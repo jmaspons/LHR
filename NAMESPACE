@@ -1,0 +1,13 @@
+## exportPattern("^[[:alpha:]]+")
+
+### C code
+useDynLib(betaBinomial)
+
+### Exports
+export(dbetabinom, qbetabinom, pbetabinom, rbetabinom
+       )
+
+### Imports
+##import(stats, graphics)
+
+##importFrom(ghypergeo, ghyper)
