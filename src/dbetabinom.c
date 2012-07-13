@@ -31,10 +31,10 @@
  *         Do this in the calling function.
  */
 
-#include "betaBinom.h"
-#include "dpq.h"
 #include <R.h>
 #include <Rmath.h>
+#include "betaBinom.h"
+#include "dpq.h"
 
 double attribute_hidden dbetabinom_raw(double x, double n, double a, double b, int give_log)
 {

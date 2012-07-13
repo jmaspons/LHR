@@ -27,10 +27,10 @@
  *	correction to a normal approximation. A search is then conducted of values close to
  *	this initial start point.
  */
-#include "betaBinom.h"
-#include "dpq.h"
 #include <R.h>
 #include <Rmath.h>
+#include "betaBinom.h"
+#include "dpq.h"
 
 static double
 do_search(double y, double *z, double p, double n, double a, double b, double incr)

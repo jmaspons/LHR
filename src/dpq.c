@@ -187,14 +187,39 @@ SEXP actuar_do_dpq3(int code, SEXP args)
     case  1:  return DPQ3_1(args, dbetabinom);
     case  2:  return DPQ3_2(args, pbetabinom);
     case  3:  return DPQ3_2(args, qbetabinom);
-    case  4:  return DPQ3_1(args, mbetabinom);
-    case  5:  return DPQ3_1(args, dbetanbinom);
-    case  6:  return DPQ3_2(args, pbetanbinom);
-    case  7:  return DPQ3_2(args, qbetanbinom);
-    case  8:  return DPQ3_1(args, mbetanbinom);
+//     case  4:  return DPQ3_1(args, mbetabinom);
+//     case  5:  return DPQ3_1(args, dbetanbinom);
+//     case  6:  return DPQ3_2(args, pbetanbinom);
+//     case  7:  return DPQ3_2(args, qbetanbinom);
+//     case  8:  return DPQ3_1(args, mbetanbinom);
     default:
         error(_("internal error in actuar_do_dpq3"));
     }
+
+    return args;                /* never used; to keep -Wall happy */
+}
+
+/* Main function, the only one used by .External(). */
+SEXP actuar_do_dpq(SEXP args)
+{
+    int i;
+    const char *name;
+
+    /* Extract distribution name */
+    args = CDR(args);
+    name = CHAR(STRING_ELT(CAR(args), 0));
+
+    /* Dispatch to actuar_do_dpq{1,2,3,4,5} */
+    for (i = 0; fun_tab[i].name; i++)
+    {
+        if (!strcmp(fun_tab[i].name, name))
+        {
+            return fun_tab[i].cfun(fun_tab[i].code, CDR(args));
+        }
+    }
+
+    /* No dispatch is an error */
+    error("internal error in actuar_do_dpq");
 
     return args;                /* never used; to keep -Wall happy */
 }

@@ -17,15 +17,6 @@ SEXP actuar_do_random2(int code, SEXP args);
 SEXP actuar_do_random3(int code, SEXP args);
 SEXP actuar_do_random4(int code, SEXP args);
 
-SEXP actuar_do_dpqphtype(SEXP args);
-SEXP actuar_do_dpqphtype2(int code, SEXP args);
-
-SEXP actuar_do_randomphtype(SEXP args);
-SEXP actuar_do_randomphtype2(int code, SEXP args);
-
-SEXP actuar_do_hierarc(SEXP args);
-SEXP actuar_do_panjer(SEXP args);
-
 /* Utility functions */
 /*   Matrix algebra */
 void actuar_expm(double *x, int n, double *z);
@@ -41,15 +32,15 @@ double dbetabinom(double x, double size, double shape1, double shape2, int give_
 double pbetabinom(double q, double size, double shape1, double shape2, int lower_tail, int log_p);
 double qbetabinom(double p, double size, double shape1, double shape2, int lower_tail, int log_p);
 double rbetabinom(double size, double shape1, double shape2);
-double mbetabinom(double order, double size, double shape1, double shape2, int give_log);
-double levbetabinom(double limit, double size, double shape1, double shape2, double order, int give_log);
+// double mbetabinom(double order, double size, double shape1, double shape2, int give_log);
+// double levbetabinom(double limit, double size, double shape1, double shape2, double order, int give_log);
 
-double dbetanbinom(double x, double size, double shape1, double shape2, int give_log);
-double pbetanbinom(double q, double size, double shape1, double shape2, int lower_tail, int log_p);
-double qbetanbinom(double p, double size, double shape1, double shape2, int lower_tail, int log_p);
-double rbetanbinom(double size, double shape1, double shape2);
-double mbetanbinom(double order, double size, double shape1, double shape2, int give_log);
-double levbetanbinom(double limit, double size, double shape1, double shape2, double order, int give_log);
+// double dbetanbinom(double x, double size, double shape1, double shape2, int give_log);
+// double pbetanbinom(double q, double size, double shape1, double shape2, int lower_tail, int log_p);
+// double qbetanbinom(double p, double size, double shape1, double shape2, int lower_tail, int log_p);
+// double rbetanbinom(double size, double shape1, double shape2);
+// double mbetanbinom(double order, double size, double shape1, double shape2, int give_log);
+// double levbetanbinom(double limit, double size, double shape1, double shape2, double order, int give_log);
 
 /* Definitions for the table linking the first group of functions to
  * the second one. Table found in names.c */

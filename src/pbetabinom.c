@@ -21,10 +21,10 @@
  *
  *    The distribution function of the beta binomial distribution.
  */
-#include "betaBinom.h"
-#include "dpq.h"
 #include <R.h>
 #include <Rmath.h>
+#include "betaBinom.h"
+#include "dpq.h"
 
 double attribute_hidden pbetabinom_raw(double x, double n, double a, double b, int log_p)
 {
