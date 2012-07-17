@@ -21,14 +21,14 @@ FUNTAB fun_tab[] = {
     {"pbetabinom",       actuar_do_dpq3,         2},
     {"qbetabinom",       actuar_do_dpq3,         3},
 //     {"mbetabinom",       actuar_do_dpq3,         4},
-//     {"dbetanbinom",      actuar_do_dpq3,         5},
-//     {"pbetanbinom",      actuar_do_dpq3,         6},
-//     {"qbetanbinom",      actuar_do_dpq3,         7},
+    {"dbetanbinom",      actuar_do_dpq3,         5},
+    {"pbetanbinom",      actuar_do_dpq3,         6},
+    {"qbetanbinom",      actuar_do_dpq3,         7},
 //     {"mbetanbinom",      actuar_do_dpq3,         8},
 
     /* RANDOM NUMBERS FUNCTIONS */
     /* Three parameter distributions */
     {"rbetabinom",       actuar_do_random3,     1},
-//     {"rbetanbinom",      actuar_do_random3,     2},
+    {"rbetanbinom",      actuar_do_random3,     2},
     {0, 0, 0}
 };

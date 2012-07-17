@@ -7,7 +7,7 @@ set(CMAKE_MODULE_PATH "${ROOT_SRC_DIR}/cmake/modules/")
 
 find_package(LibR REQUIRED)
 include_directories(${LIBR_INCLUDE_DIRS})
-add_library(betaBinomial SHARED dbetabinom.c pbetabinom.c qbetabinom.c rbetabinom.c)
+add_library(betaBinomial SHARED betabinom.c betanbinom.c)
 
 add_executable(r-package main.c)
 message(STATUS "R: ${LIBR_LIBRARIES}\n")

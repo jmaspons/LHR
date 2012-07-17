@@ -66,3 +66,6 @@
 	return R_D__0;					\
    }
    
+/* Extras */
+// #Rmpfr::pochMpfr()?
+#define pochhammer(x, n)	gamma(x+n)/gamma(x)

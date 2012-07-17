@@ -4,7 +4,8 @@
 useDynLib(betaBinomial)
 
 ### Exports
-export(dbetabinom, qbetabinom, pbetabinom, rbetabinom
+export(dbetabinom, qbetabinom, pbetabinom, rbetabinom,
+	dbetanbinom, qbetanbinom, pbetanbinom, rbetanbinom
        )
 
 ### Imports

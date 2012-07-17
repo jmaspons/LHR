@@ -109,7 +109,7 @@ SEXP actuar_do_random3(int code, SEXP args)
         switch (code)
         {
             RAND3(1, rbetabinom);
-//             RAND3(2, rbetanbinom);
+            RAND3(2, rbetanbinom);
         default:
             error(_("internal error in actuar_do_random3"));
         }

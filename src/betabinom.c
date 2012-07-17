@@ -30,18 +30,19 @@
  *     (2) Also does not check for 0 < a and 0 < b or NaN's.
  *         Do this in the calling function.
  */
-
+//TODO unify var names a= shape1, b = shape2, n=size
 #include <R.h>
 #include <Rmath.h>
-#include "betaBinom.h"
+//#include "betaBinom.h"
 #include "dpq.h"
+#include "R_ext/Visibility.h"
 
 double attribute_hidden dbetabinom_raw(double x, double n, double a, double b, int give_log)
 {
     double ans;
 
     if (x == 0 && n == 0) return R_D__1;
-    if (x < 0 || x > n) return( R_D__0 );
+    if (x < 0 || x > n) return R_D__0;
 
     ans = choose(n,x) * beta(x+a, n-x+b) / beta(a, b);
 
@@ -86,7 +87,7 @@ double pbetabinom(double x, double n, double a, double b, int lower_tail, int lo
 #ifdef IEEE_754
     if (ISNAN(x) || ISNAN(n) || ISNAN(a) || ISNAN(b))
         return x + n + a + b;
-    if (!R_FINITE(n)) return R_NaN;
+    if (!R_FINITE(n)) return R_NaN; //TODO || !R_FINITE(shape1) || !R_FINITE(shape2)
 #endif
 
     if (a <= 0 || b <= 0 || R_D_nonint(n)) return R_NaN;
