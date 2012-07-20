@@ -39,14 +39,16 @@
 
 double attribute_hidden dbetabinom_raw(double x, double size, double shape1, double shape2, int give_log)
 {
-    double ans;
-
     if (x == 0 && size == 0) return R_D__1;
     if (x < 0 || x > size) return R_D__0;
 
-    ans = choose(size,x) * beta(x+shape1, size-x+shape2) / beta(shape1, shape2);
-
-    return R_D_qIv(ans);
+    if (log_p) {
+        return (lchoose(size,x) + lbeta(x+shape1, size-x+shape2) - lbeta(shape1, shape2));
+    } else {
+        //FIXME for choose(x,y) => max x = 1030 if y = x/2 & x>y
+        //FIXME for beta(x,y) => max(x,y) = 509
+        return (choose(size,x) * beta(x+shape1, size-x+shape2) / beta(shape1, shape2));
+    }
 }
 
 double dbetabinom(double x, double size, double shape1, double shape2, int give_log)
@@ -62,6 +64,7 @@ double dbetabinom(double x, double size, double shape1, double shape2, int give_
 
     size = R_D_forceint(size);
     x = R_D_forceint(x);
+
     return dbetabinom_raw(x, size, shape1, shape2, give_log);
 }
 
@@ -74,9 +77,8 @@ double dbetabinom(double x, double size, double shape1, double shape2, int give_
 
 double attribute_hidden pbetabinom_raw(double x, double size, double shape1, double shape2, int log_p)
 {
-    int i;
     double ans = 0;
-    for (i = 0; i <= x; ++i) {
+    for (int i = 0; i <= x; ++i) {
         ans += dbetabinom_raw(i, size, shape1, shape2, log_p);
     }
     return ans;
@@ -100,8 +102,8 @@ double pbetabinom(double x, double size, double shape1, double shape2, int lower
     if (size <= x) return R_DT_1;
 
     double ans = pbetabinom_raw(x, size, shape1, shape2, log_p);
-    if (!lower_tail) ans = 1 - ans; //TODO check lower_tail -> R_D_Cval
-    return ans;
+
+    return R_D_Lval(ans);
 }
 /*
  *
@@ -112,8 +114,6 @@ double pbetabinom(double x, double size, double shape1, double shape2, int lower
 
 double qbetabinom(double p, double size, double shape1, double shape2, int lower_tail, int log_p)
 {
-    double pi=0;
-
 #ifdef IEEE_754
     if (ISNAN(p) || ISNAN(size) || ISNAN(shape1) || ISNAN(shape2))
         return p + size + shape1 + shape2;
@@ -126,10 +126,14 @@ double qbetabinom(double p, double size, double shape1, double shape2, int lower
     if (shape1 <= 0 || shape2 <= 0 || size < 0) return R_NaN;
 
     R_Q_P01_boundaries(p, 0, size);
-    
-    for (int i=0; i < size; ++i){
-	pi += dbetabinom_raw(i, size, shape1, shape2, log_p);
-	if (pi > p) return R_D_Cval(i); //TODO check lower_tail
+
+    p = R_DT_val(p);//TODO check /* need check again (cancellation!): */
+
+    double pi = 0;
+
+    for (int i = 0; i < size; ++i) {
+        pi += dbetabinom_raw(i, size, shape1, shape2, log_p);
+        if (pi > p) return i;
     }
     return size;
 }

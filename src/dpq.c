@@ -184,13 +184,19 @@ SEXP actuar_do_dpq3(int code, SEXP args)
 {
     switch (code)
     {
-    case  1:  return DPQ3_1(args, dbetabinom);
-    case  2:  return DPQ3_2(args, pbetabinom);
-    case  3:  return DPQ3_2(args, qbetabinom);
+    case  1:
+        return DPQ3_1(args, dbetabinom);
+    case  2:
+        return DPQ3_2(args, pbetabinom);
+    case  3:
+        return DPQ3_2(args, qbetabinom);
 //     case  4:  return DPQ3_1(args, mbetabinom);
-    case  5:  return DPQ3_1(args, dbetanbinom);
-    case  6:  return DPQ3_2(args, pbetanbinom);
-    case  7:  return DPQ3_2(args, qbetanbinom);
+    case  5:
+        return DPQ3_1(args, dbetanbinom);
+    case  6:
+        return DPQ3_2(args, pbetanbinom);
+    case  7:
+        return DPQ3_2(args, qbetanbinom);
 //     case  8:  return DPQ3_1(args, mbetanbinom);
     default:
         error(_("internal error in actuar_do_dpq3"));

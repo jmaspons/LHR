@@ -65,9 +65,9 @@ SEXP actuar_do_random3(int code, SEXP args)
 
     /* Check validity of arguments */
     if (!isVector(CAR(args)) ||
-        !isNumeric(CADR(args)) ||
-        !isNumeric(CADDR(args)) ||
-        !isNumeric(CADDDR(args)))
+            !isNumeric(CADR(args)) ||
+            !isNumeric(CADDR(args)) ||
+            !isNumeric(CADDDR(args)))
         error(_("invalid arguments"));
 
     /* Number of variates to generate */
@@ -96,12 +96,12 @@ SEXP actuar_do_random3(int code, SEXP args)
     {
         for (i = 0; i < n; i++)
             REAL(x)[i] = NA_REAL;
-	warning(_("NAs produced"));
+        warning(_("NAs produced"));
     }
     /* Otherwise, dispatch to appropriate r* function */
     else
     {
-    	Rboolean naflag = FALSE;
+        Rboolean naflag = FALSE;
         PROTECT(a = coerceVector(CADR(args), REALSXP));
         PROTECT(b = coerceVector(CADDR(args), REALSXP));
         PROTECT(c = coerceVector(CADDDR(args), REALSXP));

@@ -51,7 +51,7 @@
 /*#define R_DT_qIv(p)	R_D_Lval(R_D_qIv(p))		 *  p  in qF ! */
 #define R_DT_qIv(p)	(log_p ? (lower_tail ? exp(p) : - expm1(p)) \
 			       : R_D_Lval(p))
-			       
+
 /* additions for density functions (C.Loader) */
 #define R_D_fexp(f,x)     (give_log ? -0.5*log(f)+(x) : exp(x)/sqrt(f))
 #define R_D_forceint(x)   floor((x) + 0.5)
@@ -65,7 +65,7 @@
 	Rprintf("non-integer x = %f", x);	\
 	return R_D__0;					\
    }
-   
+
 /* Extras */
 // #Rmpfr::pochMpfr()?
-#define pochhammer(x, n)	gamma(x+n)/gamma(x)
+#define pochhammer(x, n)	gammafn(x+n)/gammafn(x)

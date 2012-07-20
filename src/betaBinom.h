@@ -26,7 +26,7 @@
 double	attribute_hidden dbetabinom_raw(double, double, double, double, int);
 
 
-	/* Beta Binomial Distribution */
+/* Beta Binomial Distribution */
 double	dbetabinom(double, double, double, double, int);
 double	pbetabinom(double, double, double, double, int, int);
 double	qbetabinom(double, double, double, double, int, int);
