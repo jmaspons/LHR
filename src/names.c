@@ -11,7 +11,7 @@
  */
 
 #include <Rinternals.h>
-#include "actuar.h"
+#include "probability.h"
 
 FUNTAB fun_tab[] = {
     /* DENSITY, CUMULATIVE PROBABILITY AND QUANTILE FUNCTIONS,

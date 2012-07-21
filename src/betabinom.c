@@ -33,9 +33,9 @@
 
 #include <R.h>
 #include <Rmath.h>
-//#include "betaBinom.h"
 #include "dpq.h"
 #include "R_ext/Visibility.h"
+#include  <mpfr.h>
 
 double attribute_hidden dbetabinom_raw(double x, double size, double shape1, double shape2, int give_log)
 {
@@ -47,6 +47,7 @@ double attribute_hidden dbetabinom_raw(double x, double size, double shape1, dou
     } else {
         //FIXME for choose(x,y) => max x = 1030 if y = x/2 & x>y
         //FIXME for beta(x,y) => max(x,y) = 509
+       // TODO #include  'mpfr.h'
         return (choose(size,x) * beta(x+shape1, size-x+shape2) / beta(shape1, shape2));
     }
 }

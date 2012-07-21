@@ -1,4 +1,4 @@
-Package: betaBinomial
+Package: LHR
 Type: Package
 Title: dpqr functions for the Beta binomial distribution
 Version: 0.1
@@ -6,5 +6,5 @@ Date: 2012-05-23
 Author: Joan Maspons
 Maintainer: Joan Maspons <joanmaspons@gmail.com>
 Description: More about what it does (maybe more than one line)
-License: GPL3+
+License: GPL (>= 2)
 Packaged: 2012-07-13 13:16:30 UTC; joan

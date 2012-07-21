@@ -4,7 +4,7 @@
 
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
-#include "actuar.h"
+#include "probability.h"
 
 static const R_ExternalMethodDef ExternalEntries[] = {
     {"actuar_do_random", (DL_FUNC) &actuar_do_random, -1},

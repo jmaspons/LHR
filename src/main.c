@@ -1,4 +1,4 @@
-#include "betaBinom.h"
+#include "probability.h"
 #include <stdio.h>
 #include <Rmath.h>
 #include <R.h>

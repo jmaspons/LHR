@@ -29,9 +29,9 @@
 
 #include <R.h>
 #include <Rmath.h>
-#include "betaBinom.h"
 #include "dpq.h"
 #include "R_ext/Visibility.h"
+#include <mpfr.h>
 
 double attribute_hidden dbetanbinom_raw(double x, double size, double shape1, double shape2, int give_log)
 {
@@ -43,6 +43,7 @@ double attribute_hidden dbetanbinom_raw(double x, double size, double shape1, do
               - (lgammafn(x+1) + lgammafn(shape1 + shape2 + size) - lgammafn(shape1 + shape2) + lgammafn(size + shape1 + shape2 + x) - lgammafn(size + shape1 + shape2));
     } else {
         //FIXME gammafn doesn't suport x > 171
+        //TODO mpfr
         ans = gammafn(shape1 + size) / gammafn(shape1) * gammafn(size + x) / gammafn(size) * gammafn(shape2 + x) / gammafn(shape2) /
               (gammafn(x+1) * gammafn(shape1 + shape2 + size) / gammafn(shape1 + shape2) * gammafn(size + shape1 + shape2 + x) / gammafn(size + shape1 + shape2)); //factorial(x) = gamma(x+1)
     }

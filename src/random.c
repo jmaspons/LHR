@@ -22,7 +22,7 @@
  * To add a new distribution: write an rdist() function, add an entry
  * in names.c and in the definition of the corresponding
  * actuar_do_random{1,2,3,4} function, declare the function in
- * actuar.h.
+ * probability.h.
  *
  *  AUTHOR: Vincent Goulet <vincent.goulet@act.ulaval.ca>
  *          with much indirect help from the R Core Team
@@ -30,7 +30,7 @@
 
 #include <R.h>
 #include <Rinternals.h>
-#include "actuar.h"
+#include "probability.h"
 #include "locale.h"
 
 /* Functions for three parameter distributions */
