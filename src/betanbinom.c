@@ -78,7 +78,8 @@ double dbetanbinom(double x, double size, double shape1, double shape2, int give
 double attribute_hidden pbetanbinom_raw(double x, double size, double shape1, double shape2, int log_p)
 {
     double ans = 0;
-    for (int i = 0; i <= x; ++i) {
+    int i;
+    for (i = 0; i <= x; ++i) {
         ans += dbetanbinom_raw(i, size, shape1, shape2, log_p);
     }
     return ans;

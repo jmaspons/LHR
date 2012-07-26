@@ -79,7 +79,8 @@ double dbetabinom(double x, double size, double shape1, double shape2, int give_
 double attribute_hidden pbetabinom_raw(double x, double size, double shape1, double shape2, int log_p)
 {
     double ans = 0;
-    for (int i = 0; i <= x; ++i) {
+    int i;
+    for (i = 0; i <= x; ++i) {
         ans += dbetabinom_raw(i, size, shape1, shape2, log_p);
     }
     return ans;
@@ -130,9 +131,9 @@ double qbetabinom(double p, double size, double shape1, double shape2, int lower
 
     p = R_DT_val(p);//TODO check /* need check again (cancellation!): */
 
-    double pi = 0;
+    double i, pi = 0;
 
-    for (int i = 0; i < size; ++i) {
+    for (i = 0; i < size; ++i) {
         pi += dbetabinom_raw(i, size, shape1, shape2, log_p);
         if (pi > p) return i;
     }
