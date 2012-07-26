@@ -31,7 +31,7 @@
 #include <Rmath.h>
 #include "dpq.h"
 #include "R_ext/Visibility.h"
-#include <mpfr.h>
+// #include <mpfr.h>
 
 double attribute_hidden dbetanbinom_raw(double x, double size, double shape1, double shape2, int give_log)
 {

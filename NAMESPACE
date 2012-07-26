@@ -1,7 +1,7 @@
 ## exportPattern("^[[:alpha:]]+")
 
 ### C code
-useDynLib(betaBinomial)
+useDynLib(LHR)
 
 ### Exports
 export(dbetabinom, qbetabinom, pbetabinom, rbetabinom,
