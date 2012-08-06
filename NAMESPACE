@@ -1,12 +1,14 @@
-## exportPattern("^[[:alpha:]]+")
-
 ### C code
 useDynLib(LHR)
 
 ### Exports
-export(dbetabinom, qbetabinom, pbetabinom, rbetabinom,
-	dbetanbinom, qbetanbinom, pbetanbinom, rbetanbinom
-       )
+##export(dbetabinom, qbetabinom, pbetabinom, rbetabinom, sbetabinom, fbetabinom,
+##    dbetanbinom, qbetanbinom, pbetanbinom, rbetanbinom, sbetanbinom, fbetanbinom,
+##    sbeta, fbeta, sbinom, snbinom
+##)
+
+exportPattern("^[[:alpha:]]+")
+
 
 ### Imports
 ##import(stats, graphics)

@@ -5,17 +5,20 @@
 # anys de vida fertil * N0 = suma(rnbinom() 1:N0) => size=N0 Convolució de binomials negatives [http://en.wikipedia.org/wiki/List_of_convolutions_of_probability_distributions] [http://www.usna.edu/MathDept/.courses/pre97/sm230/sums.htm : Sums of negative binomials with the same p have a negative binomial distribution with number of successes equal to the total of each number of successes.]
 # Si size=1 => rnbinom = rexp
 
-survdist<- function(n0, survA, var.survA, maxPomited=0.01, max.years){
+survdist<- function(n0, survA, var.survA, maxPomited=0.01, max.years)
+{
   if (missing(var.survA)){
     if (missing(max.years))
       max.years<- qnbinom(maxPomited, size=n0, prob=1-survA, lower.tail=FALSE)
     prob<- dnbinom(0:max.years, size=n0, prob=1-survA)
   }else{
-    if (missing(max.years))
-      max.years<- qbetanbinom(maxPomited, size=n0, mean=1-survA, variance=var.survA, lower.tail=FALSE)
-    prob<- dbetanbinom(0:max.years, size=n0, mean=1-survA, variance=var.surbA)
+    parBeta<- fbeta(survA, var.survA)
+    if (missing(max.years)){
+      max.years<- qbetanbinom(maxPomited, size=n0, parBeta[[1]], parBeta[[2]], lower.tail=FALSE)
+    }
+    prob<- dbetanbinom(0:max.years, size=n0, parBeta[[1]], parBeta[[2]])
   }
-  prob<- prob / sum(prob)
+#   prob<- prob / sum(na.omit(prob)) ## Correct for P omited
   ans<- data.frame(years=0:max.years, probS=prob)
 
   return (ans)
@@ -24,7 +27,8 @@ survdist<- function(n0, survA, var.survA, maxPomited=0.01, max.years){
 
 ## P(R0) / P(years survived) = number of offspring that reach independence for each number of years lived
 ##TODO: add temporal autocorrelated environment
-fertdist<- function(years, broods, clutch, survJ, var.survJ, meanSeason, amplSeason, breedInterval){
+fertdist<- function(years, broods, clutch, survJ, var.survJ, meanSeason, amplSeason, breedInterval, alignCriterion="bestFirst")
+{
   ans<- list()
 
   for (i in years$year){
@@ -33,21 +37,21 @@ fertdist<- function(years, broods, clutch, survJ, var.survJ, meanSeason, amplSea
       if(missing(meanSeason) & missing(amplSeason) & missing(breedInterval))
 	prob<- dbinom(0:size, size=size, prob=survJ)
       else{
-	seasons<- seasonality(i, meanSeason, amplSeason)
-	seasons<- par.seasonality(seasons, broods, breedInterval, criterion="bestMean")
+	seasons<- seasonality(years=1, meanSeason, amplSeason)
+	seasons<- par.seasonality(seasons, broods, breedInterval, criterion=alignCriterion)
 	prob<- dbinom(rep(0:size, each=broods), size=size, prob=survJ * seasons)
 	prob<- matrix(prob, ncol=broods, byrow=TRUE)
 	prob<- rowMeans(prob)
       }
     }else{
       if(missing(meanSeason) & missing(amplSeason) & missing(breedInterval)){
-	parBeta<- TrobaParametresBeta(survJ, var.survJ)
+	parBeta<- fbeta(survJ, var.survJ)
 	prob<- dbetabinom(0:size, size=size, parBeta[[1]], parBeta[[2]])
       }else{
-	seasons<- seasonality(i, meanSeason, amplSeason)
-	seasons<- par.seasonality(seasons, broods, breedInterval, criterion="bestMean")
-	parBeta<- TrobaParametresBeta(survJ * seasons, var.survJ)
-	prob<- dbinom(rep(0:size, each=broods), size=size, parBeta[[1]], parBeta[[2]])
+	seasons<- seasonality(years=1, meanSeason, amplSeason)
+	seasons<- par.seasonality(seasons, broods, breedInterval, criterion=alignCriterion)
+	parBeta<- fbeta(survJ * seasons, var.survJ)
+	prob<- dbetabinom(rep(0:size, each=broods), size=size, parBeta[[1]], parBeta[[2]])
 	prob<- matrix(prob, ncol=broods, byrow=TRUE)
 	prob<- rowMeans(prob)
       }
@@ -64,10 +68,17 @@ fertdist<- function(years, broods, clutch, survJ, var.survJ, meanSeason, amplSea
 ## P(R0|survA)
 # mirar paquet distr: Differences between random variables and distribution algebra?
 # file:///usr/local/lib/R/site-library/distrDoc/doc/distr.pdf
-fitnessdist<- function(surv, fert, n0){
+fitnessdist<- function(surv, fert, n0)
+{
   ans<- merge(surv, fert, by="years")
   ans<- data.frame(ans, probR0=numeric(nrow(ans)))
   ans$probR0<- ans$probS * ans$probF
+
+  if (sum(is.na(ans$probR0))){
+    ans<- ans[!is.na(ans$probS),]
+    warning("Omited some years from 'survdist()' because probabilities are NaN. Omited probability will be larger than specified.")
+  }
+
   ans<- by(ans$probR0, ans$fert, sum)
   ans<- data.frame(R0=as.numeric(names(ans)), probR0=as.numeric(ans))
   if (!missing(n0)) ans$R0<- ans$R0 / n0
@@ -78,36 +89,41 @@ fitnessdist<- function(surv, fert, n0){
 
 ## All in one
 # Wrapper to run the complete model in on call
-fitnessdistAIO<- function(n0, survA, var.survA, broods, clutch, survJ, var.survJ, maxPomited, max.years){
-  parameters<- list(n0=n0, survA=survA)
+fitnessdistAIO<- function(n0, survA, var.survA, broods, clutch, survJ, var.survJ, maxPomited, max.years)
+{
+  parametersSurv<- list(n0=n0, survA=survA)
+  #Check for missing parameters
+  parametersFert<- list(broods=broods, clutch=clutch, survJ=survJ) 
+
   n<-2
   if (!missing(var.survA)){
-    parameters[[n + 1]]<- var.survA
-    names(parameters)[n+1]<- "var.survA"
+    parametersSurv[[n + 1]]<- var.survA
+    names(parametersSurv)[n+1]<- "var.survA"
     n<- n+1
   }
   if (!missing(maxPomited)){
-    parameters[[n + 1]]<- maxPomited
-    names(parameters)[n+1]<- "maxPomited"
+    parametersSurv[[n + 1]]<- maxPomited
+    names(parametersSurv)[n+1]<- "maxPomited"
     n<- n+1
   }
   if (!missing(max.years)){
-    parameters[[n + 1]]<- max.years
-    names(parameters)[n+1]<- "max.years"
+    parametersSurv[[n + 1]]<- max.years
+    names(parametersSurv)[n+1]<- "max.years"
     n<- n+1
   }
 
-  surv<- do.call(survdist, args=parameters)
+  surv<- do.call(survdist, args=parametersSurv)
+  
+  parametersFert<- list(years=surv, broods=broods, clutch=clutch, survJ=survJ)
 
-  parameters<- list(years=surv, broods=broods, clutch=clutch, survJ=survJ)
   n<-4
   if (!missing(var.survJ)){
-    parameters[[n + 1]]<- var.survJ
-    names(parameters)[n+1]<- "var.survJ"
+    parametersFert[[n + 1]]<- var.survJ
+    names(parametersFert)[n+1]<- "var.survJ"
     n<- n+1
   }
 
-  fert<- do.call(fertdist, args=parameters)
+  fert<- do.call(fertdist, args=parametersFert)
 
   return (fitnessdist(surv, fert, n0))
 }
@@ -116,59 +132,35 @@ fitnessdistAIO<- function(n0, survA, var.survA, broods, clutch, survJ, var.survJ
 
 # plot(cumsum(R0$probR0) ~ R0$R0)
 
-Pacumulada<- function(probabilitat){ # usar cumsum(R0$probR0)
-  probabilitatAcumulada<- probabilitat # Densitat de la distribució de probabilitat (acumulada)
-  for (i in 2:nrow(probabilitat)){
-    probabilitatAcumulada[i,]<- colSums(probabilitat[1:i,], na.rm=TRUE)
-  }
-  return (probabilitatAcumulada)
+# Pacumulada<- function(probabilitat){ # usar cumsum(R0$probR0)
+#   probabilitatAcumulada<- probabilitat # Densitat de la distribució de probabilitat (acumulada)
+#   for (i in 2:nrow(probabilitat)){
+#     probabilitatAcumulada[i,]<- colSums(probabilitat[1:i,], na.rm=TRUE)
+#   }
+#   return (probabilitatAcumulada)
+# }
+
+# Pestabliment<- function(R0poblacio, minR0establiment=2){
+#   resultat<- numeric(ncol(R0poblacio[["R0"]])) # P(establiment) ==> R0 => 2 (remplaç de la població)
+#   names(resultat)<- attributes(R0poblacio[["R0"]])$dimnames$n0
+#   for (i in 1:length(resultat)){
+#     resultat[i]<- which.min(abs(R0poblacio[["R0"]][,i] - minR0establiment)) # posició de l'R0 més proper a 2
+#     if (R0poblacio[["R0"]][resultat[i],i] < minR0establiment){ # si el més proper està per sota incrementa en una posició
+#       resultat[i]<- resultat[i] + 1
+#     }
+#     resultat[i]<- 1 - sum(R0poblacio[["probabilitat"]][1:resultat[i],i])
+#   }
+#   return (resultat)
+# }
+
+sdistri<- function(distri){
+  mean<- weighted.mean(distri[[1]], distri[[2]], na.rm=TRUE)
+  var<- sum(distri[[2]] * (distri[[1]] - mean)^2)
+  Gmean<- G(mean, var)
+
+  return (data.frame(mean, var, Gmean))
 }
 
-Pestabliment<- function(R0poblacio, minR0establiment=2){
-  resultat<- numeric(ncol(R0poblacio[["R0"]])) # P(establiment) ==> R0 => 2 (remplaç de la població)
-  names(resultat)<- attributes(R0poblacio[["R0"]])$dimnames$n0
-  for (i in 1:length(resultat)){
-    resultat[i]<- which.min(abs(R0poblacio[["R0"]][,i] - minR0establiment)) # posició de l'R0 més proper a 2
-    if (R0poblacio[["R0"]][resultat[i],i] < minR0establiment){ # si el més proper està per sota incrementa en una posició
-      resultat[i]<- resultat[i] + 1
-    }
-    resultat[i]<- 1 - sum(R0poblacio[["probabilitat"]][1:resultat[i],i])
-  }
-  return (resultat)
-}
-
-PropietatsDistribucio<- function(R0poblacio){
-  resultat<- data.frame(mu=numeric(ncol(R0poblacio[["R0"]])), var=numeric(ncol(R0poblacio[["R0"]])), G=numeric(ncol(R0poblacio[["R0"]])), row.names=attributes(R0poblacio[["R0"]])$dimnames$n0) # P(establiment) ==> R0 => 2 (remplaç de la població)
-  for (i in 1:nrow(resultat)){
-    x<- which(!is.na(R0poblacio[["probabilitat"]][,i]))
-    resultat$mu[i]<- weighted.mean(R0poblacio[["R0"]][x,i], R0poblacio[["probabilitat"]][x,i], na.rm=TRUE)
-    resultat$var[i]<- sum(R0poblacio[["probabilitat"]][x,i] * (R0poblacio[["R0"]][x,i] - resultat$mu[i])^2)
-    resultat$G[i]<- G(resultat$mu[i], resultat$var[i])
-  }
-  return (resultat)
-}
-
-MitjanaDistribucio<- function(R0poblacio){ # Mitjana ponderada per la probabilitat
-  mitjana<- numeric(ncol(R0poblacio[["R0"]])) # P(establiment) ==> R0 => 2 (remplaç de la població)
-  names(mitjana)<- attributes(R0poblacio[["R0"]])$dimnames$n0
-  for (i in 1:length(mitjana)){
-    x<- which(!is.na(R0poblacio[["probabilitat"]][,i]))
-    mitjana[i]<- weighted.mean(R0poblacio[["R0"]][x,i], R0poblacio[["probabilitat"]][x,i], na.rm=TRUE)
-  }
-  return (mitjana)
-}
-
-VariancaDistribucio<- function(R0poblacio){ # http://en.wikipedia.org/wiki/Variance#Discrete_random_variable
-  mu<- MitjanaDistribucio(R0poblacio)
-  varianca<- numeric(ncol(R0poblacio[["R0"]]))
-  names(varianca)<- attributes(R0poblacio[["R0"]])$dimnames$n0
-  for (i in 1:length(varianca)){
-    x<- which(!is.na(R0poblacio[["probabilitat"]][,i]))
-    varianca[i]<- sum(R0poblacio[["probabilitat"]][x,i] * (R0poblacio[["R0"]][x,i] - mu[i])^2)
-    varianca[i]<- varianca[i] / sum(R0poblacio[["probabilitat"]][,i], na.rm=TRUE) # Correcció de la probabilitat omesa
-  }
-  return (varianca)
-}
 
 G<- function(mu, v){
   return (mu - 2 * v / mu)
