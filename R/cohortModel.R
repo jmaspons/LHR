@@ -18,7 +18,7 @@ survdist<- function(n0, survA, var.survA, maxPomited=0.01, max.years)
     }
     prob<- dbetanbinom(0:max.years, size=n0, parBeta[[1]], parBeta[[2]])
   }
-#   prob<- prob / sum(na.omit(prob)) ## Correct for P omited
+  prob<- prob / sum(na.omit(prob)) ## Correct for P omited or lifespan. Sum(prob) = 1
   ans<- data.frame(years=0:max.years, probS=prob)
 
   return (ans)
@@ -27,20 +27,25 @@ survdist<- function(n0, survA, var.survA, maxPomited=0.01, max.years)
 
 ## P(R0) / P(years survived) = number of offspring that reach independence for each number of years lived
 ##TODO: add temporal autocorrelated environment
-fertdist<- function(years, broods, clutch, survJ, var.survJ, meanSeason, amplSeason, breedInterval, alignCriterion="bestFirst")
+fertdist<- function(years, broods, clutch, survJ, var.survJ, meanSeason, amplSeason, breedInterval, alignCriterion="bestFirst") ##Clutch size is a int vector of length broods
 {
   ans<- list()
 
   for (i in years$year){
-    size<- i * broods * clutch
+    size<- i * clutch * broods
     if (missing(var.survJ)){
       if(missing(meanSeason) & missing(amplSeason) & missing(breedInterval))
 	prob<- dbinom(0:size, size=size, prob=survJ)
       else{
+	size<- i * clutch
 	seasons<- seasonality(years=1, meanSeason, amplSeason)
 	seasons<- par.seasonality(seasons, broods, breedInterval, criterion=alignCriterion)
-	prob<- dbinom(rep(0:size, each=broods), size=size, prob=survJ * seasons)
-	prob<- matrix(prob, ncol=broods, byrow=TRUE)
+	seasons<- sort(seasons, decreasing=TRUE)
+
+	prob<- matrix(0, nrow=max(size) + 1, ncol=broods, dimnames=list(0:max(size), NULL))
+	for (j in 1:broods){
+	  prob[1:(size[j] + 1),j]<- dbinom(0:size[j], size=size[j], prob=survJ * seasons[j])
+	}
 	prob<- rowMeans(prob)
       }
     }else{
@@ -48,15 +53,20 @@ fertdist<- function(years, broods, clutch, survJ, var.survJ, meanSeason, amplSea
 	parBeta<- fbeta(survJ, var.survJ)
 	prob<- dbetabinom(0:size, size=size, parBeta[[1]], parBeta[[2]])
       }else{
+	size<- i * clutch
 	seasons<- seasonality(years=1, meanSeason, amplSeason)
 	seasons<- par.seasonality(seasons, broods, breedInterval, criterion=alignCriterion)
+	seasons<- sort(seasons, decreasing=TRUE)
 	parBeta<- fbeta(survJ * seasons, var.survJ)
-	prob<- dbetabinom(rep(0:size, each=broods), size=size, parBeta[[1]], parBeta[[2]])
-	prob<- matrix(prob, ncol=broods, byrow=TRUE)
+
+	prob<- matrix(0, nrow=max(size) + 1, ncol=broods, dimnames=list(0:max(size), NULL))
+	for (j in 1:broods){
+	  prob[1:(size[j] + 1),j]<- dbetabinom(0:size[j], size=size[j], parBeta[[1]][j], parBeta[[2]][j])
+	}
 	prob<- rowMeans(prob)
       }
     }
-    tmp<-  data.frame(fert=0:size, probF=prob, years=i)
+    tmp<-  data.frame(fert=0:max(size), probF=prob, years=i)
     ans[[i+1]]<- tmp
   }
   ans<- as.data.frame(do.call("rbind", ans)) #passar list[[n=data.frame[1]]] a data.frame(mean, variance, espG)
@@ -76,12 +86,14 @@ fitnessdist<- function(surv, fert, n0)
 
   if (sum(is.na(ans$probR0))){
     ans<- ans[!is.na(ans$probS),]
+    error<- TRUE
     warning("Omited some years from 'survdist()' because probabilities are NaN. Omited probability will be larger than specified.")
-  }
+  }else error<- FALSE
 
   ans<- by(ans$probR0, ans$fert, sum)
   ans<- data.frame(R0=as.numeric(names(ans)), probR0=as.numeric(ans))
   if (!missing(n0)) ans$R0<- ans$R0 / n0
+  if (error) ans[nrow(ans) + 1,]<- c(NA, NA)
 
   return (ans)
 }

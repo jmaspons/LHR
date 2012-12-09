@@ -4,7 +4,7 @@ library(LHR)
 
 ## Small example
 #################
-n0<-1
+n0<-30
 maxPomited<- 0.01
 
 survA<- 0.7	# supervivència dels adults
@@ -28,6 +28,7 @@ R0<- fitnessdist(s, f, n0[1])
 R02<- fitnessdistAIO(n0[1], survA, var.survA, broods=broods, clutch=clutch, survJ=survJ, var.survJ=var.survJ, maxPomited=maxPomited)
 
 s<- survdist(n0=n0, survA, var.survA=var.survA, maxPomited=maxPomited)
+clutch<- c(3,2)
 f<- fertdist(s, broods, clutch, survJ, var.survJ=var.survJ, meanSeason=meanSeason, amplSeason=amplSeason, breedInterval=breedInterval)
 R0<- fitnessdist(s, f, n0[1])
 R02<- fitnessdistAIO(n0[1], survA, var.survA, broods=broods, clutch=clutch, survJ=survJ, var.survJ=var.survJ, maxPomited=maxPomited)
@@ -59,6 +60,7 @@ setwd("../../../../doctorat/projectes/LHT/R")
 source("./libCreaEstrategiesLHT.r")
 strategy<- CreaEstrategiesHiperCub(nStrategies, rangLambda=c(1,1.2), roundB=TRUE) # Creates a set of strategies with constraints
 strategy$lifespan<- - 1 / log(strategy$sA)
+strategy<- strategy[-which(strategy$lifespan < strategy$alpha),]
 # str(strategy)
 # 'data.frame':	x obs. of  6 variables:
 #  $ lambda: num  0.9 0.9 0.901 0.902 0.905 ...		LAMBDA
@@ -70,10 +72,12 @@ strategy$lifespan<- - 1 / log(strategy$sA)
  
 ## Environmental stochasticity
 envir<- data.frame(var=seq(0.01, 0.2, length=5))
+envirJA<- expand.grid(varJ=envir$var, varA=envir$var)
 
 ## Seasonality scenarios
 season<- expand.grid(amplSeason=seq(0.1, 1, by=0.2), breedInterval=2^(0:2), broods=1:6)
 season<- season[season$broods * season$breedInterval < 12,] # remove combination which don't fit in one year
+season<- season[-which(season$broods ==1)[-1],] # remove combinations whith 1 brood (allways at the optimum)
 season$meanSeason[season$amplSeason == seq(0.1, 1, by=0.2)[1]]<- .95
 season$meanSeason[season$amplSeason == seq(0.1, 1, by=0.2)[2]]<- .85
 season$meanSeason[season$amplSeason == seq(0.1, 1, by=0.2)[3]]<- .75
@@ -97,11 +101,18 @@ strategyName<- function(strategy, sep="\t"){
 }
 
 ## Result's variables
-Gdemo<- array(dim=c(nrow(strategy), 3, length(n0)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean"), n0=n0))
-GenvJ<- array(dim=c(nrow(strategy), 3, length(n0), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean"), n0=n0, var.survJ=envir$var))
-GenvA<- array(dim=c(nrow(strategy), 3, length(n0), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean"), n0=n0, var.survA=envir$var))
-GseasonBestFirst<- array(dim=c(nrow(strategy), 3, length(n0), nrow(season)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean"), n0=n0, amplSeason=season$amplSeason))
-GseasonBestMean<- array(dim=c(nrow(strategy), 3, length(n0), nrow(season)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean"), n0=n0, amplSeason=season$amplSeason))
+Gdemo<- array(dim=c(nrow(strategy), 5, length(n0)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0))
+GenvJ<- array(dim=c(nrow(strategy), 5, length(n0), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, var.survJ=envir$var))
+GenvA<- array(dim=c(nrow(strategy), 5, length(n0), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, var.survA=envir$var))
+GenvJA<- array(dim=c(nrow(strategy), 5, length(n0), nrow(envirJA)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, var.survJ_survA=paste(envirJA$varJ, envirJA$varA, sep="_"))
+GseasonBestFirst<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, amplSeason=season$amplSeason))
+GseasonBestMean<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, amplSeason=season$amplSeason))
+GenvJ_seasonBestFirst<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, amplSeason=season$amplSeason, var.survJ=envir$var))
+GenvJ_seasonBestMean<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, amplSeason=season$amplSeason, var.survJ=envir$var))
+GenvA_seasonBestFirst<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, amplSeason=season$amplSeason, var.survA=envir$var))
+GenvA_seasonBestMean<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, amplSeason=season$amplSeason, var.survA=envir$var))
+GenvJA_seasonBestFirst<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envirJA)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, amplSeason=season$amplSeason), var.survJ_survA=paste(envirJA$varJ, envirJA$varA, sep="_"))
+GenvJA_seasonBestMean<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envirJA)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, amplSeason=season$amplSeason, var.survJ_survA=paste(envirJA$varJ, envirJA$varA, sep="_"))
 
 ## Simulation
 # library(doMC) #no desa els resultats correctament
@@ -110,12 +121,14 @@ for (n in 1:length(n0)){
   for (s in 1:nrow(strategy)){
     cat("n0:", n0[n], "\tLH:", s, "\t/", nrow(strategy), strategyName(strategy[s,]))
 # Demographic stochasticity
-    surv<- survdist(n0=n0[n], survA=strategy$sA[s], max.years=strategy$lifespan * n0[n])
-    ##FIXME clutch must be an integer or a discrete probability distribution
-    fert<- fertdist(surv, broods=1, clutch=round(strategy$b[s]), survJ=strategy$sJ[s])
+    surv<- survdist(n0=n0[n], survA=strategy$sA[s], max.years=strategy$lifespan[e] * n0[n])
+    ##FIXME clutch must be an integer or TODO a discrete probability distribution
+    fert<- fertdist(surv, broods=1, clutch=strategy$b[s], survJ=strategy$sJ[s])
     R0<- fitnessdist(surv, fert, n0[n])
 
-    Gdemo[s,,n]<- t(sdistri(R0))
+    Gdemo[s,1:3,n]<- t(sdistri(R0))
+    Gdemo[s,4,n]<- 1 - cumsum(R0$probR0)[which(R0$R0 > 2)[1]]
+    if (any(is.na(R0))) Gdemo[s,5,n]<- 1 else Gdemo[s,5,n]<- 0
     if (n == 1) dimnames(Gdemo)$strategy[s]<- strategyName(strategy[s,c(1,2,4,5,6)], sep=" ")
     cat("\tG=", Gdemo[s,3,n], "\n")
 
@@ -125,10 +138,18 @@ for (n in 1:length(n0)){
 #       cat(season$amplSeason[a], "/", season$breedInterval[a], "/", season$broods[a], ", ", sep="")
       ##FIXME clutch = fertility / broods must be an integer or a discrete probability distribution
       ##ERROR: plot((round(strategy$b/season$broods.x)*season$broods.x) ~ (round(strategy$b/season$broods.y)*season$broods.y))
-      fertSeasonBestFirst<- fertdist(surv, broods=season$broods[a], clutch=round(strategy$b[s] %/% season$broods[a]), survJ=strategy$sJ[s], meanSeason=season$meanSeason[a], amplSeason=season$amplSeason[a], breedInterval=season$breedInterval[a], alignCriterion="bestFirst")
+
+      clutch<- rep(strategy$b[s] %/% season$broods[a], season$broods[a])
+      if (strategy$b[s] %% season$broods[a] > 0){
+	clutch[1:(strategy$b[s] %% season$broods[a])]<- clutch[1:(strategy$b[s] %% season$broods[a])] + 1
+      }
+
+      fertSeasonBestFirst<- fertdist(surv, broods=season$broods[a], clutch=clutch, survJ=strategy$sJ[s], meanSeason=season$meanSeason[a], amplSeason=season$amplSeason[a], breedInterval=season$breedInterval[a], alignCriterion="bestFirst")
       R0<- fitnessdist(surv, fertSeasonBestFirst, n0[n])
 
-      GseasonBestFirst[s,,n,a]<- t(sdistri(R0))
+      GseasonBestFirst[s,1:3,n,a]<- t(sdistri(R0))
+      GseasonBestFirst[s,4,n,a]<- 1 - cumsum(R0$probR0)[which(R0$R0 > 2)[1]]
+      if (any(is.na(R0))) GseasonBestFirst[s,5,n]<- 1 else GseasonBestFirst[s,5,n]<- 0
       if (n == 1) dimnames(GseasonBestFirst)$strategy[s]<- strategyName(strategy[s,c(1,2,4,5,6)], sep=" ")
     }
 
@@ -137,10 +158,17 @@ for (n in 1:length(n0)){
     for (a in 1:nrow(season)){
 #       cat(season$amplSeason[a], "/", season$breedInterval[a], "/", season$broods[a], ", ", sep="")
       ##FIXME clutch must be an integer or a discrete probability distribution
-      fertSeasonBestMean<- fertdist(surv, broods=season$broods[a], clutch=round(strategy$b[s] / season$broods[a]), survJ=strategy$sJ[s], meanSeason=season$meanSeason[a], amplSeason=season$amplSeason[a], breedInterval=season$breedInterval[a], alignCriterion="bestMean")
+      clutch<- rep(strategy$b[s] %/% season$broods[a], season$broods[a])
+      if (strategy$b[s] %% season$broods[a] > 0){
+	clutch[1:(strategy$b[s] %% season$broods[a])]<- clutch[1:(strategy$b[s] %% season$broods[a])] + 1
+      }
+
+      fertSeasonBestMean<- fertdist(surv, broods=season$broods[a], clutch=clutch, survJ=strategy$sJ[s], meanSeason=season$meanSeason[a], amplSeason=season$amplSeason[a], breedInterval=season$breedInterval[a], alignCriterion="bestMean")
       R0<- fitnessdist(surv, fertSeasonBestMean, n0[n])
 
-      GseasonBestMean[s,,n,a]<- t(sdistri(R0))
+      GseasonBestMean[s,1:3,n,a]<- t(sdistri(R0))
+      GseasonBestMean[s,4,n,a]<- 1 - cumsum(R0$probR0)[which(R0$R0 > 2)[1]]
+      if (any(is.na(R0))) GseasonBestMean[s,5,n]<- 1 else GseasonBestMean[s,5,n]<- 0
       if (n == 1) dimnames(GseasonBestMean)$strategy[s]<- strategyName(strategy[s,c(1,2,4,5,6)], sep=" ")
     }
 
@@ -153,8 +181,10 @@ for (n in 1:length(n0)){
 	fertEnvJ<- fertdist(surv, broods=1, clutch=round(strategy$b[s]), survJ=strategy$sJ[s], var.survJ=envir$var[e])
 	R0<- fitnessdist(surv, fertEnvJ, n0[n])
 
-	GenvJ[s,,n,e]<- t(sdistri(R0))
-      }else GenvJ[s,,n,e]<- rep(NaN, 3)
+	GenvJ[s,1:3,n,e]<- t(sdistri(R0))
+	GenvJ[s,4,n,e]<- 1 - cumsum(R0$probR0)[which(R0$R0 > 2)[1]]
+	if (any(is.na(R0))) GenvJ[s,5,n]<- 1 else GenvJ[s,5,n]<- 0
+      }else GenvJ[s,,n,e]<- rep(NaN, 5)
       if (n==1) dimnames(GenvJ)$strategy[s]<- strategyName(strategy[s,c(1,2,4,5,6)], sep=" ")
     }
     cat("DONE!\n")
@@ -209,31 +239,6 @@ GseasonBestMean<- data.frame(id=rep(1:dims[1], prod(dims[-c(1,2)])),
 			broods=rep(season$broods, each=prod(dims[c(1,3)])))
 GseasonBestMeanLH<- merge(cbind(id=1:nrow(strategy), strategy), GseasonBestMean)
 
-# ## Correct strategies to the real clutch size because binomial dist needs integer size
-# source("./libDemografiaDeterminista.r")
-# 
-# GdemoLH$b<- round(GdemoLH$b)
-# for (i in 1:nrow(GdemoLH)){
-#     GdemoLH$lambda[i]<- CalculaLambda(matriu=ConstrueixMatriuLefkovitchPre(sA=GdemoLH$sA[i], sSubA=GdemoLH$sA[i], FA=GdemoLH$F[i]/2, alpha=GdemoLH$alpha[i]))
-# }
-# ##TODO
-# GseasonBestFirstLH<- GseasonBestFirstLH[!(GseasonBestFirstLH$broods==1 & GseasonBestFirstLH$breedInterval >1),]
-# ##
-# GseasonBestFirstLH$b<- round(GseasonBestFirstLH$b / GseasonBestFirstLH$broods) * GseasonBestFirstLH$broods
-# for (i in 1:nrow(GseasonBestFirstLH)){
-#     GseasonBestFirstLH$lambda[i]<- CalculaLambda(matriu=ConstrueixMatriuLefkovitchPre(sA=GseasonBestFirstLH$sA[i], sSubA=GseasonBestFirstLH$sA[i], FA=GseasonBestFirstLH$F[i]/2, alpha=GseasonBestFirstLH$alpha[i]))
-# }
-# 
-# GseasonBestMeanLH<- GseasonBestMeanLH[!(GseasonBestMeanLH$broods==1 & GseasonBestMeanLH$breedInterval >1),]
-# GseasonBestMeanLH$b<- round(GseasonBestMeanLH$b / GseasonBestMeanLH$broods) * GseasonBestMeanLH$broods
-# for (i in 1:nrow(GseasonBestMeanLH)){
-#     GseasonBestMeanLH$lambda[i]<- CalculaLambda(matriu=ConstrueixMatriuLefkovitchPre(sA=GseasonBestMeanLH$sA[i], sSubA=GseasonBestMeanLH$sA[i], FA=GseasonBestMeanLH$F[i]/2, alpha=GseasonBestMeanLH$alpha[i]))
-# }
-# 
-# GenvJLH$b<- round(GenvJLH$b)
-# for (i in 1:nrow(GenvJLH)){
-#     GenvJLH$lambda[i]<- CalculaLambda(matriu=ConstrueixMatriuLefkovitchPre(sA=GenvJLH$sA[i], sSubA=GenvJLH$sA[i], FA=GenvJLH$F[i]/2, alpha=GenvJLH$alpha[i]))
-# }
 
 save(GdemoLH, file="Gdemo.R")
 save(GseasonBestFirstLH, file="GseasonBestFirst.R")
