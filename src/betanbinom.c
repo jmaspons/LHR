@@ -75,12 +75,13 @@ double dbetanbinom(double x, double size, double shape1, double shape2, int give
  *	x = the number of failures before the n-th success
  */
 
-double attribute_hidden pbetanbinom_raw(double x, double size, double shape1, double shape2, int log_p)
+double attribute_hidden pbetanbinom_raw(double x, double size, double shape1, double shape2)
 {
     double ans = 0;
     int i;
     for (i = 0; i <= x; ++i) {
-        ans += dbetanbinom_raw(i, size, shape1, shape2, log_p);
+	// give_log = TRUE increase the range of the parameters
+        ans += exp(dbetanbinom_raw(i, size, shape1, shape2, /*give_log*/ TRUE));
     }
     return ans;
 }
@@ -98,9 +99,9 @@ double pbetanbinom(double x, double size, double shape1, double shape2, int lowe
     if (!R_FINITE(x)) return R_DT_1;
     x = floor(x + 1e-7);
 
-    double ans = pbetanbinom_raw(x, size, shape1, shape2, log_p);
+    double ans = pbetanbinom_raw(x, size, shape1, shape2);
 
-    return R_D_Lval(ans);
+    return R_DT_val(ans);
 }
 
 /*
@@ -122,13 +123,14 @@ double qbetanbinom(double p, double size, double shape1, double shape2, int lowe
     if (shape1 <= 0 || shape2 <= 0|| size < 0) return R_NaN;
 
     R_Q_P01_boundaries(p, 0, R_PosInf);
-
-    p = R_DT_val(p); //TODO check /* need check again (cancellation!): */
-
+    
+    p = R_DT_qIv(p); //TODO check /* need check again (cancellation!): */
+    
     double pi = 0, i = 0;
 
     while (pi < p) {
-        pi += dbetanbinom_raw(i, size, shape1, shape2, log_p);
+	// give_log = TRUE increase the range of the parameters
+        pi += exp(dbetanbinom_raw(i, size, shape1, shape2, /*give_log*/ TRUE));
         i++;
     }
 

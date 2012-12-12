@@ -1,14 +1,22 @@
 ## SEASONAL EVIRONMENT
 #######################
+par.seasonality<- function(broods, breedInterval, mean, amplitude, years=1, criterion=c("bestFirst", "bestMean"), resolution=c("months", "days")){
+
+  seasons<- seasonality(years=years, mean=mean, amplitude=amplitude, resolution=resolution[1])
+  seasons<- par.modifier(pattern=seasons, events=broods, interval=breedInterval, criterion=criterion[1])
+  seasons<- sort(seasons, decreasing=TRUE)
+
+  return (seasons)
+}
+
 # Returns a vector following a sinusoidal pattern. range = mean +- amplitude / 2  
 seasonality<- function(years, mean, amplitude, resolution=c("months", "days")){
   switch (resolution[1],
       months = t<- seq(0, 2*pi*years - 2*pi/12, by=2*pi/12),
       days = t<- seq(0, 2*pi*years - 2*pi/365, by=2*pi/365)
   )
-  seasonality<- sin(t)*amplitude/2 + mean # max amplitude=1 & mean=0.5
 
-  return (seasonality)
+  return (sin(t)*amplitude/2 + mean) # max amplitude=1 & mean=0.5
 }
 
 # Parameter modification factor (par = par * par.seasonality())
@@ -16,7 +24,7 @@ seasonality<- function(years, mean, amplitude, resolution=c("months", "days")){
 # events events per year
 # interval number of units between events (units are the same as in pattern)
 ## TODO criterion: optimize the timing of reproduction according to interbreeding intervals or some reasonable rules.
-par.seasonality<- function(pattern, events, interval, criterion=c("bestFirst", "bestMean")){
+par.modifier<- function(pattern, events, interval, criterion=c("bestFirst", "bestMean")){
   n<- length(pattern)
   if (n < events * interval) stop("Pattern too short for the events number and interval parameters")
   
@@ -36,7 +44,7 @@ par.seasonality<- function(pattern, events, interval, criterion=c("bestFirst", "
     pattern<- rep(pattern,2)
     objective<- -Inf
     for (i in 0:n){
-      newObjective <-sum(pattern[dates + i])
+      newObjective<- sum(pattern[dates + i])
       if (objective < newObjective){
 	objective<- newObjective
 	bestFirstDate<- i

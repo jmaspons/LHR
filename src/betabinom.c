@@ -76,12 +76,13 @@ double dbetabinom(double x, double size, double shape1, double shape2, int give_
  *    The distribution function of the Beta binomial distribution.
  */
 
-double attribute_hidden pbetabinom_raw(double x, double size, double shape1, double shape2, int log_p)
+double attribute_hidden pbetabinom_raw(double x, double size, double shape1, double shape2)
 {
     double ans = 0;
     int i;
     for (i = 0; i <= x; ++i) {
-        ans += dbetabinom_raw(i, size, shape1, shape2, log_p);
+	// give_log = TRUE increase the range of the parameters
+        ans += exp(dbetabinom_raw(i, size, shape1, shape2, /*give_log*/ TRUE));
     }
     return ans;
 }
@@ -103,9 +104,9 @@ double pbetabinom(double x, double size, double shape1, double shape2, int lower
     x = floor(x + 1e-7);
     if (size <= x) return R_DT_1;
 
-    double ans = pbetabinom_raw(x, size, shape1, shape2, log_p);
+    double ans = pbetabinom_raw(x, size, shape1, shape2);
 
-    return R_D_Lval(ans);
+    return R_DT_val(ans);
 }
 /*
  *
@@ -129,12 +130,13 @@ double qbetabinom(double p, double size, double shape1, double shape2, int lower
 
     R_Q_P01_boundaries(p, 0, size);
 
-    p = R_DT_val(p);//TODO check /* need check again (cancellation!): */
+    p = R_DT_qIv(p);//TODO check /* need check again (cancellation!): */
 
     double i, pi = 0;
 
     for (i = 0; i < size; ++i) {
-        pi += dbetabinom_raw(i, size, shape1, shape2, log_p);
+	// give_log = TRUE increase the range of the parameters
+        pi += exp(dbetabinom_raw(i, size, shape1, shape2, /*give_log*/ TRUE));
         if (pi > p) return i;
     }
     return size;

@@ -4,6 +4,7 @@ library(LHR)
 
 ## Small example
 #################
+{
 n0<-30
 maxPomited<- 0.01
 
@@ -49,15 +50,47 @@ xyplot(probF ~ fert, groups=years, data=f[f$years%%2 !=0,], ylab="Probability", 
 xyplot(probR0 ~ R0, data=R0, type="s", ylab="Probability", xlab="offsprings", xlim=c(-1,50), main="Fitness",
 	par.settings=list(par.main.text=list(cex=4), par.xlab.text=list(cex=3), par.ylab.text=list(cex=3)) , scales=list(cex=3), lwd=3)
 dev.off()
+}
 
 ## Explore parameter space
 ###########################n
-n0<- 2^(0:5) 	# mida de la població inicial
+n0<- 3^(0:3) 	# mida de la població inicial
 maxPomited<- 0.01
-nStrategies<- 5000
-
 setwd("../../../../doctorat/projectes/LHT/R")
 source("./libCreaEstrategiesLHT.r")
+
+## Environmental stochasticity
+envir<- data.frame(var=seq(0, 0.2, length=4))
+envirJA<- expand.grid(varJ=envir$var, varA=envir$var)
+
+## Seasonality scenarios
+season<- expand.grid(amplSeason=seq(0, 1, length=3), breedInterval=1:3, broods=(1:6)[seq(1, 6, length=3)]) ## breedInterval=2^(0:2)
+season<- season[season$broods * season$breedInterval < 12,] # remove combination which don't fit in one year
+season<- season[-which(season$broods == 1 | season$amplSeason == 0)[-1],] # remove combinations whith 1 brood (allways at the optimum)
+season$meanSeason<- 1 - season$amplSeason / 2
+
+alignCriterion<- data.frame(alignCriterion=c("bestFirst", "bestMean"), stringsAsFactors=FALSE)
+
+## regular sampling
+strategy<- CreaEstrategiesLambdaLliure(dimLength=15, constrains=TRUE, separa_B_sJ=TRUE, rangLambda=rangeLambda, roundB=TRUE) ##PERFER: arreglar constrains a libCreaEstrategiesLHT.r
+strategy<- strategy[strategy$lambda > min(ranges$lambda) & strategy$lambda < max(ranges$lambda),]
+
+simulation<- merge(strategy, data.frame(n0=n0))
+simulation<- merge(simulation, envirJA)
+simulation<- merge(simulation, season)
+simulation<- merge(simulation, alignCriterion)
+
+simulation<- with(simulation, data.frame(n0, survA=sA, var.survA=varJ, broods=broods, B=B, survJ=sJ, var.survJ=varJ, meanSeason=meanSeason, amplSeason=amplSeason, breedInterval=breedInterval, alignCriterion=alignCriterion, stringsAsFactors=FALSE))
+
+save.image("initialConditions.lambdaLliure.RData")
+
+result<- runCohortModel(simulation, maxPomited=0.01)
+x<- cbind(simulation, result)
+
+## Latin hypercub sampling
+nStrategies<- 5000
+
+
 strategy<- CreaEstrategiesHiperCub(nStrategies, rangLambda=c(1,1.2), roundB=TRUE) # Creates a set of strategies with constraints
 strategy$lifespan<- - 1 / log(strategy$sA)
 strategy<- strategy[-which(strategy$lifespan < strategy$alpha),]
@@ -70,27 +103,7 @@ strategy<- strategy[-which(strategy$lifespan < strategy$alpha),]
 #  $ b     : num  0.604 0.919 5.262 0.978 6.53 ... 	FERTILITY **mandatory
 #  $ alpha : int  3 4 4 3 2 3 2 2 1 4 ... 		YEAR OF FIRST BREEDING
  
-## Environmental stochasticity
-envir<- data.frame(var=seq(0.01, 0.2, length=5))
-envirJA<- expand.grid(varJ=envir$var, varA=envir$var)
 
-## Seasonality scenarios
-season<- expand.grid(amplSeason=seq(0.1, 1, by=0.2), breedInterval=2^(0:2), broods=1:6)
-season<- season[season$broods * season$breedInterval < 12,] # remove combination which don't fit in one year
-season<- season[-which(season$broods ==1)[-1],] # remove combinations whith 1 brood (allways at the optimum)
-season$meanSeason[season$amplSeason == seq(0.1, 1, by=0.2)[1]]<- .95
-season$meanSeason[season$amplSeason == seq(0.1, 1, by=0.2)[2]]<- .85
-season$meanSeason[season$amplSeason == seq(0.1, 1, by=0.2)[3]]<- .75
-season$meanSeason[season$amplSeason == seq(0.1, 1, by=0.2)[4]]<- .65
-season$meanSeason[season$amplSeason == seq(0.1, 1, by=0.2)[5]]<- .55
-
-# season<- expand.grid(meanSeason=c(.99, .95, .9, .8, .5), breedInterval=2^(0:2), broods=1:6)
-# season<- season[season$broods * season$breedInterval < 12,] # remove combination which don't fit in one year
-# season$amplSeason[season$meanSeason == .99]<- .02
-# season$amplSeason[season$meanSeason == .95]<- .1
-# season$amplSeason[season$meanSeason == .9]<- .2
-# season$amplSeason[season$meanSeason == .8]<- .4
-# season$amplSeason[season$meanSeason == .5]<- 1
 
 strategyName<- function(strategy, sep="\t"){
   name<- character()
@@ -197,9 +210,10 @@ save.image(file=paste("cohortSimu", Sys.time(),".RData", sep=""))
 ## Postproces
 ################
 ## Arrays to data frames
-setwd("../../../../doctorat/projectes/LHT/R")
-load("cohortSimu2012-08-18 15:26:56.RData")
 
+# setwd("../../../../doctorat/projectes/LHT/R")
+# load("cohortSimu2012-08-18 15:26:56.RData")
+{
 Gdemo<- as.data.frame(Gdemo)
 Gdemo<- reshape(Gdemo, direction="long", varying=1:ncol(Gdemo))
 names(Gdemo)[1]<- "n0"
@@ -244,6 +258,7 @@ save(GdemoLH, file="Gdemo.R")
 save(GseasonBestFirstLH, file="GseasonBestFirst.R")
 save(GseasonBestMeanLH, file="GseasonBestMean.R")
 save(GenvJLH, file="GenvJ.R")
+}
 
 #####################
 ## Explore results ##

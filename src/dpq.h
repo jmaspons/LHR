@@ -20,7 +20,9 @@
 
 #define R_DT_val(x)     (lower_tail ? R_D_val(x)  : R_D_Clog(x))
 #define R_DT_Cval(x)    (lower_tail ? R_D_Clog(x) : R_D_val(x))
-
+//#define R_DT_qIv(p)      R_D_Lval(R_D_qIv(p))		 /*  p  in qF ! */
+#define R_DT_qIv(p)	(log_p ? (lower_tail ? exp(p) : - expm1(p)) \
+			       : R_D_Lval(p))
 /*Boundaries*/
 #define R_Q_P01_boundaries(p, _LEFT_, _RIGHT_)          \
     if (log_p) {                                        \
@@ -48,10 +50,6 @@
 
 /* Code from R core dpq.h */
 
-/*#define R_DT_qIv(p)	R_D_Lval(R_D_qIv(p))		 *  p  in qF ! */
-#define R_DT_qIv(p)	(log_p ? (lower_tail ? exp(p) : - expm1(p)) \
-			       : R_D_Lval(p))
-
 /* additions for density functions (C.Loader) */
 #define R_D_fexp(f,x)     (give_log ? -0.5*log(f)+(x) : exp(x)/sqrt(f))
 #define R_D_forceint(x)   floor((x) + 0.5)
@@ -67,5 +65,4 @@
    }
 
 /* Extras */
-// #Rmpfr::pochMpfr()?
 #define pochhammer(x, n)	gammafn(x+n)/gammafn(x)
