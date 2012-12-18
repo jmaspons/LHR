@@ -32,15 +32,13 @@ double dbetabinom(double x, double size, double shape1, double shape2, int give_
 double pbetabinom(double q, double size, double shape1, double shape2, int lower_tail, int log_p);
 double qbetabinom(double p, double size, double shape1, double shape2, int lower_tail, int log_p);
 double rbetabinom(double size, double shape1, double shape2);
-// double mbetabinom(double order, double size, double shape1, double shape2, int give_log);
-// double levbetabinom(double limit, double size, double shape1, double shape2, double order, int give_log);
 
 double dbetanbinom(double x, double size, double shape1, double shape2, int give_log);
 double pbetanbinom(double q, double size, double shape1, double shape2, int lower_tail, int log_p);
 double qbetanbinom(double p, double size, double shape1, double shape2, int lower_tail, int log_p);
 double rbetanbinom(double size, double shape1, double shape2);
-// double mbetanbinom(double order, double size, double shape1, double shape2, int give_log);
-// double levbetanbinom(double limit, double size, double shape1, double shape2, double order, int give_log);
+
+double * fbeta(double mean, double var, double shape[2]);
 
 /* Definitions for the table linking the first group of functions to
  * the second one. Table found in names.c */
