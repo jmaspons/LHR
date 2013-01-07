@@ -1,6 +1,9 @@
 
 
 library(LHR)
+## Test cohortModel.c
+######################
+x<- cohortModel(5, .4, .1, .05, 3, 14, .3, .02, c(1,.8,.5))
 
 ## Small example
 #################

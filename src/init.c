@@ -5,10 +5,12 @@
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
 #include "probability.h"
+#include "cohortModel.h"
 
 static const R_ExternalMethodDef ExternalEntries[] = {
     {"actuar_do_random", (DL_FUNC) &actuar_do_random, -1},
     {"actuar_do_dpq", (DL_FUNC) &actuar_do_dpq, -1},
+    {"cohortModel", (DL_FUNC) &cohortModel, -1},
     {NULL, NULL, 0}
 };
 

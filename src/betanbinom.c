@@ -123,9 +123,9 @@ double qbetanbinom(double p, double size, double shape1, double shape2, int lowe
     if (shape1 <= 0 || shape2 <= 0|| size < 0) return R_NaN;
 
     R_Q_P01_boundaries(p, 0, R_PosInf);
-    
+
     p = R_DT_qIv(p); //TODO check /* need check again (cancellation!): */
-    
+
     double pi = 0, i = 0;
 
     while (pi < p) {

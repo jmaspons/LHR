@@ -1,5 +1,10 @@
 ## COHORT DEMOGRAPHIC MODEL
-#############################################################
+############################
+cohortModel<- function(n0, survA, varSurvA, limit, broods, B, survJ, varSurvJ, season){
+#   TODO check inputs
+  .External("cohortModel", as.integer(n0), as.numeric(survA), as.numeric(varSurvA), as.numeric(limit), as.integer(broods), as.integer(B), as.numeric(survJ), as.numeric(varSurvJ), as.numeric(season))
+}
+
 ## P(years survived) = anys viscuts pel conjunt de la població adulta (de moment assumim sa constant) -> matriu de lefkovitch?
 # This represents the number of failures which occur in a sequence of Bernoulli trials before a target number of successes is reached. [?rnbinom]
 # anys de vida fertil * N0 = suma(rnbinom() 1:N0) => size=N0 Convolució de binomials negatives [http://en.wikipedia.org/wiki/List_of_convolutions_of_probability_distributions] [http://www.usna.edu/MathDept/.courses/pre97/sm230/sums.htm : Sums of negative binomials with the same p have a negative binomial distribution with number of successes equal to the total of each number of successes.]
@@ -55,7 +60,7 @@ fertdist<- function(years, broods=1, clutch, survJ, B, var.survJ, seasonalPatter
 	  clutch[1:mod]<- clutch[1:mod] + 1
 	}
       }
-      
+
       size<- i * clutch
 
       if (missing(seasonalPattern)){
