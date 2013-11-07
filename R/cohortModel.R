@@ -2,7 +2,17 @@
 ############################
 cohortModel<- function(n0, survA, varSurvA, limit, broods, B, survJ, varSurvJ, season){
 #   TODO check inputs
-  .External("cohortModel", as.integer(n0), as.numeric(survA), as.numeric(varSurvA), as.numeric(limit), as.integer(broods), as.integer(B), as.numeric(survJ), as.numeric(varSurvJ), as.numeric(season))
+  if (length(season) != broods) exit()
+  .External("cohortModel", as.integer(n0), as.numeric(survA), as.numeric(var.survA), as.numeric(limit), as.integer(broods), as.integer(B), as.numeric(survJ), as.numeric(var.survJ), as.numeric(seasonAmpl), as.numeric(breedInterval))
+}
+
+exploreCohortModel<- function(simulation){
+#   TODO check inputs
+  result<- with(simulation, .External("exploreCohortModel", as.integer(n0), as.numeric(survA), as.numeric(var.survA), as.numeric(limit), as.integer(broods), as.integer(B), as.numeric(survJ), as.numeric(var.survJ), as.numeric(amplSeason), as.numeric(breedInterval)))
+  result<- as.data.frame(result)
+  colnames(result)<- c("mean", "var", "G", "Preplace", "error")
+
+  return (result)
 }
 
 ## P(years survived) = anys viscuts pel conjunt de la població adulta (de moment assumim sa constant) -> matriu de lefkovitch?

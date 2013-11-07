@@ -80,7 +80,7 @@ double attribute_hidden pbetanbinom_raw(double x, double size, double shape1, do
     double ans = 0;
     int i;
     for (i = 0; i <= x; ++i) {
-	// give_log = TRUE increase the range of the parameters
+        // give_log = TRUE increase the range of the parameters
         ans += exp(dbetanbinom_raw(i, size, shape1, shape2, /*give_log*/ TRUE));
     }
     return ans;
@@ -129,9 +129,10 @@ double qbetanbinom(double p, double size, double shape1, double shape2, int lowe
     double pi = 0, i = 0;
 
     while (pi < p) {
-	// give_log = TRUE increase the range of the parameters
+        // give_log = TRUE increase the range of the parameters
         pi += exp(dbetanbinom_raw(i, size, shape1, shape2, /*give_log*/ TRUE));
         i++;
+        R_CheckUserInterrupt(); //TODO remove after tests: small shape1 < 0.2 parameter take very long time 
     }
 
     return i;

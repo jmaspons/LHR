@@ -47,7 +47,7 @@ double attribute_hidden dbetabinom_raw(double x, double size, double shape1, dou
     } else {
         //FIXME for choose(x,y) => max x = 1030 if y = x/2 & x>y
         //FIXME for beta(x,y) => max(x,y) = 509
-       // TODO #include  'mpfr.h'
+        // TODO #include  'mpfr.h'
         return (choose(size,x) * beta(x+shape1, size-x+shape2) / beta(shape1, shape2));
     }
 }
@@ -81,7 +81,7 @@ double attribute_hidden pbetabinom_raw(double x, double size, double shape1, dou
     double ans = 0;
     int i;
     for (i = 0; i <= x; ++i) {
-	// give_log = TRUE increase the range of the parameters
+        // give_log = TRUE increase the range of the parameters
         ans += exp(dbetabinom_raw(i, size, shape1, shape2, /*give_log*/ TRUE));
     }
     return ans;
@@ -135,7 +135,7 @@ double qbetabinom(double p, double size, double shape1, double shape2, int lower
     double i, pi = 0;
 
     for (i = 0; i < size; ++i) {
-	// give_log = TRUE increase the range of the parameters
+        // give_log = TRUE increase the range of the parameters
         pi += exp(dbetabinom_raw(i, size, shape1, shape2, /*give_log*/ TRUE));
         if (pi > p) return i;
     }

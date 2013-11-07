@@ -58,7 +58,7 @@ dev.off()
 ## Explore parameter space
 ###########################n
 n0<- 3^(0:3) 	# mida de la població inicial
-maxPomited<- 0.01
+maxPomited<- 0.05
 setwd("../../../../doctorat/projectes/LHT/R")
 source("./libCreaEstrategiesLHT.r")
 
@@ -75,15 +75,102 @@ season$meanSeason<- 1 - season$amplSeason / 2
 alignCriterion<- data.frame(alignCriterion=c("bestFirst", "bestMean"), stringsAsFactors=FALSE)
 
 ## regular sampling
-strategy<- CreaEstrategiesLambdaLliure(dimLength=15, constrains=TRUE, separa_B_sJ=TRUE, rangLambda=rangeLambda, roundB=TRUE) ##PERFER: arreglar constrains a libCreaEstrategiesLHT.r
-strategy<- strategy[strategy$lambda > min(ranges$lambda) & strategy$lambda < max(ranges$lambda),]
+strategy<- CreaEstrategiesLambdaLliure(dimLength=15, constrains=TRUE, separa_B_sJ=TRUE, roundB=TRUE) ##PERFER: arreglar constrains a libCreaEstrategiesLHT.r
+# strategy<- strategy[strategy$lambda > min(ranges$lambda) & strategy$lambda < max(ranges$lambda),]
 
 simulation<- merge(strategy, data.frame(n0=n0))
 simulation<- merge(simulation, envirJA)
-simulation<- merge(simulation, season)
-simulation<- merge(simulation, alignCriterion)
 
-simulation<- with(simulation, data.frame(n0, survA=sA, var.survA=varJ, broods=broods, B=B, survJ=sJ, var.survJ=varJ, meanSeason=meanSeason, amplSeason=amplSeason, breedInterval=breedInterval, alignCriterion=alignCriterion, stringsAsFactors=FALSE))
+## shape1 < .5 take many time qbetanbinom(limit, shape1, shape2, lower.tail=TRUE)
+betaPar<- fbeta(simulation$sA, simulation$varA)
+x<- betaPar$shape1 < 1
+p1000<- pbetanbinom(1000, simulation$n0,  betaPar[[1]], betaPar[[2]])
+p10000<- pbetanbinom(10000, simulation$n0,  betaPar[[1]], betaPar[[2]])
+color<- rainbow(nrow(betaPar),  start=0, end=0.7)
+
+color[p10000 < .95]<- "red"
+color[p10000 >= .95]<- "green"
+
+library(rgl)
+plot3d(simulation$sA, simulation$varA, p10000, col=color)
+
+
+a<- b<- seq(0.01, 200, length=100)
+a<- seq(0.01, 5, length=50)
+ab<- expand.grid(a=a, b=b)
+# p100ab<- pbetanbinom(100, 1, ab$a, ab$b)
+p1000ab<- pbetanbinom(1000, 1,  ab$a, ab$b)
+p10000ab<- pbetanbinom(10000, 1,  ab$a, ab$b)
+ab<- data.frame(ab, p1000ab, p10000ab)
+ab<- ab[order(ab$p10000ab),]
+color<- rainbow(nrow(ab),  start=0, end=0.7)
+color<- topo.colors(nrow(ab))
+color[ab$p10000ab < .95]<- "red"
+color[ab$p10000ab >= .95]<- "green"
+
+plot(ab[,1:2], col=color)
+
+levelplot(p100ab ~ a * b, data=ab)
+levelplot(p10000ab ~ a * b, data=ab)
+levelplot(p10000ab - p1000ab ~ a * b, data=ab)
+
+library(scatterplot3d)
+scatterplot3d(ab$b, ab$a, ab$p1000ab,color=color, angle=-100)
+
+library(rgl)
+plot3d(ab[, -3], col=color)
+
+ab<- expand.grid(a=a, b=2)
+
+
+maxX<- 10000
+dev.new()
+plot(expand.grid(c(1, maxX), c(0.2, 1)), type="n")
+
+for (i in 1:nrow(ab)){
+  if (is.finite(ab[[1]][i])){
+#     if (x[i]) color<- "red" else color<- 1
+    d<- exp(dbetanbinom(0:maxX, 1, ab[[1]][i], ab[[2]][i], log=TRUE))
+    points(0:maxX, cumsum(d), col=color[i], type="s")
+  }
+  cat(i, ab[[1]][i], ab[[2]][i], "P(x=", maxX, ")=", sum(d), "\n")
+}
+
+
+sA<-seq(.28, .95, length=100)
+varSa<- seq(0, .20, length=100)
+s<- expand.grid(mean=sA, var=varSa)
+betaPar<- fbeta(s$mean, s$var)
+
+x<- betaPar$shape1 < 0.5
+plot(s)
+points(s[x,], col="red", pch=16)
+points(s[is.na(x),], pch=16)
+p100par<- pbetanbinom(100, 1, betaPar$shape1, betaPar$shape2)
+p1000par<- pbetanbinom(1000, 1, betaPar$shape1, betaPar$shape2)
+p10000par<- pbetanbinom(10000, 1, betaPar$shape1, betaPar$shape2)
+
+levelplot(p100 ~ s$mean * s$var)
+levelplot(p1000 ~ s$mean * s$var)
+levelplot(p1000 - p100 ~ s$mean * s$var)
+betaPar<- betaPar[order(betaPar[[1]], betaPar[[2]]),]
+color<- topo.colors(nrow(betaPar))
+
+plot(expand.grid(c(1, 100), c(0.5, 1)), type="n")
+
+for (i in 1:nrow(betaPar)){
+  if (is.finite(betaPar[[1]][i])){
+#     if (x[i]) color<- "red" else color<- 1
+    points(0:100, cumsum(exp(dbetanbinom(0:100, 1, betaPar[[1]][i], betaPar[[2]][i], log=TRUE))), col=color[i], type="s")
+  }
+  cat(i, betaPar[[1]][i], betaPar[[2]][i], "\n")
+}
+
+
+simulation<- merge(simulation, season)
+# simulation<- merge(simulation, alignCriterion)
+
+simulation<- with(simulation, data.frame(n0, survA=sA, var.survA=varA, broods=broods, B=B, survJ=sJ, var.survJ=varJ, amplSeason=amplSeason, breedInterval=breedInterval, stringsAsFactors=FALSE))
 
 save.image("initialConditions.lambdaLliure.RData")
 

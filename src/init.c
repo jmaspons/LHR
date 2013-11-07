@@ -11,6 +11,8 @@ static const R_ExternalMethodDef ExternalEntries[] = {
     {"actuar_do_random", (DL_FUNC) &actuar_do_random, -1},
     {"actuar_do_dpq", (DL_FUNC) &actuar_do_dpq, -1},
     {"cohortModel", (DL_FUNC) &cohortModel, -1},
+    {"survdistR", (DL_FUNC) &survdistR, -1},
+    {"exploreCohortModel", (DL_FUNC) &exploreCohortModel, -1},
     {NULL, NULL, 0}
 };
 

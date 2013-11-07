@@ -3,4 +3,5 @@ src/CMakeFiles
 Makefile
 src/Makefile
 src/tmp
+src/test*
 .*\.kdev.+
