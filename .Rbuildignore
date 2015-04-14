@@ -5,3 +5,5 @@ src/Makefile
 src/tmp
 src/test*
 .*\.kdev.+
+^.*\.Rproj$
+^\.Rproj\.user$

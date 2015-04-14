@@ -43,7 +43,7 @@ int survdist(int n0, double surv, double varSurv, double limit, double ** pSurv)
 #endif
 
     if (surv < 0 || surv > 1 || n0 < 0 || varSurv < 0 || limit < 0) {
-REprintf("invalid parameters.");
+        REprintf("invalid parameters.");
 
         return 0;
     }
@@ -84,7 +84,7 @@ REprintf("invalid parameters.");
         if (limit < 1 && limit > 0) { // limit = quantile omited
             double minShape1 = 1, maxX = 15000; // it gave huge nsurv with limit = 0.05
 
-            if (shape[0] < minShape1 && pbetanbinom(maxX, n0, shape[0], shape[1], /*l._t.*/ FALSE, /*log_p*/ FALSE) > limit){
+            if (shape[0] < minShape1 && pbetanbinom(maxX, n0, shape[0], shape[1], /*l._t.*/ FALSE, /*log_p*/ FALSE) > limit) {
                 * pSurv = NULL;
                 return -1;
             }

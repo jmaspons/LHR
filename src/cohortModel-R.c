@@ -156,7 +156,7 @@ SEXP exploreCohortModel(SEXP args)
 
     resPtr = REAL(res);
 
-Rprintf("case 1 / %i\tn0=%i, sA=%.2f, varSa=%.2f  ### B=%i, sJ=%.2F, varSj=%.2f, ampl=%.2f\n", nrow, n0[0], survA[0], varSurvA[0], B[0], survJ[0], varSurvJ[0], seasonAmpl[0]);
+    Rprintf("case 1 / %i\tn0=%i, sA=%.2f, varSa=%.2f  ### B=%i, sJ=%.2F, varSj=%.2f, ampl=%.2f\n", nrow, n0[0], survA[0], varSurvA[0], B[0], survJ[0], varSurvJ[0], seasonAmpl[0]);
     nsurv = survdist(* n0, * survA, * varSurvA, * limit, & pSurv);
 // Rprintf("Survdist done. Nsurv=%i\n", nsurv);
     if (nsurv > 0) {
@@ -170,9 +170,9 @@ Rprintf("case 1 / %i\tn0=%i, sA=%.2f, varSa=%.2f  ### B=%i, sJ=%.2F, varSj=%.2f,
         }
 
         nfit = fertdist(pSurv, nsurv, * broods, * B, * survJ, * varSurvJ, seasonPattern, & fitdist);
-
+// Rprintf("Fertdist done. Nfit=%i\n", nfit);
         if (nfit > 0) {
-            if (interannual == 1){
+            if (interannual == 1) {
                 resPtr[4 * nrow] = - * broods;
             } else {
                 resPtr[4 * nrow] = 0;
@@ -204,7 +204,7 @@ Rprintf("case 1 / %i\tn0=%i, sA=%.2f, varSa=%.2f  ### B=%i, sJ=%.2F, varSj=%.2f,
 
     if (nfit == 0) {
         fitdist = NULL;
-        for (j = 0; j < 4; j++){
+        for (j = 0; j < 4; j++) {
             resPtr[j * nrow] = R_NaReal;
         }
         resPtr[4 * nrow] = nsurv > 0 ? 2 : (nsurv == 0? 1 : 1.5); // ERROR 1: survdist, 2: fitdist, +.5: maxYear >15000, -broods: interannual breeding pattern
@@ -213,13 +213,13 @@ Rprintf("case 1 / %i\tn0=%i, sA=%.2f, varSa=%.2f  ### B=%i, sJ=%.2F, varSj=%.2f,
     for (i = 1; i < nrow; i++) {
         R_CheckUserInterrupt();
 
-Rprintf("case %i / %i\tn0=%i, sA=%.2f, varSa=%.2f  ### B=%i, sJ=%.2F, varSj=%.2f, ampl=%.2f\n", i+1, nrow,  n0[i], survA[i], varSurvA[i], B[i], survJ[i], varSurvJ[i], seasonAmpl[i]);
+        Rprintf("case %i / %i\tn0=%i, sA=%.2f, varSa=%.2f  ### B=%i, sJ=%.2F, varSj=%.2f, ampl=%.2f\n", i+1, nrow,  n0[i], survA[i], varSurvA[i], B[i], survJ[i], varSurvJ[i], seasonAmpl[i]);
 
         if (n0[i] != n0[i-1] || survA[i] != survA[i-1] || varSurvA[i] != varSurvA[i-1] || limit[i] != limit[i-1]) {
             Free(pSurv);
             nsurv = survdist(n0[i], survA[i], varSurvA[i], limit[i], & pSurv);
         }
-Rprintf("\tnsurv=%i", nsurv);
+        Rprintf("\tnsurv=%i", nsurv);
         if (nsurv > 0) {
             Free(fitdist);
             interannual = 0;
@@ -235,9 +235,9 @@ Rprintf("\tnsurv=%i", nsurv);
             }
 
             nfit = fertdist(pSurv, nsurv, broods[i], B[i], survJ[i], varSurvJ[i], seasonPattern, & fitdist);
-Rprintf(", nfit=%i", nfit);
+            Rprintf(", nfit=%i", nfit);
             if (nfit > 0) {
-                if (interannual == 1){
+                if (interannual == 1) {
                     resPtr[4 * nrow + i] = -broods[i];
                 } else {
                     resPtr[4 * nrow + i] = 0;
@@ -263,18 +263,18 @@ Rprintf(", nfit=%i", nfit);
 
         } else {
             nfit = 0;
-Rprintf(", nfit=%i", nfit);
+            Rprintf(", nfit=%i", nfit);
         }
 
         if (nfit == 0) {
-            for (j = 0; j < 4; j++){
+            for (j = 0; j < 4; j++) {
                 resPtr[j * nrow + i] = R_NaReal;
             }
             resPtr[4 * nrow + i] = nsurv > 0 ? 2 : (nsurv == 0? 1 : 1.5); // ERROR 1: survdist, 2: fitdist, +.5: maxYear >15000, -broods: interannual breeding pattern
         }
-Rprintf("\tmean=%.2f, var=%.2f, G=%.2f, Prep=%.2f, error=%.0f\n", resPtr[0 * nrow + i], resPtr[1 * nrow + i], resPtr[2 * nrow + i], resPtr[3 * nrow + i], resPtr[4 * nrow + i]);
+        Rprintf("\tmean=%.2f, var=%.2f, G=%.2f, Prep=%.2f, error=%.0f\n", resPtr[0 * nrow + i], resPtr[1 * nrow + i], resPtr[2 * nrow + i], resPtr[3 * nrow + i], resPtr[4 * nrow + i]);
     }
-Rprintf("Simulation done!\n");
+    Rprintf("Simulation done!\n");
     Free(seasonPattern);
     Free(pSurv);
     Free(fitdist);

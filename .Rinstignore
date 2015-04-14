@@ -1,0 +1,5 @@
+CMake.*
+src/CMake.*
+Makefile
+src/Makefile
+src/test*
