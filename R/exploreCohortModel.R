@@ -1,3 +1,4 @@
+## IMPLEMENTED IN C: USE exploreCohortModel() INSTEAD
 # simulation<- data.frame(n0, survA, var.survA, broods, B, survJ, var.survJ, meanSeason, amplSeason, breedInterval, alignCriterion=c("bestFirst", "bestMean"))
 runCohortModel<- function(simulation, maxPomited=0.05, verbose=FALSE){
   ans<- data.frame(mean=numeric(nrow(simulation)), var=numeric(nrow(simulation)), G=numeric(nrow(simulation)), Preplacement=numeric(nrow(simulation)), error=logical(nrow(simulation)))

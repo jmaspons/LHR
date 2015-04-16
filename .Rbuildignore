@@ -1,9 +1,10 @@
 CMakeFiles
-src/CMakeFiles
 Makefile
+build.*
+src/CMakeFiles
 src/Makefile
 src/tmp
-src/test*
+src/test.*
 .*\.kdev.+
 ^.*\.Rproj$
 ^\.Rproj\.user$

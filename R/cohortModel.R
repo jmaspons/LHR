@@ -2,7 +2,7 @@
 ############################
 cohortModel<- function(n0, survA, varSurvA, limit, broods, B, survJ, varSurvJ, season){
 #   TODO check inputs
-  if (length(season) != broods) exit()
+  if (length(season) != broods) stop()
   .External("cohortModel", as.integer(n0), as.numeric(survA), as.numeric(var.survA), as.numeric(limit), as.integer(broods), as.integer(B), as.numeric(survJ), as.numeric(var.survJ), as.numeric(seasonAmpl), as.numeric(breedInterval))
 }
 
@@ -55,41 +55,40 @@ fertdist<- function(years, broods=1, clutch, survJ, B, var.survJ, seasonalPatter
      
     if (meanSeason == 1 & amplSeason == 0 | missing(seasonalPattern) & missing(meanSeason) & missing(amplSeason) & missing(breedInterval)){
       if (missing(var.survJ)){
-	prob<- dbinom(0:size, size=size, prob=survJ)
+	      prob<- dbinom(0:size, size=size, prob=survJ)
       }else{
-	parBeta<- fbeta(survJ, var.survJ)
-	prob<- exp(dbetabinom(0:size, size=size, parBeta[[1]], parBeta[[2]], log=TRUE))
+      	parBeta<- fbeta(survJ, var.survJ)
+      	prob<- exp(dbetabinom(0:size, size=size, parBeta[[1]], parBeta[[2]], log=TRUE))
       }
 
     }else{ # seasonality
       if (missing(clutch)){
-	clutch<- rep(B %/% broods, broods)
-	mod<- B %% broods
-	
-	if (mod > 0){
-	  clutch[1:mod]<- clutch[1:mod] + 1
-	}
+	      clutch<- rep(B %/% broods, broods)
+      	mod<- B %% broods
+      	
+      	if (mod > 0){
+      	  clutch[1:mod]<- clutch[1:mod] + 1
+      	}
       }
 
       size<- i * clutch
 
       if (missing(seasonalPattern)){
-	seasonalPattern<- par.seasonality(broods=broods, breedInterval=breedInterval, mean=meanSeason, ampl=amplSeason, criterion=alignCriterion)
+	      seasonalPattern<- par.seasonality(broods=broods, breedInterval=breedInterval, mean=meanSeason, ampl=amplSeason, criterion=alignCriterion)
       }
       
       prob<- matrix(0, nrow=max(size) + 1, ncol=broods, dimnames=list(0:max(size), NULL))
       
       if (missing(var.survJ)){
-	for (j in 1:broods){
-	  prob[1:(size[j] + 1),j]<- dbinom(0:size[j], size=size[j], prob=survJ * seasonalPattern[j])
-	}
-	
+      	for (j in 1:broods){
+      	  prob[1:(size[j] + 1),j]<- dbinom(0:size[j], size=size[j], prob=survJ * seasonalPattern[j])
+      	}
       }else{
-	parBeta<- fbeta(survJ * seasonalPattern, var.survJ)
-
-	for (j in 1:broods){
-	  prob[1:(size[j] + 1),j]<- exp(dbetabinom(0:size[j], size=size[j], parBeta[[1]][j], parBeta[[2]][j], log=TRUE))
-	}
+      	parBeta<- fbeta(survJ * seasonalPattern, var.survJ)
+      
+      	for (j in 1:broods){
+      	  prob[1:(size[j] + 1),j]<- exp(dbetabinom(0:size[j], size=size[j], parBeta[[1]][j], parBeta[[2]][j], log=TRUE))
+      	}
       }
       
       prob<- rowMeans(prob)
