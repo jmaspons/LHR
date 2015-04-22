@@ -20,20 +20,19 @@ exploreCohortModel<- function(simulation){
 # anys de vida fertil * N0 = suma(rnbinom() 1:N0) => size=N0 Convolució de binomials negatives [http://en.wikipedia.org/wiki/List_of_convolutions_of_probability_distributions] [http://www.usna.edu/MathDept/.courses/pre97/sm230/sums.htm : Sums of negative binomials with the same p have a negative binomial distribution with number of successes equal to the total of each number of successes.]
 # Si size=1 => rnbinom = rexp
 
-survdist<- function(n0, survA, var.survA, maxPomited=0.01, max.years)
-{
+survdist<- function(n0, survA, var.survA, maxPomitted=0.01, max.years){
   if (missing(var.survA)){
     if (missing(max.years))
-      max.years<- qnbinom(maxPomited, size=n0, prob=survA, lower.tail=FALSE)
+      max.years<- qnbinom(maxPomitted, size=n0, prob=survA, lower.tail=FALSE)
     prob<- dnbinom(0:max.years, size=n0, prob=1-survA)
   }else{ # var.survA
     parBeta<- fbeta(survA, var.survA)
     if (missing(max.years)){
-      max.years<- qbetanbinom(maxPomited, size=n0, parBeta[[1]], parBeta[[2]], lower.tail=FALSE)
+      max.years<- qbetanbinom(maxPomitted, size=n0, parBeta[[1]], parBeta[[2]], lower.tail=FALSE)
     }
     prob<- exp(dbetanbinom(0:max.years, size=n0, parBeta[[1]], parBeta[[2]], log=TRUE))
   }
-  prob<- prob / sum(prob, rm.na=TRUE) ## Correct for P omited or lifespan. Sum(prob) = 1
+  prob<- prob / sum(prob, rm.na=TRUE) ## Correct for P omitted or lifespan. Sum(prob) = 1
   ans<- data.frame(years=0:max.years, probS=prob)
 
   return (ans)
@@ -114,7 +113,7 @@ fitnessdist<- function(surv, fert, n0)
   if (sum(is.na(ans$probR0))){
     ans<- ans[!is.na(ans$probS),]
     error<- TRUE
-    warning("Omited some years from 'survdist()' because probabilities are NaN. Omited probability will be larger than specified.")
+    warning("omitted some years from 'survdist()' because probabilities are NaN. omitted probability will be larger than specified.")
   }else error<- FALSE
 
   ans<- by(ans$probR0, ans$fert, sum)
@@ -128,7 +127,7 @@ fitnessdist<- function(surv, fert, n0)
 
 ## All in one
 # Wrapper to run the complete model in on call
-fitnessdistAIO<- function(n0, survA, var.survA, broods, clutch, survJ, var.survJ, maxPomited, max.years)
+fitnessdistAIO<- function(n0, survA, var.survA, broods, clutch, survJ, var.survJ, maxPomitted, max.years)
 {
   parametersSurv<- list(n0=n0, survA=survA)
   #Check for missing parameters
@@ -140,9 +139,9 @@ fitnessdistAIO<- function(n0, survA, var.survA, broods, clutch, survJ, var.survJ
     names(parametersSurv)[n+1]<- "var.survA"
     n<- n+1
   }
-  if (!missing(maxPomited)){
-    parametersSurv[[n + 1]]<- maxPomited
-    names(parametersSurv)[n+1]<- "maxPomited"
+  if (!missing(maxPomitted)){
+    parametersSurv[[n + 1]]<- maxPomitted
+    names(parametersSurv)[n+1]<- "maxPomitted"
     n<- n+1
   }
   if (!missing(max.years)){
@@ -256,8 +255,4 @@ espG<- function(x){
 # #################################################
 # ## Prova efecte de mostreig / disperció del risc
 # 
-# ## Funcions
-# G<- function(mu, v){
-#   return (mu - 2 * v / mu)
-# }
-# 
+

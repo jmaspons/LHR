@@ -9,7 +9,7 @@ x<- cohortModel(5, .4, .1, .05, 3, 14, .3, .02, c(1,.8,.5))
 #################
 {
 n0<-30
-maxPomited<- 0.01
+maxPomitted<- 0.01
 
 survA<- 0.7	# supervivència dels adults
 var.survA<- 0.05	# provabilitat de que un ou arribi a adult [Surv Egg->Adult]
@@ -22,22 +22,22 @@ meanSeason<- .8
 amplSeason<- .4
 breedInterval<- 2
 
-s<- survdist(n0=n0, survA, maxPomited=maxPomited)
+s<- survdist(n0=n0, survA, maxPomitted=maxPomitted)
 clutch2<- rep(clutch %/% broods, broods)
 
 if (clutch %% broods > 0) clutch2[1:(clutch %% broods)]<- clutch2[1:(clutch %% broods)] + 1
 
 f<- fertdist(s, broods, clutch2, survJ, meanSeason=meanSeason, amplSeason=amplSeason, breedInterval=breedInterval)
 R0<- fitnessdist(s, f, n0[1])
-R02<- fitnessdistAIO(n0[1], survA, var.survA, broods=broods, clutch=clutch, survJ=survJ, var.survJ=var.survJ, maxPomited=maxPomited)
+R02<- fitnessdistAIO(n0[1], survA, var.survA, broods=broods, clutch=clutch, survJ=survJ, var.survJ=var.survJ, maxPomitted=maxPomitted)
 
-s<- survdist(n0=n0, survA, var.survA=var.survA, maxPomited=maxPomited)
+s<- survdist(n0=n0, survA, var.survA=var.survA, maxPomitted=maxPomitted)
 clutch<- c(3,2)
 f<- fertdist(s, broods, clutch, survJ, var.survJ=var.survJ, meanSeason=meanSeason, amplSeason=amplSeason, breedInterval=breedInterval)
 R0<- fitnessdist(s, f, n0[1])
-R02<- fitnessdistAIO(n0[1], survA, var.survA, broods=broods, clutch=clutch, survJ=survJ, var.survJ=var.survJ, maxPomited=maxPomited)
+R02<- fitnessdistAIO(n0[1], survA, var.survA, broods=broods, clutch=clutch, survJ=survJ, var.survJ=var.survJ, maxPomitted=maxPomitted)
 
-s<- survdist(n0=n0, survA, maxPomited=maxPomited)
+s<- survdist(n0=n0, survA, maxPomitted=maxPomitted)
 f<- fertdist(s, broods, clutch, survJ)
 R0<- fitnessdist(s, f, n0)
 
@@ -58,7 +58,7 @@ dev.off()
 ## Explore parameter space
 ###########################n
 n0<- 3^(0:3) 	# mida de la població inicial
-maxPomited<- 0.05
+maxPomitted<- 0.05
 setwd("../../../../doctorat/projectes/LHT/R")
 source("./libCreaEstrategiesLHT.r")
 
@@ -175,7 +175,7 @@ simulation<- with(simulation, data.frame(n0, survA=sA, var.survA=varA, broods=br
 simulation<- simulation[order(simulation$n0, simulation$survA, simulation$var.survA),]
 save.image("initialConditions.lambdaLliure-1.RData")
 
-result<- runCohortModel(simulation, maxPomited=0.01)
+result<- runCohortModel(simulation, maxPomitted=0.01)
 x<- cbind(simulation, result)
 
 ## Latin hypercub sampling
@@ -525,7 +525,7 @@ x<- which(strategy$lambda > 1 & strategy$lambda < 1.1)
 
 par(mfrow=c(2,2))
 for (i in 1:4){
-  plot(propietatsDistri[x,3,i] ~ strategy$sA[x], main=paste("n0=", dimnames(propietatsDistri)$n0[i]), ylab="G = mu - 2 var/mu", xlab="Sa")
+  plot(propietatsDistri[x,3,i] ~ strategy$sA[x], main=paste("n0=", dimnames(propietatsDistri)$n0[i]), ylab="G = mu - var/(2*mu)", xlab="Sa")
 }
 
 library(rgl)

@@ -1,15 +1,16 @@
 ##TODO: check ghyper {SuppDists} for documentation pattern
-# s: summary functions to calculate mean and var from the parameters of the distribution
-# f: find the parameters of the distribution which give the desired mean and var
+# s* summary functions return the mean and variance of the probability distribution
+# f* find functions return the parameters of the probability distribution for the disired mean and var
+
 ## Beta distribution
 sbeta<- function(shape1, shape2){
   mean<- shape1 / (shape1 + shape2)
   var<- shape1 * shape2 / ((shape1 + shape2)^2 * (shape1 + shape2 + 1))
   
   if (shape1 < 0 || shape2 < 0){
-    mean[which(shape1 < 0 | shape2 < 0)]<- NaN
-    var[which(is.na(mean))]<- NaN
-    warning("NaNs produced: parameters must be > 0")
+  	mean[which(shape1 < 0 | shape2 < 0)]<- NaN
+  	var[which(is.na(mean))]<- NaN
+  	warning("NaNs produced: parameters must be > 0")
   }
   
   return (list(mean=mean, var=var))
@@ -24,15 +25,15 @@ fbeta<- function(mean, var){
   shape1[which(shape1 <= 0 | shape2 <= 0)]<- NaN
   
   if (mean < 0 || mean > 1){
-    shape1[which(mean < 0 | mean > 1)]<- NaN
-    warning("Mean parameter must be between 0 and 1")
+  	shape1[which(mean < 0 | mean > 1)]<- NaN
+  	warning("Mean parameter must be between 0 and 1")
   }
   
   shape2[which(is.na(shape1))]<- NaN
       
   if (any(is.nan(shape1)))
-    warning("NaNs produced (parameters out of domain)")
-  
+  	warning("NaNs produced (parameters out of domain)")
+
   return (data.frame(shape1, shape2))
 }
 
@@ -40,11 +41,11 @@ fbeta<- function(mean, var){
 sbinom<- function(size, prob){
   mean<- size * prob
   var<- size * prob * (1 - prob)
-  
+
   if (size < 0 || prob < 0 || prob > 1){
-    mean[which(size < 0 | prob < 0 | prob > 1)]<- NaN
-    var[which(size < 0 | prob < 0 | prob > 1)]<- NaN
-    warning("NaNs produced (parameters out of domain)")
+  	mean[which(size < 0 | prob < 0 | prob > 1)]<- NaN
+  	var[which(size < 0 | prob < 0 | prob > 1)]<- NaN
+  	warning("NaNs produced (parameters out of domain)")
   }
   
   return (list(mean=mean, var=var))
@@ -54,12 +55,15 @@ sbinom<- function(size, prob){
 snbinom<- function(size, prob){
   mean<- prob*size/(1-prob)
   var<- size*prob/((1-prob)^2)
-  
+
   if (size < 0 || prob < 0 || prob > 1){
-    mean[which(size < 0 | prob < 0 | prob > 1)]<- NaN
-    var[which(size < 0 | prob < 0 | prob > 1)]<- NaN
-    warning("NaNs produced (parameters out of domain)")
+  	mean[which(size < 0 | prob < 0 | prob > 1)]<- NaN
+  	var[which(size < 0 | prob < 0 | prob > 1)]<- NaN
+  	warning("NaNs produced (parameters out of domain)")
   }
   
   return (list(mean=mean, var=var))
 }
+
+## Beta negative binomial and Beta binomial
+# see betabinomial.R and betanegativebinomial.R
