@@ -191,25 +191,13 @@ fitnessdistAIO<- function(n0, survA, var.survA, broods, clutch, survJ, var.survJ
 #   return (resultat)
 # }
 
-sdistri<- function(distri){
-  mean<- weighted.mean(distri[[1]], distri[[2]], na.rm=TRUE)
-  var<- sum(distri[[2]] * (distri[[1]] - mean)^2)
-  Gmean<- G(mean, var)
-
-  return (data.frame(mean, var, Gmean))
-}
-
-
-G<- function(mu, v){
-  return (mu - 2 * v / mu)
-}
-
-espG<- function(x){  
-  x.mean<- mean(x)
-  x.variance<- var(x)
-  G.esp<- x.mean - 2 * x.variance / x.mean
-  return (data.frame(mean=x.mean, variance=x.variance, G.esp=G.esp))
-}
+# sdistri<- function(distri){
+#   mean<- weighted.mean(distri[[1]], distri[[2]], na.rm=TRUE)
+#   var<- sum(distri[[2]] * (distri[[1]] - mean)^2)
+#   Gmean<- G(mean, var)
+# 
+#   return (data.frame(mean, var, Gmean))
+# }
 
 # 
 # # [http://www.statmethods.net/advgraphs/probability.html]
