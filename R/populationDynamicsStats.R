@@ -1,8 +1,8 @@
 # pop: matrix(NA, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf)) from models-discreteTime.R
 # pop<- mSurvBV.t(broods, clutch, nestFail, juvSurv, adultSurv, N0,replicates, tf)
-summary.discretePopSim<- function(pop){
-  R<- r(pop) # intrinsic growth rate
-  L<- lambda(pop) # lambda
+summary.discretePopSim<- function(pop, dt=1){
+  R<- r(pop, dt=dt) # intrinsic growth rate
+  L<- lambda(pop, dt=dt) # lambda
   meanR<- mean(R)
   varR<- var(as.numeric(R))
   meanL<- mean(L)
@@ -14,22 +14,28 @@ summary.discretePopSim<- function(pop){
   return(res)
 }
 
-r<- function(pop){
-  delta<- t(diff(t(pop))) # dN =  N_t+1 - N_t
-  return (delta / pop[,-ncol(pop)]) # intrinsic grow rate (r = dN / dt / N)
+r<- function(pop, dt=1){
+  sampleT<- seq(1, ncol(pop), by=dt)
+  if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
+  pop<- pop[, sampleT]
+  dN<- t(diff(t(pop))) # dN =  N_t+1 - N_t
+  return ((dN / dt) / pop[,-ncol(pop)]) # intrinsic grow rate (r = dN / dt / N)
 }
 
 lambda<- function(...){
   UseMethod("lambda")  
 }
 
-lambda.discretePopSim<- function(pop){
+lambda.discretePopSim<- function(pop, dt=1){
+  sampleT<- seq(1, ncol(pop), by=dt)
+  if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
+  pop<- pop[, sampleT]
   return (pop[,-1] / pop[,-ncol(pop)]) # lambda = Nt+1 / Nt
 }
 
 # Proportions for trends. Decrease includes extinct.
 trendsProp<- function(pop){
-  popF<- pop[,ncol(pop)]
+  popF<- pop[,ncol(pop)] # final population
   N0<- pop[,1]
   increase<- length(which(popF > N0)) / replicates
   decrease<- length(which(popF < N0)) / replicates
