@@ -34,14 +34,27 @@ lambda.discretePopSim<- function(pop, dt=1){
 }
 
 # Proportions for trends. Decrease includes extinct.
-trendsProp<- function(pop){
+trendsProp<- function(...){
+  UseMethod("trendsProp")
+}
+
+trendsProp.discretePopSim<- function(pop){
   popF<- pop[,ncol(pop)] # final population
   N0<- pop[,1]
+  replicates<- nrow(pop)
   increase<- length(which(popF > N0)) / replicates
   decrease<- length(which(popF < N0)) / replicates
   stable<- length(which(popF == N0)) / replicates
   extinct<- length(which(popF == 0)) / replicates
   return (data.frame(increase, decrease, stable, extinct))
+}
+
+trendsProp.numericDistri<- function(distri, N0){
+  increase<- sum(distri$p[which(distri$x == (N0 + 1)):nrow(distri)])
+  decrease<- sum(distri$p[1:which(distri$x == (N0 - 1))])
+  stable<- distri$p[distri$x == N0]
+  extinct<- distri$p[distri$x == 0]
+  return(data.frame(increase, decrease, stable, extinct))
 }
 
 ## Ideas: Lyapunov exponents
