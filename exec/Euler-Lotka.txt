@@ -1,0 +1,31 @@
+/* PARAMETERS
+ * s: adult survival
+ * j: juvenile survival
+ * \alpha: age at first reproduction
+ * b: fecundity
+ * F: net fecundity (j * b)
+ * l: survival until reproductive class (j * s^(alpha-1))
+ *
+ * Code to solve Euler-Lotka equation using maxima (http://maxima.sourceforge.net/)
+ */
+
+lambda^alpha * (1 - (s / lambda)) = l * F;
+
+solve(lambda^alpha * (1 - (s / lambda)) = l * F, F);
+solve(lambda^alpha * (1 - (s / lambda)) = l * F, s);
+solve(lambda^alpha * (1 - (s / lambda)) = l * F, l);
+solve(lambda^alpha * (1 - (s / lambda)) = l * F, alpha);
+
+/* Substitute
+ * l = j * s^(alpha-1)
+ * F = j * b
+ */
+
+lambda^alpha*(1-(s/lambda)) = j * s^(alpha-1) * j * b;
+
+solve(lambda^alpha * (1 - (s / lambda)) = j * s^(alpha-1) * F, F);
+solve(lambda^alpha * (1 - (s / lambda)) = j * s^(alpha-1) * j * b, s);
+solve(lambda^alpha * (1 - (s / lambda)) = j * s^(alpha-1) * j * b, j);
+solve(lambda^alpha * (1 - (s / lambda)) = j * s^(alpha-1) * j * b, b);
+solve(lambda^alpha * (1 - (s / lambda)) = j * s^(alpha-1) * j * b, alpha);
+

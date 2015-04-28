@@ -1,148 +1,125 @@
-## TODO: translate 
-# see popbio package https://github.com/cstubben/popbio/wiki/Creating-projection-matrices
-# LefkovitchPre(sA=0.7, sSubA=0.5, FA=1, alpha=2)
-# LefkovitchPost(sA=.7, sSubA=0.5, sJ=.5, bA=2, alpha=2)
-# LefkovitchPre(sA=0.7, sSubA=0.5, FA=1, alpha=1)
-# LefkovitchPost(sA=.7, sSubA=0.5, sJ=.5, bA=2, alpha=1)
-# lambda.leslie.matrix(matriu=LefkovitchPre(sA=0.7, sSubA=0, FA=1, alpha=2))
-# findF(lambda=1.1, sA=0.6, alpha=1) #Retorna la fertilitat neta en funció de la lambda, supervivència dels adults i edat de primera reproducció
-# LifeExpectancy()
-##revisar:
-# CalculaValorReproduccio(estrategia, numPostes=1)
-# Eigen.analysis(A)
-# TempsGeneraciofunction(sensitivities)
-# Gen.time(A,peryear=5)
-# CalculaRmax()
+## Parameters
+# AFR: Age at First Reproduction
+# a, j, s: survival for adults (A), juveniles (J) and subadults (S)
+# b: fecundity
+# bj=F: net fecundity
+# e.g.
+# b<-3; a<-.9; s=.7; j=.5; bj=F= b * j
 
-## PARÀMETRES ##
-# alpha: Age at First Breeding
+## Matricial models ----
+## Pre-breeding census
+# AFR=1
+# b*j b*j
+#   a   a
+# 
+# AFR=2
+# 0 b*j
+# s a
 
-LefkovitchPre<- function(sA, sSubA=0, FA, alpha=1){
-  nClasses<- alpha
-  if (nClasses == 1){nClasses<- 2}
-  matriu<- matrix(0, nrow=nClasses, ncol=nClasses, dimnames=list(c("J", rep("sA", nClasses-2), "A"), c("J", rep("sA", nClasses-2), "A")))
-  matriu[1, nClasses]<- FA
-  matriu[nClasses, nClasses]<- sA
-  if (alpha > 1){
-    for (i in 2:(nClasses)){
-      matriu[i,i-1]<- sSubA
+
+LefkovitchPre<- function(a, s, bj, AFR=1){
+  rows<- max(AFR, 2)
+  mat<- matrix(0, nrow=rows, ncol=rows)
+  mat[1, rows]<- bj
+  mat[rows, rows]<- a
+  stages<- rep("A", 2)
+  if (AFR > 1){
+    stages<- c(rep("S", rows-1), "A")
+    for (i in 2:(rows)){
+      mat[i,i-1]<- s
     }
   }else{
-    matriu[1, 1]<- FA
-    matriu[2, 1]<- sA
+    mat[,1]<- mat[,2]
   }
-  class(matriu)<- "leslie.matrix"
-  return (matriu)
+  dimnames(mat)<- list(stages, stages)
+  class(mat)<- "leslieMatrix"
+  return (mat)
 }
 
-## TODO: check for errors...
-LefkovitchPost<- function(sA, sSubA, sJ, bA, alpha=1){
-  nClasses<- alpha + 1
-  matriu<- matrix(0, nrow=nClasses, ncol=nClasses, dimnames=list(c("J", rep("sA", nClasses-2), "A"), c("J", rep("sA", nClasses-2), "A")))
-  matriu[1, nClasses]<- bA
-  matriu[nClasses, nClasses]<- sA
-  matriu[2, 1]<- sJ
-  if (nClasses > 2){
-    for (i in 3:(nClasses)){
-      matriu[i,i-1]<- sSubA
+## Post-breeding census
+# AFR=1
+# 0 b
+# j a
+# 
+# AFR=2
+# 0 0 b
+# j 0 0
+# 0 s a
+
+LefkovitchPost<- function(a, s, j, b, AFR=1){
+  rows<- AFR + 1
+  stages<- c("J", rep("S", rows-2), "A")
+  mat<- matrix(0, nrow=rows, ncol=rows, dimnames=list(stages, stages))
+  mat[1, rows]<- b
+  mat[rows, rows]<- a
+  mat[2, 1]<- j
+  if (AFR >= 2){
+    for (i in 3:(rows)){
+      mat[i,i-1]<- s
     }
-  }else{
-    matriu[1, 1]<- 0
-    matriu[2, 1]<- sJ
   }
-  class(matriu)<- "leslie.matrix"
-  return (matriu)
+  class(mat)<- "leslieMatrix"
+  return (mat)
 }
 
-lambda.leslie.matrix<- function(mat){ # Ted J. Case. "An Illustrated Guide to Theoretical Ecology" pàg. 64-73
+
+lambda.leslieMatrix<- function(mat){ # Ted J. Case. "An Illustrated Guide to Theoretical Ecology" pàg. 64-73
   return (max(Re(eigen(mat, only.values=TRUE)$values)))
 }
 
+# Use eigen.analysis function to analyse matrices. It is imported from popbio package
+# popbio::eigen.analysis(mat)
 
-##Funció d'Euler-Lotka per trobar la fertilitat neta (F) a partir de lambda i sA
+## Inverse eigenvalue problem: find a, j, b or F from lambda and the rest of parameters ----
+# Not so easy, some parameters fall outside the domain (e.g. survival <0 or >1): 
+
+## CORRESPONDS TO A PRE-BREEDING CENSUS MATRIX (see test/Euler-Lotka.r)
+# Euler-Lotka equation fails for some cases with no clear pattern (see test/Euler-Lotka.r)
 # http://en.wikipedia.org/wiki/Euler–Lotka_equation
-#http://darwin.eeb.uconn.edu/eeb310/lecture-notes/spotted-owl/node3.html
-
+# http://darwin.eeb.uconn.edu/eeb310/lecture-notes/spotted-owl/node3.html
+# see Euler-Lotka.txt
+# alpha= AFR
 #(l_{alpha}*F)*lambda^-alpha sumatori(from x=alpha to infinite){lambda^(-x+alpha)*s^(x-alpha)} = 1
-#(l_{alpha}*F)*(1/(1-(s/lambda))) = lambda^alpha
-#lambda^alpha*(1-(s/lambda)) = (l_{alpha}*F)
-##Maxima
-# solve(lambda^alpha*(1-(s/lambda))=l*f, f)
-# \begin{eqnarray*}\left[ f={{-\left(s\,\lambda^{\alpha}-\lambda^{\alpha+1}\right)}\over{l\,\lambda}} \right] \end{eqnarray*}
-# f = (-(sA * lamda^alpha - lambda^(alpha+1))) / (l_{alpha} * lambda)
-# l_{alpha} = supervivència fins a l'edat reproductora alpha -> (sJ*sA^(alpha-1))
-# f = annual reproductive rate, i.e., the average number of fledged offspring per individual ->b
-##Test de la funció trobaF()
-# lambda<- 1.123456
-# sA<-.9
-# alpha<- 2
-# F<- trobaF(lambda, sA, alpha)
-# mat<- construeixMatriuLefkovitchPre(sA, sSubA=sA, F, alpha)
-# if (calculaLambda(mat) == lambda) {cat("OK!, les lambdes coincideixen i F=", F, "\n")}else{cat("KO! això falla\n")}
+#(l_{alpha}*F)*(1/(1-(a/lambda))) = lambda^alpha
+# lambda^alpha*(1-(a/lambda)) = (l_{alpha}*F)
+# l_{alpha}:  survival until reproductive class -> j * a^(alpha-1)
+# lambda^alpha*(1-(a/lambda)) = j * a^(alpha-1) * F
 
-findF<- function(lambda, adultSurv, alpha){ #Fertilitat neta en funció dels paràmetres demogràfics
-  F<- (-(adultSurv*lambda^alpha - lambda^(alpha+1))) / (adultSurv^(alpha-1)*lambda)
+## Maxima
+# solve(lambda^alpha * (1 - (s / lambda)) = j * s^(alpha-1) * F, F);
+# solve(lambda^alpha * (1 - (a / lambda)) = j * a^(alpha-1) * j * b, a);
+# solve(lambda^alpha * (1 - (a / lambda)) = j * a^(alpha-1) * j * b, j);
+# solve(lambda^alpha * (1 - (a / lambda)) = j * a^(alpha-1) * j * b, b);
+# solve(lambda^alpha * (1 - (a / lambda)) = j * a^(alpha-1) * j * b, alpha);
+
+findF_EulerLotka<- function(lambda, a, AFR){
+  F<- -(a * lambda^AFR - lambda^(AFR+1)) / (a^(AFR-1) * lambda)
+  F[F < 0]<- NA
   return (F)
 }
 
-# lifeExpectancy<- - 1 / log(GdemoLH$sA) ## SRC: http://www.countrysideinfo.co.uk/bird_lifespan.htm
-
-##Funció d'Euler-Lotka per trobar la fertilitat neta (F) a partir de lambda i sA
-# http://en.wikipedia.org/wiki/Euler–Lotka_equation
-#http://darwin.eeb.uconn.edu/eeb310/lecture-notes/spotted-owl/node3.html
-
-#(l_{alpha}*F)*lambda^-alpha sumatori(from x=alpha to infinite){lambda^(-x+alpha)*s^(x-alpha)} = 1
-#(l_{alpha}*F)*(1/(1-(s/lambda))) = lambda^alpha
-#lambda^alpha*(1-(s/lambda)) = (l_{alpha}*F)
-##Maxima
-# solve(lambda^alpha*(1-(s/lambda))=l*f, f)
-# \begin{eqnarray*}\left[ f={{-\left(s\,\lambda^{\alpha}-\lambda^{\alpha+1}\right)}\over{l\,\lambda}} \right] \end{eqnarray*}
-# f = (-(sA * lamda^alpha - lambda^(alpha+1))) / (l_{alpha} * lambda)
-# l_{alpha} = supervivència fins a l'edat reproductora alpha -> (sJ*sA^(alpha-1))
-# f = annual reproductive rate, i.e., the average number of fledged offspring per individual ->b
-
-CalculaValorReproduccio<- function(estrategia, numPostes=1){ ##Bókony et al 2009. Stress response and the value of reproduction
-  anysReproduccio<- 1 / (1 - estrategia$sA)
-  valorReproduccio<- log10((estrategia$b /numPostes) / (estrategia$b * anysReproduccio))
-  return (valorReproduccio)
+findJ_EulerLotka<- function(lambda, b, a, AFR){
+  F<- findF_EulerLotka(lambda, a, AFR)
+  j<- F / b
+  j[j < 0 | j > 1]<- NA
+  return (j)
 }
 
-Eigen.analysis<- function(A){
-  ev <- eigen(A)
-  lmax <- which(Re(ev$values)==max(Re(ev$values)))
-  lambda <- Re(ev$values[lmax])
-  W <- ev$vectors
-  w <- abs(Re(W[,lmax]))
-  V <- Conj(solve(W))
-  v <- abs(Re(V[lmax,]))
-  
-  s <- v%o%w
-  s[A == 0] <- 0
-  class(s) <- "leslie.matrix"
-  e <- s*A/lambda
-  rho <- lambda/abs(Re(ev$values[2]))
-  
-  
-  eigen.analysis <- list(lambda1=lambda, rho=rho, sensitivities=s,
-                         elasticities=e, stable.age=w/sum(w),
-                         repro.value=v/v[1])
-  
-  eigen.analysis
-  
+findA_EulerLotka<- function(lambda, b, j, AFR){
+  a<- -(b * j^2 * a^(AFR-1) * lambda - lambda^(AFR + 1)) / (lambda^AFR)
+  a[a < 0 | a > 1]<- NA
+  return (a)
 }
 
-TempsGeneracio<- function(sensitivities){##Article matrius multiestats
-  return (1 / sensitivities[1, ncol(sensitivities)])
+findB_EulerLotka<- function(lambda, j, a, AFR){
+  F<- findF_EulerLotka(lambda, a, AFR)
+  b<- F / j
+  return (b)
 }
 
-Gen.time<- function(A, peryear=5){ ##Temps de generació  #(Ted J. Case. "An Illustrated Guide to Theoretical Ecology" pàg 89-90 #mirar el peryear!!
-  ro <- calc.ro(A)
-  ea <- eigen.analysis(A)
-  T <- peryear*log(ro)/log(ea$lambda)
-  
-  T
-}
 
+## Rmax ----
+## Cole 1954. The population consequences of life history phenomena. The Quarterly Review of Biology 29 (2) pp: 103-137 
 cole<- function(x, fecundity, ageFirstBreeding, lifespan){
   return(exp(-x) + fecundity * exp(-(x * ageFirstBreeding)) - fecundity * exp(-(x * lifespan)) - 1)
 }
@@ -151,12 +128,21 @@ Rmax<- function(fecundity, ageFirstBreeding, lifespan, cole){ # values in years
   return (uniroot(cole, c(0.01,30), fecundity=fecundity, ageFirstBreeding=ageFirstBreeding, lifespan=lifespan)$root)
 }
 
-# F <- Fecundity
-# A <- d$AgeFirstBreeding/12
-# L <- d$Lifespan
-# cole<- function(x) exp(-x) + d2$F[i]*exp(-(x*(d2$A[i]))) - d2$F[i]*exp(-(x*(d2$L[i]))) - 1
-# #craete an empty vector
-# R_max <- c(1:length(d2$F))
-# #fill the vector with the Rmax values.
-# for (i in 1:length(d2$F)){R_max[i] <- uniroot(cole, c(0.01,30))$root}
+
+
+## TODO: check and reference ----
+
+# lifeExpectancy<- - 1 / log(GdemoLH$sA) ## SRC: http://www.countrysideinfo.co.uk/bird_lifespan.htm
+
+# TempsGeneracio<- function(sensitivities){##Article matrius multiestats
+#   return (1 / sensitivities[1, ncol(sensitivities)])
+# }
+
+# Gen.time<- function(A, peryear=5){ ##T  #(Ted J. Case. "An Illustrated Guide to Theoretical Ecology" pàg 89-90 #mirar el peryear!!
+#   ro <- calc.ro(A)
+#   ea <- eigen.analysis(A)
+#   T <- peryear*log(ro)/log(ea$lambda)
+#   
+#   T
+# }
 
