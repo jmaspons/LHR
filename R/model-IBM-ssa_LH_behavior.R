@@ -1,5 +1,4 @@
 # Propensity functions for each transition ----
-# TODO: add c1 and c2 instead of c to simulate learning whitout breeding
 rateFunc<- compiler::cmpfun( # byte-compile the function
   function(x, params, t){
     with(params, {
@@ -12,8 +11,8 @@ rateFunc<- compiler::cmpfun( # byte-compile the function
                dead1bF=db1 * (1 + (x["N1s"] + x["N1b"] + x["N1bF"]) / K) * x["N1bF"], dead1j=dj1 * (1  + (x["N1s"] + x["N1b"] + x["N1bF"] + x["N1j"]) / K) * x["N1j"],
                dead2s=d2 * (1 + (x["N2s"] + x["N2b"] + x["N2bF"]) / K) * x["N2s"], dead2b=db2 * (1 + (x["N2s"] + x["N2b"] + x["N2bF"]) / K) * x["N2b"],
                dead2bF=db2 * (1 + (x["N2s"] + x["N2b"] + x["N2bF"]) / K) * x["N2bF"], dead2j=dj2 * (1  + (x["N2s"] + x["N2b"] + x["N2bF"] + x["N2j"]) / K) * x["N2j"],
-               move12s=c * (1-P1s) * x["N1s"], move21s=c * P1s * x["N2s"], move12b=c * (1-P1b) * x["N1b"], move21b=c * P1b * x["N2b"],
-               move12bF=cF * (1-P1b) * x["N1bF"], move21bF=cF * P1b * x["N2bF"], move12j=c * (1-P1j) * x["N1j"], move21j=c * P1j * x["N2j"],
+               move12s=c1 * (1-P1s) * x["N1s"], move21s=c2 * P1s * x["N2s"], move12b=c1 * (1-P1b) * x["N1b"], move21b=c2 * P1b * x["N2b"],
+               move12bF=cF * (1-P1b) * x["N1bF"], move21bF=cF * P1b * x["N2bF"], move12j=c1 * (1-P1j) * x["N1j"], move21j=c2 * P1j * x["N2j"],
                grow1=g1 * x["N1j"], grow2=g2 * x["N2j"])
       )}
     )
@@ -54,7 +53,7 @@ getParams<- function(strategy=c("slow", "fast", "freqRepro"), diffHab2, scenario
                  slow=c(clutch1=1, clutch2=1,   b=1, PbF1=.2, PbF2=.2,  d1=.1,db1=.3,dj1=.2,  d2=.1,db2=.3,dj2=.2, g1=.1, g2=.1, K=500),
                  fast=c(clutch1=8, clutch2=8,   b=1, PbF1=.4, PbF2=.4,  d1=.5,db1=.8,dj1=1.5, d2=.5,db2=.8,dj2=1.5, g1=1, g2=1, K=500),
                  freqRepro=c(clutch1=2, clutch2=2,   b=4, PbF1=.4, PbF2=.4,  d1=.5,db1=.8,dj1=.8,  d2=.5,db2=.8,dj2=.8, g1=1, g2=1, K=500))
-    tmp<- c(tmp, Pb1=1, Pb2=1, c=1, cF=1, P1s=.5, P1b=.5, P1j=.5) # add neutral behavior
+    tmp<- c(tmp, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5) # add neutral behavior
   })
   names(params)<- strategy
   
@@ -107,15 +106,15 @@ setScenario<- function(params, scenario){
 
 setBehavior<- function(params, behavior){
   if (any(grepl("neutral", behavior))){
-    params[c("Pb1","Pb2",  "c","cF",  "P1s","P1b","P1j")]<- c(1,1, 1,1, .5,.5,.5)
+    params[c("Pb1","Pb2",  "c1", "c2", "cF",  "P1s","P1b","P1j")]<- c(1,1, 1,1,1, .5,.5,.5)
   }
   
   if (any(grepl("skip", behavior))){ ## Increase breeding costs or better habitat selection
     params[c("Pb1", "Pb2")]<- c(1, .2)
   }
   
-  if (any(grepl("learn", behavior))){
-    params[c("c", "cF")]<- c(0, 3)
+  if (any(grepl("learnBreed", behavior))){
+    params[c("c1", "c2" "cF")]<- c(0, 0, 3)
   }
   
   if (any(grepl("preferHab1", behavior))){
@@ -127,7 +126,7 @@ setBehavior<- function(params, behavior){
   }
   
   if (any(grepl("static", behavior))){
-    params[c("c","cF")]<- c(0,0)
+    params[c("c1", "c2", "cF")]<- c(0,0,0)
   }
   
   return (params)
@@ -135,7 +134,7 @@ setBehavior<- function(params, behavior){
 
 getParamsCombination<- function(strategies=c("slow", "fast", "freqRepro"), 
                                 scenarios=c("identicalHab", "mortalHab2", "nestPredHab2"), 
-                                behaviors=c("neutral", "skip", "learn", "preferHab1", "preferHab2")){
+                                behaviors=c("neutral", "skip", "learnBreed", "preferHab1", "preferHab2")){
   comb<- expand.grid(list(strategy=strategies, scenario=scenarios, behavior=behaviors), stringsAsFactors=FALSE)
   params<- data.frame()
   for (i in 1:nrow(comb)){
