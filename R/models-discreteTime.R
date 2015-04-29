@@ -1,16 +1,18 @@
 ## return object of class c("discretePopSim", "data.frame") with replicates on rows and time in columns
 # When the population gets extinct it fills results with NAs.
-extinctNA<- function(pop)
+extinctNA<- function(pop){
   extT<- apply(pop, 1, function(x) match(0, x))
-  extPop<- which(!is.na(extinctT))
+  extT<- extT[extT < ncol(pop)]
+  extPop<- which(!is.na(extT))
   for (i in seq_along(extPop)){
     pop[i,(extT[i]+1):ncol(pop)]<- NA
   }
   return(pop)
 }
 
+##  CONSTANT ENVIRONMENT
 # Adult mortality + offspring mortality
-# fitness = B(n=NB(n=N_0, p=1-adultSurv) * fecundity, p=juvSurv)
+# N_t+1 = B(n=NB(n=N_t, p=1-adultSurv) * fecundity, p=juvSurv)
 # Juveniles reach adult stage in one time step (age at first reproduction = 1)
 # fecundity = clutch x broods
 mFit.t<- function(fecundity, juvSurv, adultSurv, N0, replicates, tf, maxN=100000){
@@ -32,7 +34,7 @@ mFit.t<- function(fecundity, juvSurv, adultSurv, N0, replicates, tf, maxN=100000
 }
 
 # Adult mortality + Nest mortality + offspring mortality
-# fitness = B(n=B(n=NB(n=N_0, p=1-adultSurv) * broods, p=1-nestFail) * clutch, p=juvSurv)
+# N_t+1 = B(n=B(n=NB(n=N_t, p=1-adultSurv) * broods, p=1-nestFail) * clutch, p=juvSurv)
 # Juveniles reach adult stage in one time step (age at first reproduction = 1)
 mSurvBV.t<- function(broods, clutch, nestFail, juvSurv, adultSurv, N0, replicates, tf, maxN=100000){
   pop<- matrix(NA, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
@@ -55,7 +57,7 @@ mSurvBV.t<- function(broods, clutch, nestFail, juvSurv, adultSurv, N0, replicate
 
 
 # Adult mortality + offspring mortality + sex ratio 
-# fitness = B(n=B(n=NB(n=N_0, p=1-adultSurv) * fecundity, p=juvSurv), p=sexRatio)
+# N_t+1 = B(n=B(n=NB(n=N_t, p=1-adultSurv) * fecundity, p=juvSurv), p=sexRatio)
 # Juveniles reach adult stage in one time step (age at first reproduction = 1)
 # fecundity = clutch x broods
 ## TODO:
@@ -77,7 +79,7 @@ mFitSex.t<- function(fecundity, juvSurv, adultSurv, sexRatio=.5, N0, replicates,
 }
 
 # Adult mortality + Nest mortality + offspring mortality + sex ratio
-# fitness = B(n=B(n=B(n=NB(n=N_0, p=1-adultSurv) * broods, p=1-nestFail) * clutch, p=juvSurv), p=sexRatio)
+# N_t+1 = B(n=B(n=B(n=NB(n=N_t, p=1-adultSurv) * broods, p=1-nestFail) * clutch, p=juvSurv), p=sexRatio)
 # Juveniles reach adult stage in one time step (age at first reproduction = 1)
 mSurvBVSex.t<- function(broods, clutch, nestFail, juvSurv, adultSurv, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, replicates, tf, maxN=100000){
   popF<- popM<- matrix(NA, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
@@ -106,3 +108,6 @@ mSurvBVSex.t<- function(broods, clutch, nestFail, juvSurv, adultSurv, sexRatio=.
   class(popF)<- class(popM)<- c("discretePopSim", "data.frame")
   return(list(females=popF, males=popM))
 }
+
+
+## SEASONAL ENVIRONMENT ---- TODO
