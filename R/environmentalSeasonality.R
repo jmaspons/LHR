@@ -1,7 +1,7 @@
 ## SEASONAL EVIRONMENT
-#######################
-par.seasonality<- function(broods, breedInterval, mean, amplitude, years=1, criterion=c("bestFirst", "bestMean"), resolution=c("months", "days")){
-
+# modify a parameter following a seasonal pattern
+par.seasonality<- function(broods, breedInterval, mean, amplitude, years=1, 
+                           criterion=c("maxFirst", "maxMean"), resolution=c("months", "days")){
   seasons<- seasonality(years=years, mean=mean, amplitude=amplitude, resolution=resolution[1])
   seasons<- par.modifier(pattern=seasons, events=broods, interval=breedInterval, criterion=criterion[1])
   seasons<- sort(seasons, decreasing=TRUE)
@@ -24,11 +24,11 @@ seasonality<- function(years, mean, amplitude, resolution=c("months", "days")){
 # events events per year
 # interval number of units between events (units are the same as in pattern)
 ## TODO criterion: optimize the timing of reproduction according to interbreeding intervals or some reasonable rules.
-par.modifier<- function(pattern, events, interval, criterion=c("bestFirst", "bestMean")){
+par.modifier<- function(pattern, events, interval, criterion=c("maxFirst", "maxMean")){
   n<- length(pattern)
   if (n < events * interval) stop("Pattern too short for the events number and interval parameters")
   
-  if (criterion[1] == "bestFirst"){
+  if (criterion[1] == "maxFirst"){
     firstDate<- which.max(pattern)
     dates<- seq(firstDate, firstDate + events * interval, length=events)
     if (firstDate + events * interval > n){
@@ -36,7 +36,7 @@ par.modifier<- function(pattern, events, interval, criterion=c("bestFirst", "bes
       dates[nextPeriod]<- dates[nextPeriod] - n
     }
     
-  }else if (criterion[1] == "bestMean"){
+  }else if (criterion[1] == "maxMean"){
     seasonLength<- events * interval
     dates<- seq(1, seasonLength, by=interval)
     ##TODO Optimization
@@ -57,31 +57,13 @@ par.modifier<- function(pattern, events, interval, criterion=c("bestFirst", "bes
 }
 
 # Calculates the mean and amplitude parameters of seasonality() from the range
-seasonal.range<- function(min, max){
-  mean<- (min + max)/2
-  amplitude<- max - min
+seasonAmplitude<- function(seasonRange){
+  mean<- (min(seasonRange) + max(seasonRange))/2
+  seasonAmplitude<- max(seasonRange) - min(seasonRange)
   
-  return (data.frame(mean, amplitude))
+  return (data.frame(mean, seasonAmplitude))
 }
 
-# # Valors entre 0 i 1
-# amplitude<- 1
-# mean<- 0.5
-# s<- seasonality(5, mean, amplitude)
-# 
-# seasonal.range(.5,1)
-# # Stochasticity
-# y1<- sin(x) + rnorm(length(x),0,0.1)
-# y2<- (sin(x) + rnorm(length(x),0,0.1))/2 + 0.3
-# y3<- (sin(x) + rnorm(length(x),0,0.1))/10 + 0.5
-# y4<- sin(x)
-# 
-# plot(y1, type="l", ylab="Producció neta", xlab="Temps (mesos)")
-# points(y2, type="l", col="green")
-# points(y3, type="l", col="red")
-# points(y4, type="l", col="blue")
-# 
-# abline(h=0, lty=2)
-# abline(h=0.3, col="green", lty=2)
-# abline(h=0.5, col="red", lty=2)
-# 
+seasonRange<- function(mean, seasonAmplitude){
+  return (data.frame(min=mean - amplitude, max=mean + amplitude))
+}
