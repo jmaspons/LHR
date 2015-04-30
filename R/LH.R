@@ -19,7 +19,7 @@ setMethod("LH",
             # if not defined, subadult survival is equal to adult survival
             if (!"s" %in% names(pars)){
               pars$s<- pars$a
-              pars<- pars[,c("lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")]
+              pars<- pars[,c("lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")] # Sort columns
             }
             strategy<- new("LH", pars)
             return (strategy)
@@ -98,10 +98,15 @@ setMethod("show", signature(object="LH"),
             LH(S3Part(x)[...])
 }
 
-## Sample LH imposing the deterministic relations between the lambda and the rest of parameters
-sampleLH<- function(lambda=seq(.8, 2, by=0.1), broods=2^(0:2), b=c(1, seq(2, 20, by=1)), 
-                    j=seq(0.2, 0.8, by=0.1), a=seq(0.3, 0.9, by=0.1), AFR=1,
+## Sample LH ----
+# imposing the deterministic relations between the lambda and the rest of parameters
+# sampleLH<- function(lambda=seq(.8, 2, by=0.1), broods=2^(0:2), b=c(1, seq(2, 20, by=2)), 
+#                     j=seq(0.2, 0.8, by=0.1), a=seq(0.3, 0.9, by=0.1), AFR=1,
+#                     free=c("j", "lambda")[1], maxFecundity=20, higherJuvMortality=TRUE, method=c("regular", "MonteCarlo"), census="pre-breeding"){
+sampleLH<- function(lambda=seq(.8, 1.2, by=0.2), broods=2^(0:2), b=c(1, 2, 5, 10), 
+                    j=seq(0.2, 0.8, by=0.2), a=seq(0.3, 0.9, by=0.2), AFR=1,
                     free=c("j", "lambda")[1], maxFecundity=20, higherJuvMortality=TRUE, method=c("regular", "MonteCarlo"), census="pre-breeding"){
+                    # with low parameters resolution only broods=1 give correct values on findJ_Euler-Lotka
   if ("lambda" == free){
     pars<- expand.grid(broods, b, j, a, AFR)
     names(pars)<- c("broods", "b", "j", "a", "AFR")
@@ -136,7 +141,7 @@ sampleLH<- function(lambda=seq(.8, 2, by=0.1), broods=2^(0:2), b=c(1, seq(2, 20,
     pars$a<- with(pars, findA_EulerLotka(lambda=lambda, b=b, j=j, AFR=AFR))
   }
   
-  # Detect errors on the inverse eigenvalue problem and discard errors
+  # Detect errors on the inverse eigenvalue problem and discard them
   if (free != "lambda"){
     lambdaMat<- numeric(nrow(pars))
     for (i in 1:nrow(pars)){
@@ -160,6 +165,6 @@ sampleLH<- function(lambda=seq(.8, 2, by=0.1), broods=2^(0:2), b=c(1, seq(2, 20,
   if (higherJuvMortality) pars<- pars[pars$j <= pars$a,]
   
   # Sort columns
-  pars<- pars[c("lambda", "fecundity", "broods", "b", "a", "j", "AFR")]
+  pars<- pars[order(pars$lambda, pars$fecundity, pars$a), c("lambda", "fecundity", "broods", "b", "a", "j", "AFR")]
   return (pars)
 }
