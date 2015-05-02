@@ -9,8 +9,10 @@ useDynLib(LHR)
 
 exportPattern("^[[:alpha:]]+")
 
+exportClasses("LH")
+exportClasses("Env")
+exportClasses("Sim")
+exportClasses("Model")
 
 ### Imports
-##import(stats, graphics)
-
-##importFrom(ghypergeo, ghyper)
+importFrom(popbio, eigen.analysis)
