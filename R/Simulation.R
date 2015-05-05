@@ -16,11 +16,11 @@ setMethod("Sim",
 ## Subclasses
 ## Sim.discretePopSim Class
 setClass("Sim.discretePopSim", contains="Sim")
-setGeneric("Sim.discretePopSim", function(N0, structure, tf, replicates, raw=TRUE) standardGeneric("Sim.discretePopSim"))
+setGeneric("Sim.discretePopSim", function(N0, envVar, sexRatio, matingSystem, tf, replicates, raw=TRUE) standardGeneric("Sim.discretePopSim"))
 setMethod("Sim.discretePopSim",
-          signature(N0="numeric", structure="character", tf="numeric", replicates="numeric", raw="logical"),
-          function(N0, structure, tf, replicates, raw){
-            params<- list(N0=N0, structure=structure, tf=tf, replicates=replicates, raw=raw)
+          signature(N0="numeric", envVar="list", sexRatio="numeric", matingSystem="character", tf="numeric", replicates="numeric", raw="logical"),
+          function(N0, envVar, sexRatio, matingSystem, tf, replicates, raw){
+            params<- list(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, tf=tf, replicates=replicates, raw=raw)
             sim<- new("Sim.discretePopSim", 
                              params=params)
             return (sim)
@@ -28,9 +28,9 @@ setMethod("Sim.discretePopSim",
 )
 
 setMethod("Sim.discretePopSim",
-          signature(N0="missing", structure="missing", tf="missing", replicates="missing", raw="missing"),
+          signature(N0="missing", envVar="missing", sexRatio="missing", matingSystem="missing", tf="missing", replicates="missing", raw="missing"),
           function(){
-            params<- list(N0=c(2, 10), structure="fit", tf=10, replicates=15, raw=TRUE)
+            params<- list(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA, matingSystem=NA, tf=10, replicates=15, raw=TRUE)
             sim<- new("Sim.discretePopSim", 
                              params=params)
             return (sim)
@@ -38,6 +38,7 @@ setMethod("Sim.discretePopSim",
 )
 
 ## Sim.numericDistri Class
+#TODO: sexRatio
 setClass("Sim.numericDistri", contains="Sim")
 setGeneric("Sim.numericDistri", function(N0, structure, raw) standardGeneric("Sim.numericDistri"))
 setMethod("Sim.numericDistri",
