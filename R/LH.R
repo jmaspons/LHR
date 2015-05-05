@@ -154,10 +154,12 @@ sampleLH<- function(lambda=seq(.8, 1.2, by=0.2), broods=2^(0:2), b=c(1, 2, 5, 10
     if (free == "j"){
       pars$j[errLambda]<- NA
       pars<- pars[!is.na(pars$j),]
+      pars<- pars[pars$j >= min(j),]
     }
     if (free == "a"){
       pars$a[errLambda]<- NA
       pars<- pars[!is.na(pars$a),]
+      pars<- pars[pars$a >= min(a),]
     }
   }
   
