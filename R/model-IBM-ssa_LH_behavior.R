@@ -1,5 +1,5 @@
 # Propensity functions for each transition ----
-rateFunc<- compiler::cmpfun( # byte-compile the function
+rateFunc.LH_Beh<- compiler::cmpfun( # byte-compile the function
   function(x, params, t){
     with(params, {
       return(c(repro1s=b * Pb1 * (1-PbF1) * x["N1s"], repro1sF=b * Pb1 * PbF1 * x["N1s"], 
@@ -22,23 +22,24 @@ rateFunc<- compiler::cmpfun( # byte-compile the function
 # State-change matrix for each transition ----
 ## Notes: individuals from NxbF move to N-xb. Individuals which failed on the last reproductive event have
 # higher probability to move to another habitat (c < cF) but they relax after an habitat change to evaluate the reproduction outcome in the new habitat.
-transitionMat<- function(clutch1, clutch2){
-  if (missing(clutch2))  clutch2<- clutch1
+transitionMat.LH_Beh<- function(params){
+  transMat<- with(params, expr={
   #             repro1      repro2                    skip          dead1       dead2         move                       grow
-  transMat<- matrix(c(-1,     -1, 0, 0, 0, 0, 0, 0,   1, 1, 0, 0,  -1, 0, 0, 0, 0, 0, 0, 0,  -1, 1, 0, 0, 0, 0, 0, 0,    1, 0, # skip                #habitat 1
-                1,       0,       0,-1, 0, 0, 0, 0,  -1, 0, 0, 0,   0,-1, 0, 0, 0, 0, 0, 0,   0, 0,-1, 1, 0, 1, 0, 0,    0, 0, # breeding
-                0,       1,       0, 1, 0, 0, 0, 0,   0,-1, 0, 0,   0, 0,-1, 0, 0, 0, 0, 0,   0, 0, 0, 0,-1, 0, 0, 0,    0, 0, # Breeding Fail
-                clutch1, 0, clutch1, 0, 0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0,-1, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0,-1, 1,   -1, 0, # juveniles
-                #habitat 2                
-                0, 0, 0, 0,      -1,-1,       0, 0,   0, 0, 1, 1,   0, 0, 0, 0,-1, 0, 0, 0,   1,-1, 0, 0, 0, 0, 0, 0,    0, 1, # skip
-                0, 0, 0, 0,       1, 0,       0,-1,   0, 0,-1, 0,   0, 0, 0, 0, 0,-1, 0, 0,   0, 0, 1,-1, 1, 0, 0, 0,    0, 0, # breeding
-                0, 0, 0, 0,       0, 1,       0, 1,   0, 0, 0,-1,   0, 0, 0, 0, 0, 0,-1, 0,   0, 0, 0, 0, 0,-1, 0, 0,    0, 0, # Breeding Fail
-                0, 0, 0, 0, clutch2, 0, clutch2, 0,   0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0,-1,   0, 0, 0, 0, 0, 0, 1,-1,    0,-1), # juveniles
-              ncol=30, byrow=TRUE, 
-              dimnames=list(state=c("N1s", "N1b", "N1bF", "N1j", "N2s", "N2b", "N2bF", "N2j"), 
-                            event=c("repro1s", "repro1sF", "repro1b","repro1bF",  "repro2s","repro2sF", "repro2b","repro2bF",
-                                    "skipR1","skipR1F","skipR2","skipR2F",   "dead1s","dead1b","dead1bF","dead1j",  "dead2s","dead2b","dead2bF","dead2j",
-                                    "move12s","move21s","move12b","move21b","move12bF","move21bF","move12j","move21j",  "grow1", "grow2")))
+    matrix(c(-1,     -1, 0, 0, 0, 0, 0, 0,   1, 1, 0, 0,  -1, 0, 0, 0, 0, 0, 0, 0,  -1, 1, 0, 0, 0, 0, 0, 0,    1, 0, # skip                #habitat 1
+              1,       0,       0,-1, 0, 0, 0, 0,  -1, 0, 0, 0,   0,-1, 0, 0, 0, 0, 0, 0,   0, 0,-1, 1, 0, 1, 0, 0,    0, 0, # breeding
+              0,       1,       0, 1, 0, 0, 0, 0,   0,-1, 0, 0,   0, 0,-1, 0, 0, 0, 0, 0,   0, 0, 0, 0,-1, 0, 0, 0,    0, 0, # Breeding Fail
+              clutch1, 0, clutch1, 0, 0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0,-1, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0,-1, 1,   -1, 0, # juveniles
+              #habitat 2                
+              0, 0, 0, 0,      -1,-1,       0, 0,   0, 0, 1, 1,   0, 0, 0, 0,-1, 0, 0, 0,   1,-1, 0, 0, 0, 0, 0, 0,    0, 1, # skip
+              0, 0, 0, 0,       1, 0,       0,-1,   0, 0,-1, 0,   0, 0, 0, 0, 0,-1, 0, 0,   0, 0, 1,-1, 1, 0, 0, 0,    0, 0, # breeding
+              0, 0, 0, 0,       0, 1,       0, 1,   0, 0, 0,-1,   0, 0, 0, 0, 0, 0,-1, 0,   0, 0, 0, 0, 0,-1, 0, 0,    0, 0, # Breeding Fail
+              0, 0, 0, 0, clutch2, 0, clutch2, 0,   0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0,-1,   0, 0, 0, 0, 0, 0, 1,-1,    0,-1), # juveniles
+            ncol=30, byrow=TRUE, 
+            dimnames=list(state=c("N1s", "N1b", "N1bF", "N1j", "N2s", "N2b", "N2bF", "N2j"), 
+                          event=c("repro1s", "repro1sF", "repro1b","repro1bF",  "repro2s","repro2sF", "repro2b","repro2bF",
+                                  "skipR1","skipR1F","skipR2","skipR2F",   "dead1s","dead1b","dead1bF","dead1j",  "dead2s","dead2b","dead2bF","dead2j",
+                                  "move12s","move21s","move12b","move21b","move12bF","move21bF","move12j","move21j",  "grow1", "grow2")))
+  })
   return (transMat)
 }
 
@@ -46,8 +47,7 @@ transitionMat<- function(clutch1, clutch2){
 # returns a different strategies.and scenarios
 # diffHab2: named vector with the differences in the parameters at habitat 2 respect habitat 1
 # Warning: clutch have no effect on the simulation. It's necessary to modify the reaction channels (getReactionChannels(clutch1, clutch2))
-## TODO: add c1 and c2 instead of c to simulate learning without breeding
-getParams<- function(strategy=c("slow", "fast", "freqRepro"), diffHab2, scenario="identicalHab", behavior="neutral"){
+getParams.LH_Beh<- function(strategy=c("slow", "fast", "freqRepro"), diffHab2, scenario="identicalHab", behavior="neutral"){
   params<- lapply(strategy, function(x){
     tmp<- switch(x,
                  slow=c(clutch1=1, clutch2=1,   b=1, PbF1=.2, PbF2=.2,  d1=.1,db1=.3,dj1=.2,  d2=.1,db2=.3,dj2=.2, g1=.1, g2=.1, K=500),
@@ -66,6 +66,7 @@ getParams<- function(strategy=c("slow", "fast", "freqRepro"), diffHab2, scenario
     names(params)<- paste(names(params), behavior, sep="_")
   }
   params<- data.frame(do.call("rbind", params))
+  
   return (params)
 }
 
@@ -114,7 +115,7 @@ setBehavior<- function(params, behavior){
   }
   
   if (any(grepl("learnBreed", behavior))){
-    params[c("c1", "c2" "cF")]<- c(0, 0, 3)
+    params[c("c1", "c2", "cF")]<- c(0, 0, 3)
   }
   
   if (any(grepl("preferHab1", behavior))){
@@ -144,65 +145,72 @@ getParamsCombination<- function(strategies=c("slow", "fast", "freqRepro"),
   return (params)
 }
 
-# Explore LH and behavior----
-exploreSSA<- function(x0L, params, transitions, rateFunc, tf=10, replicates=ifelse(rawSim, 1,100),
-                      discretePop=FALSE, burnin=-1, dtDiscretize=1, cores=1, mc.preschedule=FALSE, ...){
-  if (is.numeric(x0L)){
-    x0L<- list(x0L)
-  }
-  
-  missingTransitions<- ifelse(missing(transitions), TRUE, FALSE)
-  resStats<- list()
-  if (discretePop) resPop<- list()
-  
-  for (i in 1:nrow(params)){
-    cat(i, "/", nrow(params), rownames(params)[i], "\n")
-    if (missingTransitions) transitions<- transitionMat(params$clutch1[i], params$clutch2[i])
-    
-    resStats[[i]]<- as.data.frame(matrix(nrow=length(x0L), ncol=21, 
-                                         dimnames=list(N0=sapply(x0L, sum), stats=c("N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL", "increase.dtF", "decrease.dtF", "stable.dtF", "extinct.dtF", "GR.dtF", "meanR.dtF", "varR.dtF", "GL.dtF", "meanL.dtF", "varL.dtF"))))
-    if (discretePop) resPop[[i]]<- list()
-    
-    for (j in seq_along(x0L)){
-      RNGkind("L'Ecuyer-CMRG") # ?mcparallel > Random numbers
-      mc.reset.stream()
-      simL<- mclapply(1:replicates, function(x){
-        sim<- ssa.adaptivetau(init.values=x0L[[j]], transitions=transitions, rateFunc=rateFunc, params=params[i,], tf=tf)# TODO, ...)
-        sim<- discretizePopSim(sim, dt=dtDiscretize, burnin=burnin)
-        return (sim)
-      }, mc.cores=cores, mc.set.seed=TRUE, mc.preschedule=mc.preschedule)
+## Updated with a generic form where transitionMat if a function that returns the transition matrix.
+# The constructor can takes the params variable as a input (e.g. clutch size)
+## Explore LH and behavior ----
+# exploreSSA<- function(x0L, params, transitions, rateFunc, tf=10, replicates=100,
+#                       discretePop=FALSE, finalPop=TRUE, burnin=-1, dtDiscretize=1, cores=1, mc.preschedule=TRUE, ...){
+#   if (is.numeric(x0L)){
+#     x0L<- list(x0L)
+#   }
+#   
+#   missingTransitions<- ifelse(missing(transitions), TRUE, FALSE)
+#   resStats<- list()
+#   if (discretePop) resPop<- list()
+#   if (finalPop) fPop<- list()
+#   
+#   for (i in 1:nrow(params)){
+#     cat(i, "/", nrow(params), rownames(params)[i], "\n")
+#     if (missingTransitions) transitions<- transitionMat.LH(params$clutch[i])
+# #     if (missingTransitions) transitions<- transitionMat.LH_Beh(params$clutch1[i], params$clutch2[i]) ## TODO allow to change the transitionMat function
+#     resStats[[i]]<- as.data.frame(matrix(nrow=length(x0L), ncol=21, 
+#                                          dimnames=list(N0=sapply(x0L, sum), stats=c("N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL", "increase.dtF", "decrease.dtF", "stable.dtF", "extinct.dtF", "GR.dtF", "meanR.dtF", "varR.dtF", "GL.dtF", "meanL.dtF", "varL.dtF"))))
+#     if (discretePop) resPop[[i]]<- list()
+#     if (finalPop) fPop[[i]]<- list()
+#     
+#     for (j in seq_along(x0L)){
+#       RNGkind("L'Ecuyer-CMRG") # ?mcparallel > Random numbers
+#       mc.reset.stream()
+#       simL<- mclapply(1:replicates, function(x){
+#         sim<- ssa.adaptivetau(init.values=x0L[[j]], transitions=transitions, rateFunc=rateFunc, params=params[i,], tf=tf)# TODO, ...)
+#         sim<- discretizePopSim(sim, dt=dtDiscretize, burnin=burnin)
+#         return (sim)
+#       }, mc.cores=cores, mc.set.seed=TRUE, mc.preschedule=mc.preschedule)
+# 
+#       if (length(unique(sapply(simL, ncol))) > 1){warning("Discrete simulation results differs in time steps")} ## important when !is.null(dtDiscretize)
+#       pop<- do.call("rbind", simL) ## TODO: Check different times for extinctions for models-discreteTime.R
+#       
+#       # Save discrete population stats
+#       # pop: dt= dtDiscretize
+#       # popDtF: dt= tf - 0
+#       popDtF<- pop[,c(1,ncol(pop))]
+#       popDtF[is.na(popDtF[,2]),2]<- 0
+#       tmp<- data.frame(N0=sum(x0L[[j]]), summary(pop), summary(popDtF))
+#       names(tmp)<- gsub(".1", ".dtF", names(tmp))
+#       resStats[[i]][j,]<- tmp
+#       print(tmp, row.names=FALSE)
+#       
+#       if (discretePop) resPop[[i]][[j]]<- pop
+#       if (finalPop) fPop[[i]][[j]]<- pop[,ncol(pop)]
+#     }# End N0 loop
+#     
+#     if (discretePop) names(resPop[[i]])<- paste0("N", sapply(x0L, sum))
+#   }# End parameters loop
+#   
+#   names(resStats)<- rownames(params)
+#   
+#   res<- list(stats=resStats)
+#   if (discretePop){
+#     names(resPop)<- rownames(params)
+#     res<- c(res, list(pop=resPop))
+#   }
+#   res<- c(res, list(params=params))
+#   res<- c(res, list(simParams=list(x0L=x0L, tf=tf, replicates=replicates, burnin=burnin, dtDiscretize=dtDiscretize)))
+#   
+#   return (res)
+# }
 
-      if (length(unique(sapply(simL, ncol))) > 1){warning("Discrete simulation results differs in time steps")} ## important when !is.null(dtDiscretize)
-      pop<- do.call("rbind", simL) ## TODO: Check different times for extinctions for models-discreteTime.R
-      
-      # Save discrete population stats
-      # pop: dt= dtDiscretize
-      # popDtF: dt= tf - 0
-      popDtF<- pop[,c(1,ncol(pop))]
-      popDtF[is.na(popDtF[,2]),2]<- 0
-      tmp<- data.frame(N0=sum(x0L[[j]]), summary(pop), summary(popDtF))
-      names(tmp)<- gsub(".1", ".dtF", names(tmp))
-      resStats[[i]][j,]<- tmp
-      print(tmp, row.names=FALSE)
-      
-      if (discretePop) resPop[[i]][[j]]<- pop
-    }# End N0 loop
-    
-    if (discretePop) names(resPop[[i]])<- paste0("N", sapply(x0L, sum))
-  }# End parameters loop
-  
-  names(resStats)<- rownames(params)
-  
-  res<- list(stats=resStats)
-  if (discretePop){
-    names(resPop)<- rownames(params)
-    res<- c(res, list(pop=resPop))
-  }
-  res<- c(res, list(params=params))
-  res<- c(res, list(simParams=list(x0L=x0L, tf=tf, replicates=replicates, burnin=burnin, dtDiscretize=dtDiscretize)))
-  
-  return (res)
-}
+
 
 
 ## Graphics ----

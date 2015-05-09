@@ -59,22 +59,29 @@ setMethod("Sim.numericDistri",
           }
 )
 
+
 ## Sim.ssa Class
-setClass("Sim.ssa", contains="Sim")
-setGeneric("Sim.ssa", function(N0, structure, tf, replicates, raw) standardGeneric("Sim.ssa"))
+# setOldClass("ssa")
+setClass("Sim.ssa", contains="Sim") #slots=list(result="ssa"), needs S3 class prototype
+setGeneric("Sim.ssa", function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, 
+                               tf=10, replicates=15, raw=TRUE, popTf=TRUE, stats=TRUE) standardGeneric("Sim.ssa"))
 setMethod("Sim.ssa",
-          signature(N0="numeric", structure="character", tf="numeric", replicates="numeric", raw="logical"),
-          function(N0, structure, tf, replicates, raw){
-            params<- list(N0=N0, structure=structure, tf=tf, replicates, raw)
+          signature(N0="list", transitionMat="closure", rateFunc="closure", tf="numeric", replicates="numeric", raw="logical", popTf="logical", stats="logical"),
+          function(N0, transitionMat, rateFunc, tf, replicates, raw, popTf, stats){
+            params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, raw=raw, popTf=popTf, stats=stats)
             simulation<- new("Sim.ssa", params=params)
             return (simulation)
           }
 )
 
 setMethod("Sim.ssa",
-          signature(N0="missing", structure="missing", tf="missing", replicates="missing", raw="missing"),
-          function(){
-            params<- list(N0=c(2, 10), structure="LH-behavior", tf=10, replicates=15, raw=TRUE)
+          signature(N0="ANY", transitionMat="ANY", rateFunc="ANY", tf="ANY", replicates="ANY", raw="ANY", popTf="ANY", stats="ANY"),
+          function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, tf=10, replicates=15, raw=TRUE, popTf=TRUE, stats=TRUE){
+            if (missing(N0)){
+              N0<- c(N1s=0, N1b=1, N1bF=0, N1j=0, N2s=0, N2b=1, N2bF=0, N2j=0)
+              N0<- lapply(2^(0:5), function(x) N0 * x)
+            }
+            params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, raw=raw, popTf=popTf, stats=stats)
             sim<- new("Sim.ssa", params=params)
             return (sim)
           }
@@ -94,6 +101,16 @@ setMethod("show", signature(object="Sim"),
             cat("Object of class \"Sim\" with", nrow(object), "simulations\n Parameters:\n")
             print(object@params[1]) # vector with more than one value
             print(data.frame(object@params[-1]), row.names=FALSE) # one value only
+            cat("\n")
+            print(S3Part(object))
+          }
+)
+
+setMethod("show", signature(object="Sim.ssa"),
+          function(object){
+            cat("Object of class \"Sim\" with", nrow(object), "simulations\n Parameters:\n")
+            print(object@params[1]) # vector with more than one value
+            print(data.frame(object@params[4:8]), row.names=FALSE) # one value only
             cat("\n")
             print(S3Part(object))
           }

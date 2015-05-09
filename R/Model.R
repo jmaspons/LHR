@@ -158,10 +158,47 @@ run.discretePopSim<- function(model){
 }
 
 run.numericDistr<- function(){}
-run.ssa<- function(){}
 
+setClass("Model.ssa", contains="Model")
+
+## Model.ssa ----
+setGeneric("Model.ssa", function(pars=getParams.LH_Beh(), sim=Sim.ssa()) standardGeneric("Model.ssa"))
+
+setMethod("Model.ssa",
+          signature(pars="data.frame", sim="Sim.ssa"),
+          function (pars, sim){
+            new("Model.ssa", pars, sim=sim)
+          }
+)
+
+setMethod("Model.ssa",
+          signature(pars="ANY", sim="ANY"),
+          function (pars=getParams.LH_Beh(), sim=Sim.ssa()){
+            new("Model.ssa", pars, sim=sim)
+          }
+)
+
+run.ssa<- function(model, ...){
+  x0L<- model@sim@params$N0
+  params<- S3Part(model)
+  transitionMat<- model@sim@params$transitionMat
+  rateFunc<- model@sim@params$rateFunc
+  tf<- model@sim@params$tf
+  replicates<- model@sim@params$replicates
+  discretePop<- model@sim@params$raw
+  finalPop<- model@sim@params$popTf
+#   burnin=-1
+#   dtDiscretize=NULL
+#   cores=1
+#   mc.preschedule=TRUE
+
+  res<- exploreSSA(x0L=x0L, params=params, transitionMat=transitionMat, rateFunc=rateFunc, 
+                   tf=tf, replicates=replicates, discretePop=discretePop, finalPop=finalPop, ...)
+  return (res)
+}
+
+##
 setGeneric("result", function(model) standardGeneric("result"))
-
 # Create a Sim object with the results
 setMethod("result", 
           signature(model="Model"),
@@ -182,7 +219,7 @@ setMethod("result",
 ## Generic methods ----
 setMethod("print", signature(x="Model"),
           function(x, ...){
-            print(S3Part(x)[,1:12], ...)
+            print(S3Part(x), ...) # S3Part(x)[,1:12]
           }
 )
 
@@ -190,10 +227,10 @@ setMethod("show", signature(object="Model"),
           function(object){
             cat("Object of class \"Model\" with", nrow(object), "scenarios\n")
             if (nrow(object@sim) == 0){
-              print(S3Part(object)[,1:12])
+              print(S3Part(object)) # S3Part(x)[,1:12]
               cat("There are no results yet. Use run(model) to start the simulations.\n")
             }else{
-              res<- merge(S3Part(object)[,1:12], S3Part(object@sim), by.x="row.names", by.y="scenario")
+              res<- merge(S3Part(object), S3Part(object@sim), by.x="row.names", by.y="scenario")
               names(res)[1]<- "scenario"
               res<- res[order(res$scenario, res$N0),]
               print(res)
