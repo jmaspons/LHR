@@ -119,7 +119,7 @@ print.numericDistri<- function(distri){
   str(attributes(distri)$parameters)
   cat("\n")
   print(head(data.frame(distri), n=15))
-  if (nrow(distri) > 15) cat("\t ...\t", nrow(distri - 15), "rows omited.\n")
+  if (nrow(distri) > 15) cat("\t ...\t", nrow(distri) - 15, "rows omited.\n")
 }
 
 summary.numericDistri<- function(distri){
