@@ -1,11 +1,3 @@
-# TODO: Add brood mortality. Additive or a part of j??
-  #   LH$j<- LH$j / (1 - breedFail)
-  #   to-report annual2monthMortality [p]      
-  #   annualSurv = monthlySurv ^ 12    =>   monthlySurv = anualSurv ^ 1 / 12
-  #   monthSurv = (1 - annualMortality) ^ (1 / 12)
-  #   negative binomial: annualSurv = pnbinom(q=0, size=12, prob=monthlySurv) => 0 fails en 12 trails
-  #   report 1 - (1 - p) ^ (1 / 12)
-
 ## Temporal variability class
 setClass("Model", slots=list(sim="Sim", params="list"), contains="data.frame")
 
@@ -91,16 +83,16 @@ setMethod("combineLH_Env",
 # seasonEvents<- function(env)
 
 ## Simulate ----
-setGeneric("run", function(model) standardGeneric("run"))
+setGeneric("run", function(model, ...) standardGeneric("run"))
 
 # Create a Sim object with the results
 setMethod("run", 
           signature(model="Model"),
-          function(model){
+          function(model, ...){
             simRes<- switch(class(model@sim),
                                Sim.discretePopSim=run.discretePopSim(model),
                                Sim.numericDistri=run.numericDistri(model),
-                               Sim.ssa=run.ssa(model))
+                               Sim.ssa=run.ssa(model, ...))
 # print(str(simRes))
             modelRes<- new("Model", 
                         S3Part(model),
@@ -120,93 +112,105 @@ run.discretePopSim<- function(model){
   res<- array(dim=c(nrow(scenario) * length(pars$N0), 12), 
               dimnames=list(LH_N0=NULL, stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
   k<- 1
-  for (n in 1:length(pars$N0)){
-    N0<- pars$N0[n]
+  for (i in 1:nrow(scenario)){ ## TODO: parallelise
+    ## TODO: pass model@params (LH*Env) to the function, add as a scenario instead as in @params
+    rawSim[[i]]<- list()
+    ## Seasonality
+    seasonVar<- seasonOptimCal(env=Env(scenario[i,]))[[1]] #, resolution=resolution, nSteps=seasonBroods$broods, interval=interval, criterion=criterion)
+    if (any(seasonVar !=1)){
+      jMseason<- scenario$jM[i] * seasonVar
+      breedFailMseason<- scenario$breedFailM[i] * seasonVar
+    }else{
+      jMseason<- scenario$jM[i]
+      breedFailMseason<- scenario$breedFailM[i]
+    }
     
-    rawSim[[n]]<- list()
-    for (i in 1:nrow(scenario)){ ## TODO: parallelise
-      ## TODO: pass model@params (LH*Env) to the function, add as a scenario instead as in @params
-
-      ## Seasonality
-      seasonVar<- seasonOptimCal(env=Env(scenario[i,]))[[1]] #, resolution=resolution, nSteps=seasonBroods$broods, interval=interval, criterion=criterion)
-      if (any(seasonVar !=1)){
-        jMseason<- scenario$jM[i] * seasonVar
-        breedFailMseason<- scenario$breedFailM[i] * seasonVar
-      }else{
-        jMseason<- scenario$jM[i]
-        breedFailMseason<- scenario$breedFailM[i]
-      }
-      
+    for (n in 1:length(pars$N0)){
+      N0<- pars$N0[n]
       pop<- with(scenario[i,], discretePopSim(broods=broods, b=b, j=jMseason, a=a, breedFail=breedFailMseason,
                                               varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
                                               pars$sexRatio, pars$matingSystem, N0, pars$replicates, pars$tf))
 
       if (pars$raw){
-        rawSim[[n]][[i]]<- pop
+        rawSim[[i]][[n]]<- pop
+        names(rawSim[[i]])[n]<- N0
       }
       ## TODO: pop<- list(popF, popM)
       res[k,]<- c(i, N0, as.numeric(summary(pop)))
       k<- k + 1
     }
   }
-  names(rawSim)<- pars$N0
+  names(rawSim)<- row.names(params)
 
   res<- as.data.frame(res)
-  simRes<- new("Sim.discretePopSim", res, params=pars)
+  if (pars$raw){
+    simRes<- new("Sim.discretePopSim", res, params=pars, raw=raw)
+  }else{
+    simRes<- new("Sim.discretePopSim", res, params=pars)
+  }
   
   return(simRes)
 }
 
-run.numericDistr<- function(){}
-
-setClass("Model.ssa", contains="Model")
-
-## Model.ssa ----
-setGeneric("Model.ssa", function(pars=getParams.LH_Beh(), sim=Sim.ssa()) standardGeneric("Model.ssa"))
-
-setMethod("Model.ssa",
-          signature(pars="data.frame", sim="Sim.ssa"),
-          function (pars, sim){
-            new("Model.ssa", pars, sim=sim)
-          }
-)
-
-setMethod("Model.ssa",
-          signature(pars="ANY", sim="ANY"),
-          function (pars=getParams.LH_Beh(), sim=Sim.ssa()){
-            new("Model.ssa", pars, sim=sim)
-          }
-)
-
-run.ssa<- function(model, ...){
-  x0L<- model@sim@params$N0
-  params<- S3Part(model)
-  transitionMat<- model@sim@params$transitionMat
-  rateFunc<- model@sim@params$rateFunc
-  tf<- model@sim@params$tf
-  replicates<- model@sim@params$replicates
-  discretePop<- model@sim@params$raw
-  finalPop<- model@sim@params$popTf
-#   burnin=-1
-#   dtDiscretize=NULL
-#   cores=1
-#   mc.preschedule=TRUE
-
-  res<- exploreSSA(x0L=x0L, params=params, transitionMat=transitionMat, rateFunc=rateFunc, 
-                   tf=tf, replicates=replicates, discretePop=discretePop, finalPop=finalPop, ...)
-  return (res)
+run.numericDistri<- function(model){
+  # print("Inside run.numericDistri()")
+  scenario<- S3Part(model)
+  pars<- model@sim@params
+  
+  rawSim<- list()
+  res<- array(dim=c(nrow(scenario) * length(pars$N0), 12), 
+              dimnames=list(LH_N0=NULL, stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
+  k<- 1
+  for (i in 1:nrow(scenario)){ ## TODO: parallelise
+    ## TODO: pass model@params (LH*Env) to the function, add as a scenario instead as in @params
+    rawSim[[i]]<- list()
+    ## Seasonality
+    seasonVar<- seasonOptimCal(env=Env(scenario[i,]))[[1]] #, resolution=resolution, nSteps=seasonBroods$broods, interval=interval, criterion=criterion)
+    if (any(seasonVar !=1)){
+      jMseason<- scenario$jM[i] * seasonVar
+      breedFailMseason<- scenario$breedFailM[i] * seasonVar
+    }else{
+      jMseason<- scenario$jM[i]
+      breedFailMseason<- scenario$breedFailM[i]
+    }
+print(scenario[i,])    
+    for (n in 1:length(pars$N0)){
+      N0<- pars$N0[n]
+      distri<- with(scenario[i,], t1distri(broods=broods, b=b, j=jMseason, a=a, breedFail=breedFailMseason,
+                                              varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
+                                              pars$sexRatio, pars$matingSystem, N0))
+      
+      if (pars$raw){
+        rawSim[[i]][[n]]<- distri
+        names(rawSim[[i]])[n]<- N0
+      }
+      ## TODO: pop<- list(popF, popM)
+      res[k,]<- c(i, N0, as.numeric(summary(distri)))
+      k<- k + 1
+    }
+  }
+  names(rawSim)<- row.names(params)
+  
+  res<- as.data.frame(res)
+  if (pars$raw){
+    simRes<- new("Sim.numericDistri", res, params=pars, raw=raw)
+  }else{
+    simRes<- new("Sim.numericDistri", res, params=pars)
+  }
+  
+  return(simRes)
 }
 
 ##
 setGeneric("result", function(model) standardGeneric("result"))
-# Create a Sim object with the results
+# Create a data frame with the results and parameters
 setMethod("result", 
           signature(model="Model"),
           function(model){
             if (nrow(object@sim) == 0){
               stop("There are no results yet. Use run(model) to start the simulations. The function return a model with the results on the sim slot.\n")
             }else{
-              res<- merge(S3Part(object)[,1:12], S3Part(object@sim), by.x="row.names", by.y="scenario")
+              res<- merge(S3Part(object), S3Part(object@sim), by.x="row.names", by.y="scenario")
               names(res)[1]<- "scenario"
               res<- res[order(res$scenario, res$N0),]
             }

@@ -118,6 +118,10 @@ setBehavior<- function(params, behavior){
     params[c("c1", "c2", "cF")]<- c(0, 0, 3)
   }
   
+  if (any(grepl("learnExploreBreed", behavior))){ # Avoid habitat 2 after exploring or breeding fail
+    params[c("c1", "c2", "cF")]<- c(1, 3, 3)
+  }
+  
   if (any(grepl("preferHab1", behavior))){
     params[c("P1s","P1b","P1j")]<- c(.8,.8,.8)
   }
@@ -133,13 +137,13 @@ setBehavior<- function(params, behavior){
   return (params)
 }
 
-getParamsCombination<- function(strategies=c("slow", "fast", "freqRepro"), 
+getParamsCombination.LH_Beh<- function(strategies=c("slow", "fast", "freqRepro"), 
                                 scenarios=c("identicalHab", "mortalHab2", "nestPredHab2"), 
-                                behaviors=c("neutral", "skip", "learnBreed", "preferHab1", "preferHab2")){
+                                behaviors=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2")){
   comb<- expand.grid(list(strategy=strategies, scenario=scenarios, behavior=behaviors), stringsAsFactors=FALSE)
   params<- data.frame()
   for (i in 1:nrow(comb)){
-    params<- rbind(params, getParams(comb$strategy[i], scenario=comb$scenario[i], behavior=comb$behavior[i]))
+    params<- rbind(params, getParams.LH_Beh(comb$strategy[i], scenario=comb$scenario[i], behavior=comb$behavior[i]))
   }
   
   return (params)

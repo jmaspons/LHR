@@ -14,7 +14,7 @@ setMethod("Sim",
 )
 
 ## Subclasses
-## Sim.discretePopSim Class
+## Sim.discretePopSim Class ----
 setClass("Sim.discretePopSim", contains="Sim")
 setGeneric("Sim.discretePopSim", function(N0, envVar, sexRatio, matingSystem, tf, replicates, raw=TRUE) standardGeneric("Sim.discretePopSim"))
 setMethod("Sim.discretePopSim",
@@ -37,30 +37,32 @@ setMethod("Sim.discretePopSim",
           }
 )
 
-## Sim.numericDistri Class
+## Sim.numericDistri Class ----
 #TODO: sexRatio
 setClass("Sim.numericDistri", contains="Sim")
-setGeneric("Sim.numericDistri", function(N0, structure, raw) standardGeneric("Sim.numericDistri"))
+setGeneric("Sim.numericDistri", function(N0, envVar, sexRatio, matingSystem, raw=TRUE) standardGeneric("Sim.numericDistri"))
 setMethod("Sim.numericDistri",
-          signature(N0="numeric", structure="character", raw="logical"),
-          function(N0, structure, raw){
-            params<- list(N0=N0, structure=structure, raw=raw)
-            sim<- new("Sim.numericDistri", params=params)
+          signature(N0="numeric", envVar="list", sexRatio="numeric", matingSystem="character", raw="logical"),
+          function(N0, envVar, sexRatio, matingSystem, raw){
+            params<- list(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, raw=raw)
+            sim<- new("Sim.numericDistri", 
+                      params=params)
             return (sim)
           }
 )
 
 setMethod("Sim.numericDistri",
-          signature(N0="missing", structure="missing", raw="missing"),
+          signature(N0="missing", envVar="missing", sexRatio="missing", matingSystem="missing", raw="missing"),
           function(){
-            params<- list(N0=c(2, 10), structure="fit", raw=TRUE)
-            sim<- new("Sim.numericDistri", params=params)
+            params<- list(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA, matingSystem=NA, raw=TRUE)
+            sim<- new("Sim.numericDistri", 
+                      params=params)
             return (sim)
           }
 )
 
 
-## Sim.ssa Class
+## Sim.ssa Class ----
 # setOldClass("ssa")
 setClass("Sim.ssa", contains="Sim") #slots=list(result="ssa"), needs S3 class prototype
 setGeneric("Sim.ssa", function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, 

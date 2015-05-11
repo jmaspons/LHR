@@ -9,7 +9,7 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, tf=10, replicates=10
 
   resStats<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=12,
                                           dimnames=list(scenario=paste0(rownames(params), "_N", rep(sapply(x0L, sum), times=nrow(params))),
-                                                                        stats=c("params", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))))
+                                                                        stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))))
 #                                                         , "increase.dtF", "decrease.dtF", "stable.dtF", "extinct.dtF", "GR.dtF", "meanR.dtF", "varR.dtF", "GL.dtF", "meanL.dtF", "varL.dtF"))))
   if (discretePop) resPop<- list()
   if (finalPop) fPop<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=replicates, dimnames=list(scenari=paste0(rownames(params), "_N", rep(sapply(x0L, sum), times=nrow(params)), Nf=NULL))))
@@ -38,7 +38,7 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, tf=10, replicates=10
       # popDtF: dt= tf - 0
       popDtF<- pop[,c(1,ncol(pop))]
       popDtF[is.na(popDtF[,2]),2]<- 0
-      tmp<- data.frame(params=rownames(params)[i], N0=sum(x0L[[j]]), summary(popDtF), stringsAsFactors=FALSE) ## TODO check params column. It's always 1!!
+      tmp<- data.frame(scenario=rownames(params)[i], N0=sum(x0L[[j]]), summary(popDtF), stringsAsFactors=FALSE) ## TODO check params column. It's always 1!!
 #       if (!is.null(dtDiscretize)) tmp<- rbind(tmp, summary(pop))
 #       names(tmp)<- gsub(".1", ".dt", names(tmp))
       resStats[k,]<- tmp
