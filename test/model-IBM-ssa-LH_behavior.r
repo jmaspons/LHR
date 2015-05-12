@@ -3,10 +3,22 @@ tf <- 20 # Final time
 x0 <- c(N1s=0, N1b=1, N1bF=0, N1j=0, N2s=0, N2b=1, N2bF=0, N2j=0)
 x0L<- lapply(1:6, function(x) x0 * x)
 params<- getParams.LH_Beh()
-
+x0A<- c(N1s=1, N1b=1, N1bF=1, N1j=1, N2s=1, N2b=1, N2bF=1, N2j=1)
+x0AL<- lapply(50, function(x) x0 * x)
 i<- 1
 trans<- transitionMat.LH_Beh(params[i,])
 rateFunc.LH_Beh(x0L[[5]],params = params[i,])
+for (i in 1:nrow(params)){
+  tmp<- rateFunc.LH_Beh(x0AL[[1]],params = params[i,])
+  tmp<- tmp[tmp != 0]
+  repro<- sum(tmp[grep("repro[0-9]{1}b\\.", names(tmp))])
+  dead<- sum(tmp[grep("dead", names(tmp))])
+  tmp<- c(repro=repro, dead=dead)
+  cat("\t", rownames(params)[i], "\n")
+  print(rbind(tmp, tmp / sum(tmp)))
+}
+
+lapply()
 
 sim0<- ssa.adaptivetau(x0L[[5]], trans, rateFunc.LH_Beh, params[i,], tf)
 plotSim(sim0)
