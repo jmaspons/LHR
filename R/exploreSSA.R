@@ -1,6 +1,6 @@
 setOldClass("ssa")
 
-## Explore SSA
+## Explore SSA ----
 exploreSSA<- function(x0L, params, transitionMat, rateFunc, tf=10, replicates=100,
                       discretePop=FALSE, finalPop=TRUE, burnin=-1, dtDiscretize=NULL, cores=1, mc.preschedule=TRUE, ...){
   if (is.numeric(x0L)){
@@ -8,11 +8,14 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, tf=10, replicates=10
   }
 
   resStats<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=12,
-                                          dimnames=list(scenario=paste0(rownames(params), "_N", rep(sapply(x0L, sum), times=nrow(params))),
-                                                                        stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))))
+                                  dimnames=list(scenario=paste0(rep(rownames(params), each=length(x0L)), "_N", rep(sapply(x0L, sum), times=nrow(params))),
+                                                                stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))))
 #                                                         , "increase.dtF", "decrease.dtF", "stable.dtF", "extinct.dtF", "GR.dtF", "meanR.dtF", "varR.dtF", "GL.dtF", "meanL.dtF", "varL.dtF"))))
+  if (finalPop) fPop<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=replicates, 
+                                            dimnames=list(scenario=paste0(rep(rownames(params), each=length(x0L)), "_N", rep(sapply(x0L, sum), times=nrow(params))), 
+                                                          Nf=NULL)))
   if (discretePop) resPop<- list()
-  if (finalPop) fPop<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=replicates, dimnames=list(scenari=paste0(rownames(params), "_N", rep(sapply(x0L, sum), times=nrow(params)), Nf=NULL))))
+
   k<- 1
   for (i in 1:nrow(params)){
     cat(i, "/", nrow(params), rownames(params)[i], "\n")
@@ -41,6 +44,7 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, tf=10, replicates=10
       tmp<- data.frame(scenario=rownames(params)[i], N0=sum(x0L[[j]]), summary(popDtF), stringsAsFactors=FALSE) ## TODO check params column. It's always 1!!
 #       if (!is.null(dtDiscretize)) tmp<- rbind(tmp, summary(pop))
 #       names(tmp)<- gsub(".1", ".dt", names(tmp))
+if(paste0(rownames(params)[i], "_N", sum(x0L[[j]])) != rownames(resStats)[k]) stop("Incorrect rownames")
       resStats[k,]<- tmp
 
       print(tmp, row.names=FALSE)
@@ -69,7 +73,7 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, tf=10, replicates=10
   return (res)
 }
 
-
+## Discretize the result of a ssa simulations from adaptivetau ----
 # sim: matrix(ncol=1:tf, nrow=nStates, dimnames=list(time=NULL, state=c("time", states))) from ssa (e.g. models-IBM-ssa_LH_behavior.R)
 discretizePopSim<- function(sim, dt=NULL, burnin=-1, keepStates=FALSE){
   extinctionTime<- sim[match(TRUE, rowSums(sim[,-1]) == 0), "time"]
