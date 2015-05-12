@@ -5,7 +5,8 @@ Version: 0.1
 Date: 2012-05-23
 Author: Joan Maspons
 Maintainer: Joan Maspons <joanmaspons@gmail.com>
-Depends: adaptivetau, parallel
+Depends: adaptivetau, parallel, reshape2
+Suggests: popbio
 Description: Implements stochastic demographic models. Compound distributions (Beta binomial, Beta negative binomial and binomial with random size parameter following a binomial distribution)
 License: GPL (>= 2)
 Packaged: 2013-01-07 11:06:19 UTC; joan

@@ -16,9 +16,12 @@ sbeta<- function(shape1, shape2){
   return (list(mean=mean, var=var))
 }
 
-fbeta<- function(mean, var){
-# Hi ha restriccions en l'espai mean ~ var (max var = 0.25 & mean= 0.5): alpha > 1 & beta > 1 -> unimodal
+fbeta<- function(mean, var="max"){
+# Restrictions on the parameter space: max(var) = mean - mean^2 
+#   (max var = 0.25 & mean= 0.5)
+#   alpha > 1 & beta > 1 -> unimodal
 # Maxima: solve([mean= shape1/(shape1+shape2) , var= shape1*shape2/((shape1+shape2)^2 * (shape1+shape2+1))], [shape1,shape2]);
+  if (var[1] == "max") var<- maxVarBeta(mean) - 0.0000000000001
   shape1<-  -(mean * var + mean^3 - mean^2) / var
   shape2<- ((mean-1) * var + mean^3 - 2 * mean^2 + mean) / var
   
@@ -31,11 +34,13 @@ fbeta<- function(mean, var){
   
   shape2[which(is.na(shape1))]<- NaN
       
-  if (any(is.nan(shape1)))
+  if (any(is.nan(shape1) & var != 0))
   	warning("NaNs produced (parameters out of domain)")
 
   return (data.frame(shape1, shape2))
 }
+
+maxVarBeta<- function(mean) mean - mean^2 # max var is the superior limit (not included)
 
 ## Binomial distribution
 sbinom<- function(size, prob){

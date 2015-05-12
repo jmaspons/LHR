@@ -24,11 +24,11 @@ G.numeric<- function(mu, sigma2){
   return (mu - sigma2 / (2 * mu))
 }
 
-G.discretePopSim<- function(pop, growRate=c("r", "lambda")[1]){
+G.discretePopSim<- function(pop, growRate=c("r", "lambda")[1], ...){
   Gres<- switch(growRate,
-         r={rPop<- as.numeric(r(pop)); # avoid var() returns a var/cov matrix
+         r={rPop<- as.numeric(r(pop), ...); # avoid var() returns a var/cov matrix
             G(mean(rPop), var(rPop))},
-         lambda={lambdaPop<- as.numeric(lambda(pop));
+         lambda={lambdaPop<- as.numeric(lambda(pop), ...);
             GLambda<- G(mean(lambdaPop), var(lambdaPop))})
   return (Gres)
 } 

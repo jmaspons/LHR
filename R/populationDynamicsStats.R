@@ -29,6 +29,8 @@ r.discretePopSim<- function(pop, dt=1){
   return (r) # intrinsic grow rate (r = dN / dt / N)
 }
 
+# r.numericDistri on models-compoundDistributions.R
+
 lambda<- function(...){
   UseMethod("lambda")  
 }
@@ -42,6 +44,7 @@ lambda.discretePopSim<- function(pop, dt=1){
 }
 
 # lambda.leslieMatrix on model-deterministic.R
+# lambda.numericDistri on models-compoundDistributions.R
 
 # Proportions for trends. Decrease includes extinct.
 trendsProp<- function(...){

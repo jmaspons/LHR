@@ -25,7 +25,7 @@ paramSpaceBeta<- function(method=c("meanVar", "freeShape"), pattern=c("montecarl
       betaDist<- data.frame(sbeta(betaDist$shape1, betaDist$shape2), betaDist)
     })
 
-  return (param)
+  return (param[with(param, order(mean, var)),]) #
 }
 
 # For high dimensionality (e.g. interaction between 2 beta parameter space)

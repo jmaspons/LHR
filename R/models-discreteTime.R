@@ -308,7 +308,7 @@ mSurvBV.tseason<- function(broods, b, j, a, breedFail, N0, replicates, tf, maxN=
     for (k in seq_along(broods)){
       succeedingBroods<- rbinom(replicates, pop[,t], 1 - breedFail[k])
       # Juvenile survivors
-      pop[s,t+1]<- pop[s,t+1] + rbinom(1, b * succeedingBroods, j[k])
+      pop[,t+1]<- pop[,t+1] + rbinom(1, b * succeedingBroods, j[k])
     }
 
     # Add adult survivors
@@ -475,7 +475,7 @@ mSurvBVSex.tseason<- function(broods, b, j, a, breedFail, N0, replicates, tf, ma
     for (k in seq_along(broods)){
       succeedingBroods<- rbinom(replicates, pop[,t], 1 - breedFail[k])
       # Juvenile survivors
-      pop[s,t+1]<- pop[s,t+1] + rbinom(1, b * succeedingBroods, j[k])
+      pop[,t+1]<- pop[,t+1] + rbinom(1, b * succeedingBroods, j[k])
     }
     
     # Add adult survivors
