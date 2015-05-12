@@ -11,9 +11,9 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, tf=10, replicates=10
                                   dimnames=list(scenario=paste0(rep(rownames(params), each=length(x0L)), "_N", rep(sapply(x0L, sum), times=nrow(params))),
                                                                 stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))))
 #                                                         , "increase.dtF", "decrease.dtF", "stable.dtF", "extinct.dtF", "GR.dtF", "meanR.dtF", "varR.dtF", "GL.dtF", "meanL.dtF", "varL.dtF"))))
-  if (finalPop) fPop<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=replicates, 
+  if (finalPop) Ntf<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=2 + replicates, 
                                             dimnames=list(scenario=paste0(rep(rownames(params), each=length(x0L)), "_N", rep(sapply(x0L, sum), times=nrow(params))), 
-                                                          Nf=NULL)))
+                                                          Ntf=c("scenario", "N0", 1:replicates))))
   if (discretePop) resPop<- list()
 
   k<- 1
@@ -22,7 +22,7 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, tf=10, replicates=10
     transitions<- transitionMat(params[i,])
     
     if (discretePop) resPop[[i]]<- list()
-#     if (finalPop) fPop[[i]]<- as.data.frame(matrix(nrow=length(x0L), ncol=replicates, dimnames=list(N0=sapply(x0L, sum), Nf=NULL)))
+#     if (finalPop) Ntf[[i]]<- as.data.frame(matrix(nrow=length(x0L), ncol=replicates, dimnames=list(N0=sapply(x0L, sum), Nf=NULL)))
 
     for (j in seq_along(x0L)){
       RNGkind("L'Ecuyer-CMRG") # ?mcparallel > Random numbers
@@ -50,7 +50,11 @@ if(paste0(rownames(params)[i], "_N", sum(x0L[[j]])) != rownames(resStats)[k]) st
       print(tmp, row.names=FALSE)
 
       if (discretePop) resPop[[i]][[j]]<- pop
-      if (finalPop) fPop[k,]<- sort(pop[,ncol(pop)])
+      if (finalPop){
+        pop<- pop[,ncol(pop)]
+        pop[is.na(pop)]<- 0
+        Ntf[k,]<- c(rownames(params)[i], N0=sum(x0L[[j]]), sort(pop))
+      }
       k<- k +1
     }# End N0 loop
 
@@ -65,7 +69,7 @@ if(paste0(rownames(params)[i], "_N", sum(x0L[[j]])) != rownames(resStats)[k]) st
     res<- c(res, list(pop=resPop))
   }
   if (finalPop){
-    res<- c(res, list(popTf=fPop))
+    res<- c(res, list(Ntf=Ntf))
   }
   res<- c(res, list(params=params))
   res<- c(res, list(simParams=list(x0L=x0L, tf=tf, replicates=replicates, burnin=burnin, dtDiscretize=dtDiscretize)))

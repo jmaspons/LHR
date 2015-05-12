@@ -15,12 +15,12 @@ setMethod("Sim",
 
 ## Subclasses
 ## Sim.discretePopSim Class ----
-setClass("Sim.discretePopSim", contains="Sim")
-setGeneric("Sim.discretePopSim", function(N0, envVar, sexRatio, matingSystem, tf, replicates, raw=TRUE) standardGeneric("Sim.discretePopSim"))
+setClass("Sim.discretePopSim", slots=list(Ntf="data.frame"), contains="Sim")
+setGeneric("Sim.discretePopSim", function(N0, envVar, sexRatio, matingSystem, tf, replicates, raw=TRUE, Ntf=TRUE) standardGeneric("Sim.discretePopSim"))
 setMethod("Sim.discretePopSim",
-          signature(N0="numeric", envVar="list", sexRatio="numeric", matingSystem="character", tf="numeric", replicates="numeric", raw="logical"),
-          function(N0, envVar, sexRatio, matingSystem, tf, replicates, raw){
-            params<- list(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, tf=tf, replicates=replicates, raw=raw)
+          signature(N0="numeric", envVar="list", sexRatio="numeric", matingSystem="character", tf="numeric", replicates="numeric", raw="logical", Ntf="logical"),
+          function(N0, envVar, sexRatio, matingSystem, tf, replicates, raw, Ntf){
+            params<- list(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf)
             sim<- new("Sim.discretePopSim", 
                              params=params)
             return (sim)
@@ -28,9 +28,9 @@ setMethod("Sim.discretePopSim",
 )
 
 setMethod("Sim.discretePopSim",
-          signature(N0="missing", envVar="missing", sexRatio="missing", matingSystem="missing", tf="missing", replicates="missing", raw="missing"),
+          signature(N0="missing", envVar="missing", sexRatio="missing", matingSystem="missing", tf="missing", replicates="missing", raw="missing", Ntf="missing"),
           function(){
-            params<- list(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA, matingSystem=NA, tf=10, replicates=15, raw=TRUE)
+            params<- list(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA, matingSystem=NA, tf=10, replicates=15, raw=TRUE, Ntf=TRUE)
             sim<- new("Sim.discretePopSim", 
                              params=params)
             return (sim)
@@ -64,26 +64,26 @@ setMethod("Sim.numericDistri",
 
 ## Sim.ssa Class ----
 # setOldClass("ssa")
-setClass("Sim.ssa", contains="Sim") #slots=list(result="ssa"), needs S3 class prototype
+setClass("Sim.ssa", slots=list(Ntf="data.frame"), contains="Sim") #slots=list(result="ssa"), needs S3 class prototype
 setGeneric("Sim.ssa", function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, 
-                               tf=10, replicates=15, raw=TRUE, popTf=TRUE, stats=TRUE) standardGeneric("Sim.ssa"))
+                               tf=10, replicates=15, raw=TRUE, Ntf=TRUE, stats=TRUE) standardGeneric("Sim.ssa"))
 setMethod("Sim.ssa",
-          signature(N0="list", transitionMat="closure", rateFunc="closure", tf="numeric", replicates="numeric", raw="logical", popTf="logical", stats="logical"),
-          function(N0, transitionMat, rateFunc, tf, replicates, raw, popTf, stats){
-            params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, raw=raw, popTf=popTf, stats=stats)
+          signature(N0="list", transitionMat="closure", rateFunc="closure", tf="numeric", replicates="numeric", raw="logical", Ntf="logical", stats="logical"),
+          function(N0, transitionMat, rateFunc, tf, replicates, raw, Ntf, stats){
+            params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf, stats=stats)
             simulation<- new("Sim.ssa", params=params)
             return (simulation)
           }
 )
 
 setMethod("Sim.ssa",
-          signature(N0="ANY", transitionMat="ANY", rateFunc="ANY", tf="ANY", replicates="ANY", raw="ANY", popTf="ANY", stats="ANY"),
-          function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, tf=10, replicates=15, raw=TRUE, popTf=TRUE, stats=TRUE){
+          signature(N0="ANY", transitionMat="ANY", rateFunc="ANY", tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY", stats="ANY"),
+          function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, tf=10, replicates=15, raw=TRUE, Ntf=TRUE, stats=TRUE){
             if (missing(N0)){
               N0<- c(N1s=0, N1b=1, N1bF=0, N1j=0, N2s=0, N2b=1, N2bF=0, N2j=0)
               N0<- lapply(2^(0:5), function(x) N0 * x)
             }
-            params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, raw=raw, popTf=popTf, stats=stats)
+            params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf, stats=stats)
             sim<- new("Sim.ssa", params=params)
             return (sim)
           }

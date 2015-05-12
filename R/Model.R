@@ -109,8 +109,16 @@ run.discretePopSim<- function(model){
   pars<- model@sim@params
 
   rawSim<- list()
-  res<- array(dim=c(nrow(scenario) * length(pars$N0), 12), 
-              dimnames=list(LH_N0=NULL, stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
+  res<- matrix(nrow=nrow(scenario) * length(pars$N0), ncol=12, 
+              dimnames=list(scenario=paste0(rep(rownames(scenario), each=length(pars$N0)), "_N", rep(pars$N0, times=nrow(scenario))),
+                            stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
+  if (pars$Ntf){
+    Ntf<- matrix(nrow=nrow(scenario) * length(pars$N0), ncol=2 + pars$replicates, 
+                 dimnames=list(scenario=paste0(rep(rownames(scenario), each=length(pars$N0)), "_N", rep(pars$N0, times=nrow(scenario))), 
+                               Ntf=c("scenario", "N0", 1:pars$replicates)))
+    Ntf<- as.data.frame(Ntf)
+  }
+  
   k<- 1
   for (i in 1:nrow(scenario)){ ## TODO: parallelise
     ## TODO: pass model@params (LH*Env) to the function, add as a scenario instead as in @params
@@ -130,23 +138,32 @@ run.discretePopSim<- function(model){
       pop<- with(scenario[i,], discretePopSim(broods=broods, b=b, j=jMseason, a=a, breedFail=breedFailMseason,
                                               varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
                                               pars$sexRatio, pars$matingSystem, N0, pars$replicates, pars$tf))
+      ## TODO: pop<- list(popF, popM)
+      res[k,]<- c(i, N0, as.numeric(summary(pop)))
 
       if (pars$raw){
         rawSim[[i]][[n]]<- pop
         names(rawSim[[i]])[n]<- N0
       }
-      ## TODO: pop<- list(popF, popM)
-      res[k,]<- c(i, N0, as.numeric(summary(pop)))
+      if (pars$Ntf){
+        pop<- pop[,ncol(pop)]
+        pop[is.na(pop)]<- 0
+        Ntf[k,]<- c(rownames(scenario)[i], N0, sort(pop))
+      }
+
       k<- k + 1
     }
   }
-  names(rawSim)<- row.names(params)
+  names(rawSim)<- row.names(scenario)
 
   res<- as.data.frame(res)
+  simRes<- new("Sim.discretePopSim", res, params=pars)
   if (pars$raw){
-    simRes<- new("Sim.discretePopSim", res, params=pars, raw=raw)
-  }else{
-    simRes<- new("Sim.discretePopSim", res, params=pars)
+    simRes@raw<- rawSim
+  }
+  if (pars$Ntf){
+    Ntf[,-1]<- apply(Ntf[,2:ncol(Ntf)], 2, as.numeric)
+    simRes@Ntf<- Ntf
   }
   
   return(simRes)
@@ -158,8 +175,9 @@ run.numericDistri<- function(model){
   pars<- model@sim@params
   
   rawSim<- list()
-  res<- array(dim=c(nrow(scenario) * length(pars$N0), 12), 
-              dimnames=list(LH_N0=NULL, stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
+  res<- matrix(nrow=nrow(scenario) * length(pars$N0), ncol=12, 
+              dimnames=list(scenario=paste0(rep(rownames(scenario), each=length(pars$N0)), "_N", rep(pars$N0, times=nrow(scenario))),
+                            stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
   k<- 1
   for (i in 1:nrow(scenario)){ ## TODO: parallelise
     ## TODO: pass model@params (LH*Env) to the function, add as a scenario instead as in @params
@@ -202,21 +220,39 @@ print(scenario[i,])
 }
 
 ##
-setGeneric("result", function(model) standardGeneric("result"))
-# Create a data frame with the results and parameters
+setGeneric("result", function(model, type="stats") standardGeneric("result"))
+# Create a data frame with the aggregated results and parameters
 setMethod("result", 
-          signature(model="Model"),
-          function(model){
-            if (nrow(object@sim) == 0){
+          signature(model="Model", type="ANY"),
+          function(model, type="stats"){
+            if (nrow(model@sim) == 0){
               stop("There are no results yet. Use run(model) to start the simulations. The function return a model with the results on the sim slot.\n")
-            }else{
-              res<- merge(S3Part(object), S3Part(object@sim), by.x="row.names", by.y="scenario")
-              names(res)[1]<- "scenario"
-              res<- res[order(res$scenario, res$N0),]
             }
-            return(res)
-          }
-          
+#               if (all(is.na(as.numeric(res$scenario)))){ # for categoric scenarios in ssaLH-behavior
+#                 scenario<- strsplit(res$scenario, "_")
+#                 scenario<- do.call("rbind", scenario)
+#                 if (inherits(model@sim, "Sim.ssa")){
+#                   colnames(scenario)<- c("LH", "environment", "behavior")
+#                 }
+#                 res<- data.frame(scenario, res)
+#               }
+            res<- switch(type,
+              stats={
+                res<- merge(S3Part(model), S3Part(model@sim), by.x="row.names", by.y="scenario")
+                names(res)[1]<- "scenario"
+                res<- res[order(res$scenario, res$N0),]
+                res},
+              Ntf={
+                res<- model@sim@Ntf
+                res<- melt(res, id.vars=1:2, value.name="Ntf") # id vars: scenario and N0
+                res$quantile<- as.numeric(res$variable)
+                res$quantile<- (res$quantile - 1) / (model@sim@params$replicates - 1) # length(unique(res$quantile)) == replicates
+                res<- res[,-3]
+              }
+            )
+
+          return(res)
+        }
 )
 
 
