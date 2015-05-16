@@ -2,18 +2,9 @@
 setClass("Model", slots=list(sim="Sim", params="list"), contains="data.frame")
 
 ## Constructor ----
-setGeneric("Model", function(lh=LH(), env=Env(), sim=Sim()) standardGeneric("Model"))
-
-setMethod("Model",
-          signature(lh="missing", env="missing", sim="missing"),
-          function(lh=LH(), env=Env(), sim=Sim()){
-            model<- Model(lh, env, sim)
-            return (model)
-          }
-)
-
-
-setMethod("Model",
+# TODO: don't export Model_complete
+setGeneric("Model_complete", function(lh=LH(), env=Env(), sim=Sim()) standardGeneric("Model_complete"))
+setMethod("Model_complete",
           signature(lh="LH", env="Env", sim="Sim"),
           function(lh, env, sim){
             lhEnv<- combineLH_Env(lh=lh, env=env)
@@ -22,20 +13,23 @@ setMethod("Model",
             
             model<- new("Model", 
                         scenario,
-#                         lh=lh, Data in scenario and easily to recreate the obj with LH(unique(scenario))
-#                         env=env,
+                        #                         lh=lh, Data in scenario and easily to recreate the obj with LH(unique(scenario))
+                        #                         env=env,
                         sim=sim,
                         params=parameters)
             return (model)
           }
 )
 
+setGeneric("Model", function(lh=LH(), env=Env(), sim=Sim()) standardGeneric("Model"))
 setMethod("Model",
-          signature(lh="LH", env="Env", sim="missing"),
-          function(lh, env){
-            Model(lh=lh, env=env, sim=Sim())
+          signature(lh="ANY", env="ANY", sim="ANY"),
+          function(lh=LH(), env=Env(), sim=Sim()){
+            model<- Model_complete(lh, env, sim)
+            return (model)
           }
 )
+
 
 
 ## Combine LH and Environment ----
@@ -135,9 +129,9 @@ run.discretePopSim<- function(model){
     
     for (n in 1:length(pars$N0)){
       N0<- pars$N0[n]
-      pop<- with(scenario[i,], discretePopSim(broods=broods, b=b, j=jMseason, a=a, breedFail=breedFailMseason,
+      pop<- with(scenario[i,], discretePopSim.dispatch(broods=broods, b=b, j=jMseason, a=a, breedFail=breedFailMseason,
                                               varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
-                                              pars$sexRatio, pars$matingSystem, N0, pars$replicates, pars$tf))
+                                              sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, replicates=pars$replicates, tf=pars$tf))
       ## TODO: pop<- list(popF, popM)
       res[k,]<- c(i, N0, as.numeric(summary(pop)))
 

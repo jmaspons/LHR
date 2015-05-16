@@ -13,10 +13,10 @@ extinctNA<- function(pop){
   return(pop)
 }
 
-setGeneric("discretePopSim", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0, 
+setGeneric("discretePopSim.dispatch", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0, 
                                       sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], 
-                                      N0, replicates, tf, maxN=100000) standardGeneric("discretePopSim"))
-setMethod("discretePopSim",  # function dispatcher # TODO check what happen with the full model and the dispatcher (same signature)
+                                      N0, replicates, tf, maxN=100000) standardGeneric("discretePopSim.dispatch"))
+setMethod("discretePopSim.dispatch",  # function dispatcher # TODO check what happen with the full model and the dispatcher (same signature)
           signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="numeric", varBreedFail="numeric",
                     sexRatio="ANY", matingSystem="ANY", N0="numeric", replicates="numeric", tf="numeric", maxN="ANY"),
           function(broods=1, b, j, a, breedFail, varJ=0, varBreedFail=0, sexRatio=.5, matingSystem="monogamy", N0, replicates, tf, maxN=100000){
@@ -40,18 +40,21 @@ print(cm)
           }
 )
 
+setGeneric("discretePopSim", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0, 
+                                               sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], 
+                                               N0, replicates, tf, maxN=100000) standardGeneric("discretePopSim"))
 ## Stable environment
 setMethod("discretePopSim", 
           signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="missing", varBreedFail="missing",
-                    sexRatio="missing", matingSystem="missing", N0="numeric", replicates="numeric", tf="numeric", maxN="ANY"),
-          function(b, j, a, N0, replicates, tf, maxN=100000){ #mFit
+                    sexRatio="missing", matingSystem="missing", N0="numeric", replicates="numeric", tf="numeric", maxN="numeric"),
+          function(b, j, a, N0, replicates, tf, maxN){ #mFit
             mFit.t(fecundity=b, j=j, a=a, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
           }
 )
 setMethod("discretePopSim", 
           signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="missing", varBreedFail="missing",
-                    sexRatio="missing", matingSystem="missing", N0="numeric", replicates="numeric", tf="numeric", maxN="ANY"),
-          function(broods, b, j, a, breedFail, N0, replicates, tf, maxN=100000){ #mSurvBV
+                    sexRatio="missing", matingSystem="missing", N0="numeric", replicates="numeric", tf="numeric", maxN="numeric"),
+          function(broods, b, j, a, breedFail, N0, replicates, tf, maxN){ #mSurvBV
             if (length(j) > 1 | length(a) > 1){
               mSurvBV.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
             }else{
@@ -61,15 +64,15 @@ setMethod("discretePopSim",
 )
 setMethod("discretePopSim", 
           signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="missing", varBreedFail="missing",
-                    sexRatio="numeric", matingSystem="character", N0="numeric", replicates="numeric", tf="numeric", maxN="ANY"),
-          function(b, j, a, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, replicates, tf, maxN=100000){ #mFitSex
+                    sexRatio="numeric", matingSystem="character", N0="numeric", replicates="numeric", tf="numeric", maxN="numeric"),
+          function(b, j, a, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, replicates, tf, maxN){ #mFitSex
             mFitSex.t(fecundity=b, j=j, a=a, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
           }
 )
 setMethod("discretePopSim", 
           signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="missing", varBreedFail="missing",
-                    sexRatio="numeric", matingSystem="character", N0="numeric", replicates="numeric", tf="numeric", maxN="ANY"),
-          function(broods, b, j, a, breedFail, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, replicates, tf, maxN=100000){ #mSurvBVSex
+                    sexRatio="numeric", matingSystem="character", N0="numeric", replicates="numeric", tf="numeric", maxN="numeric"),
+          function(broods, b, j, a, breedFail, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, replicates, tf, maxN){ #mSurvBVSex
             if (length(j) > 1 | length(a) > 1){
               mSurvBVSex.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
             }else{
@@ -81,15 +84,15 @@ setMethod("discretePopSim",
 # TODO: check environmental correlation between j and breedFail. Same mean value or independent?
 setMethod("discretePopSim", 
           signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="numeric", varBreedFail="numeric",
-                    sexRatio="missing", matingSystem="missing", N0="numeric", replicates="numeric", tf="numeric", maxN="ANY"),
-          function(b, j, a, varJ, varBreedFail, N0, replicates, tf, maxN=100000){ #mFit
+                    sexRatio="missing", matingSystem="missing", N0="numeric", replicates="numeric", tf="numeric", maxN="numeric"),
+          function(b, j, a, varJ, varBreedFail, N0, replicates, tf, maxN){ #mFit
             mFit.tvar(fecundity=b, j=j, a=a, varJ=varJ, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
           }
 )
 setMethod("discretePopSim", 
           signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="numeric", varBreedFail="numeric",
-                    sexRatio="missing", matingSystem="missing", N0="numeric", replicates="numeric", tf="numeric", maxN="ANY"),
-          function(broods, b, j, a, breedFail, varJ, varBreedFail, N0, replicates, tf, maxN=100000){ #mSurvBV
+                    sexRatio="missing", matingSystem="missing", N0="numeric", replicates="numeric", tf="numeric", maxN="numeric"),
+          function(broods, b, j, a, breedFail, varJ, varBreedFail, N0, replicates, tf, maxN){ #mSurvBV
             if (length(a) > 1 | length(j) > 1){
               mSurvBV.tvarseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
             }else{
@@ -99,15 +102,15 @@ setMethod("discretePopSim",
 )
 setMethod("discretePopSim", 
           signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="numeric", varBreedFail="numeric",
-                    sexRatio="numeric", matingSystem="character", N0="numeric", replicates="numeric", tf="numeric", maxN="ANY"),
-          function(b, j, a, varJ, varBreedFail, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, replicates, tf, maxN=100000){ #mFitSex
+                    sexRatio="numeric", matingSystem="character", N0="numeric", replicates="numeric", tf="numeric", maxN="numeric"),
+          function(b, j, a, varJ, varBreedFail, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, replicates, tf, maxN){ #mFitSex
             mFitSex.tvar(fecundity=b, j=j, a=a, varJ=varJ, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
           }
 )
 setMethod("discretePopSim", 
           signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="numeric", varBreedFail="numeric",
-                    sexRatio="numeric", matingSystem="character", N0="numeric", replicates="numeric", tf="numeric", maxN="ANY"),
-          function(broods, b, j, a, breedFail, varJ, varBreedFail, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, replicates, tf, maxN=100000){ #mSurvBVSex
+                    sexRatio="numeric", matingSystem="character", N0="numeric", replicates="numeric", tf="numeric", maxN="numeric"),
+          function(broods, b, j, a, breedFail, varJ, varBreedFail, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, replicates, tf, maxN){ #mSurvBVSex
             if (length(a) > 1 | length(j) > 1){
               mSurvBVSex.tvarseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
             }else{

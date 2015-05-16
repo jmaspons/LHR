@@ -16,26 +16,26 @@ setMethod("Sim",
 ## Subclasses
 ## Sim.discretePopSim Class ----
 setClass("Sim.discretePopSim", slots=list(Ntf="data.frame"), contains="Sim")
-setGeneric("Sim.discretePopSim", function(N0, envVar, sexRatio, matingSystem, tf, replicates, raw=TRUE, Ntf=TRUE) standardGeneric("Sim.discretePopSim"))
-setMethod("Sim.discretePopSim",
+## TODO: don't export Sim.discretePopSim_complete
+setGeneric("Sim.discretePopSim_complete", function(N0, envVar, sexRatio, matingSystem, tf, replicates, raw, Ntf) standardGeneric("Sim.discretePopSim_complete"))
+setMethod("Sim.discretePopSim_complete",
           signature(N0="numeric", envVar="list", sexRatio="numeric", matingSystem="character", tf="numeric", replicates="numeric", raw="logical", Ntf="logical"),
           function(N0, envVar, sexRatio, matingSystem, tf, replicates, raw, Ntf){
             params<- list(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf)
-            sim<- new("Sim.discretePopSim", 
-                             params=params)
+            sim<- new("Sim.discretePopSim", params=params)
             return (sim)
           }
 )
 
+setGeneric("Sim.discretePopSim", function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=10, replicates=15, raw=TRUE, Ntf=TRUE) standardGeneric("Sim.discretePopSim"))
 setMethod("Sim.discretePopSim",
-          signature(N0="missing", envVar="missing", sexRatio="missing", matingSystem="missing", tf="missing", replicates="missing", raw="missing", Ntf="missing"),
-          function(){
-            params<- list(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA, matingSystem=NA, tf=10, replicates=15, raw=TRUE, Ntf=TRUE)
-            sim<- new("Sim.discretePopSim", 
-                             params=params)
+          signature(N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY"),
+          function(N0=c(2, 10), sexRatio=NA_real_, matingSystem=NA_character_, tf=10, replicates=15, raw=TRUE, Ntf=TRUE){
+            sim<- Sim.discretePopSim_complete(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf)
             return (sim)
           }
 )
+
 
 ## Sim.numericDistri Class ----
 #TODO: sexRatio
