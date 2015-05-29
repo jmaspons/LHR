@@ -129,7 +129,7 @@ sampleLH<- function(lambda=seq(.8, 1.2, by=0.2), broods=2^(0:2), b=c(1, 2, 5, 10
     pars$fecundity<- pars$broods * pars$b
     pars<- pars[pars$fecundity <= maxFecundity,]
     # Euler-Lotka corresponds to a pre-breding census matrix
-    pars$j<- with(pars, findJ_EulerLotka(lambda=lambda, b=b, a=a, AFR=AFR))
+    pars$j<- with(pars, findJ_EulerLotka(lambda=lambda, b=fecundity, a=a, AFR=AFR))
     # Filter
     #     pars<- pars[pars$j <= pars$a,]
   }else if (free == "a"){
@@ -138,7 +138,7 @@ sampleLH<- function(lambda=seq(.8, 1.2, by=0.2), broods=2^(0:2), b=c(1, 2, 5, 10
     pars$fecundity<- pars$broods * pars$b
     pars<- pars[pars$fecundity <= maxFecundity,]
     # Euler-Lotka corresponds to a pre-breding census matrix
-    pars$a<- with(pars, findA_EulerLotka(lambda=lambda, b=b, j=j, AFR=AFR))
+    pars$a<- with(pars, findA_EulerLotka(lambda=lambda, b=fecundity, j=j, AFR=AFR))
   }
   
   # Detect errors on the inverse eigenvalue problem and discard them
