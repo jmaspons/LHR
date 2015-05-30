@@ -1,5 +1,5 @@
 # Functions for compound discrete probability distributions resolved numerically
-# numericDistribution class 
+# numericDistri class 
 setOldClass("numericDistri")
 
 ## TODO: call distriBeta* or distri* according to p parameter (p = c(shape1, shape2) | p)
@@ -18,21 +18,12 @@ distriBinom.numeric<- function(size, prob, log=FALSE){
   return (res)
 }
 
-# distri: numericDistribution object which compound a binomial distribution as a size parameter.
+# distri: numericDistri object which compound a binomial distribution as a size parameter.
 # p: probability
 distriBinom.numericDistri<- function(distri, prob, log=FALSE){
-  if (!inherits(distri, "numericDistri")) stop("distri should be a numericDistri object")
+  res<- .External("binomialCompound", distri$p, prob, log)
+  res<- data.frame(x=0:(length(res) - 1), p=res)
   
-  sizeDistri<- lapply(1:nrow(distri), function(i){
-    x<- distri$x[i]
-    p<- distri$p[i]
-    res<- data.frame(x=0:x, p=dbinom(0:x, size=x, prob=prob, log=log) * p)
-    #     class(res)<- c("numericDistri")
-    return (res)
-  })
-  sizeDistri<- do.call("rbind", sizeDistri)
-  res<- by(sizeDistri$p, sizeDistri$x, sum)
-  res<- data.frame(x=as.numeric(names(res)), p=as.numeric(res))
   attributes(res)$p.omitted<- 1 - sum(res$p)
   attributes(res)$parameters<- list(size=c(list(distribution=class(distri)[1]), attributes(distri)$parameters), prob=prob, log=log)
   class(res)<- "compoundBinom"
@@ -57,19 +48,10 @@ distriBetaBinom.numeric<- function(size, shape1, shape2, log=FALSE){
 
 # distri: numericDistribution object which compound a binomial distribution as a size parameter.
 # p: probability
-distriBetaBinom.numericDistri<- function(distri, shape1, shape2){
-  if (!inherits(distri, "numericDistri")) stop("distri should be a numericDistri object")
+distriBetaBinom.numericDistri<- function(distri, shape1, shape2, log=FALSE){
+  res<- .External("BetaBinomialCompound", distri$p, shape1, shape2, log)
+  res<- data.frame(x=0:(length(res) - 1), p=res)
   
-  sizeDistri<- lapply(1:nrow(distri), function(i){
-    x<- distri$x[i]
-    p<- distri$p[i]
-    res<- data.frame(x=0:x, p=dbetabinom(0:x, size=x, shape1, shape2) * p)
-    #     class(res)<- c("numericDistri")
-    return (res)
-  })
-  sizeDistri<- do.call("rbind", sizeDistri)
-  res<- by(sizeDistri$p, sizeDistri$x, sum)
-  res<- data.frame(x=as.numeric(names(res)), p=as.numeric(res))
   attributes(res)$p.omitted<- 1 - sum(res$p)
   attributes(res)$parameters<- list(size=c(list(distribution=class(distri)[1]), attributes(distri)$parameters), prob=prob, log=log)
   class(res)<- "compoundBetaBinom"
@@ -154,5 +136,11 @@ sdistri.numericDistri<- function(distri){
   return (data.frame(mean, var, Gmean))
 }
 
-
+plot.numericDistri<- function(distri, cum=FALSE, ...){
+  if (cum){
+    distri$p<- cumsum(distri$p)
+  }
+  type<- ifelse(cum, "s", "p")
+  plot.default(distri, type=type, ...)
+}
 
