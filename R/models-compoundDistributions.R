@@ -92,7 +92,8 @@ mFit.trans<- function(fecundity, j, a, N){
 mSurvBV.trans<- function(broods, b, j, a, breedFail, N){
   ## Probability of successful breeding attempt without complete brood fail
   nSuccessBroods<- distriBinom(N * broods, prob=1-breedFail)
-  nSuccessBroods$x<- nSuccessBroods$x * b
+  nSuccessBroods<- nSuccessBroods * b
+
   ## Recruitment probability conditioned to the number of successful broods
   recruits<- distriBinom(nSuccessBroods, prob=j)
   
