@@ -13,10 +13,11 @@ extinctNA<- function(pop){
   return(pop)
 }
 
-setGeneric("discretePopSim.dispatch", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0, 
+## S4 model dispatcher ----
+setGeneric("discretePopSim_dispatch", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0,
                                       sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], 
-                                      N0, replicates, tf, maxN=100000) standardGeneric("discretePopSim.dispatch"))
-setMethod("discretePopSim.dispatch",  # function dispatcher # TODO check what happen with the full model and the dispatcher (same signature)
+                                      N0, replicates, tf, maxN=100000) standardGeneric("discretePopSim_dispatch"))
+setMethod("discretePopSim_dispatch",  # function dispatcher
           signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="numeric", varBreedFail="numeric",
                     sexRatio="ANY", matingSystem="ANY", N0="numeric", replicates="numeric", tf="numeric", maxN="ANY"),
           function(broods=1, b, j, a, breedFail, varJ=0, varBreedFail=0, sexRatio=.5, matingSystem="monogamy", N0, replicates, tf, maxN=100000){
@@ -35,7 +36,7 @@ setMethod("discretePopSim.dispatch",  # function dispatcher # TODO check what ha
             }
 
             cm<- paste0(cm, "N0=N0, replicates=replicates, tf=tf, maxN=maxN)")
-print(cm)
+# print(cm)
             eval(expr=parse(text=cm))
           }
 )

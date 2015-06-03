@@ -1,14 +1,16 @@
 ## S4 model dispatcher ----
-setGeneric("t1distri", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0, sexRatio=.5,
-                                matingSystem=c("monogamy", "polygyny", "polyandry")[1], N) standardGeneric("t1distri"))
+setGeneric("t1distri_dispatch", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0, sexRatio=.5,
+                                matingSystem=c("monogamy", "polygyny", "polyandry")[1], N) standardGeneric("t1distri_dispatch"))
 
-setMethod("t1distri",  # function dispatcher # TODO check what happen with the full model and the dispatcher (same signature)
+setMethod("t1distri_dispatch",  # function dispatcher
           signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="numeric", varBreedFail="numeric",
                     sexRatio="ANY", matingSystem="ANY", N="numeric"),
           function(broods=1, b, j, a, breedFail, varJ=0, varBreedFail=0, sexRatio=.5, matingSystem="monogamy", N){
-            cm<- paste0("t1distri(j=j, a=a, b=b, ")
-            if (any(breedFail != 0)){ # any for seasonal where j and breedFail can be a vector of broods length
-              cm<- paste0(cm, "broods=broods, breedFail=breedFail, ")
+            cm<- paste0("t1distri(j=j, a=a, ")
+            if (any(breedFail != 0)){ # ,  any for seasonal where j and breedFail can be a vector of broods length
+              cm<- paste0(cm, "b=b, broods=broods, breedFail=breedFail, ")
+            }else{
+              cm<- paste0(cm, "b=broods * b, ")
             }
             if (!is.na(sexRatio)){
               cm<- paste0(cm, "sexRatio=sexRatio, matingSystem=matingSystem, ")
@@ -21,10 +23,13 @@ setMethod("t1distri",  # function dispatcher # TODO check what happen with the f
             }
             
             cm<- paste0(cm, "N=N)")
-            print(cm)
+# print(cm)
             eval(expr=parse(text=cm))
           }
 )
+
+setGeneric("t1distri", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0, sexRatio=.5,
+                                matingSystem=c("monogamy", "polygyny", "polyandry")[1], N) standardGeneric("t1distri"))
 
 ## Stable environment
 setMethod("t1distri", 

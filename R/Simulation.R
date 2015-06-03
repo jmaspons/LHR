@@ -40,23 +40,23 @@ setMethod("Sim.discretePopSim",
 ## Sim.numericDistri Class ----
 #TODO: sexRatio
 setClass("Sim.numericDistri", contains="Sim")
-setGeneric("Sim.numericDistri", function(N0, envVar, sexRatio, matingSystem, raw=TRUE) standardGeneric("Sim.numericDistri"))
-setMethod("Sim.numericDistri",
+## TODO: don't export Sim.numericDistri_complete
+setGeneric("Sim.numericDistri_complete", function(N0, envVar, sexRatio, matingSystem, raw) standardGeneric("Sim.numericDistri_complete"))
+setMethod("Sim.numericDistri_complete",
           signature(N0="numeric", envVar="list", sexRatio="numeric", matingSystem="character", raw="logical"),
           function(N0, envVar, sexRatio, matingSystem, raw){
             params<- list(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, raw=raw)
-            sim<- new("Sim.numericDistri", 
-                      params=params)
+            sim<- new("Sim.numericDistri", params=params)
             return (sim)
           }
 )
 
+setGeneric("Sim.numericDistri", function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, raw=TRUE) standardGeneric("Sim.numericDistri"))
 setMethod("Sim.numericDistri",
-          signature(N0="missing", envVar="missing", sexRatio="missing", matingSystem="missing", raw="missing"),
-          function(){
-            params<- list(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA, matingSystem=NA, raw=TRUE)
-            sim<- new("Sim.numericDistri", 
-                      params=params)
+          signature(N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", raw="ANY"),
+          function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, raw=TRUE){
+            sim<- Sim.numericDistri_complete(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, raw=raw)
+
             return (sim)
           }
 )
@@ -65,17 +65,19 @@ setMethod("Sim.numericDistri",
 ## Sim.ssa Class ----
 # setOldClass("ssa")
 setClass("Sim.ssa", slots=list(Ntf="data.frame"), contains="Sim") #slots=list(result="ssa"), needs S3 class prototype
-setGeneric("Sim.ssa", function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, 
-                               tf=10, replicates=15, raw=TRUE, Ntf=TRUE, stats=TRUE) standardGeneric("Sim.ssa"))
-setMethod("Sim.ssa",
+# TODO: don't export Sim.ssa_complete
+setGeneric("Sim.ssa_complete", function(N0, transitionMat, rateFunc, tf, replicates, raw, Ntf, stats) standardGeneric("Sim.ssa_complete"))
+setMethod("Sim.ssa_complete",
           signature(N0="list", transitionMat="closure", rateFunc="closure", tf="numeric", replicates="numeric", raw="logical", Ntf="logical", stats="logical"),
           function(N0, transitionMat, rateFunc, tf, replicates, raw, Ntf, stats){
             params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf, stats=stats)
-            simulation<- new("Sim.ssa", params=params)
-            return (simulation)
+            sim<- new("Sim.ssa", params=params)
+            return (sim)
           }
 )
 
+setGeneric("Sim.ssa", function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, 
+                               tf=10, replicates=15, raw=TRUE, Ntf=TRUE, stats=TRUE) standardGeneric("Sim.ssa"))
 setMethod("Sim.ssa",
           signature(N0="ANY", transitionMat="ANY", rateFunc="ANY", tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY", stats="ANY"),
           function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, tf=10, replicates=15, raw=TRUE, Ntf=TRUE, stats=TRUE){
@@ -83,8 +85,7 @@ setMethod("Sim.ssa",
               N0<- c(N1s=0, N1b=1, N1bF=0, N1j=0, N2s=0, N2b=1, N2bF=0, N2j=0)
               N0<- lapply(2^(0:5), function(x) N0 * x)
             }
-            params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf, stats=stats)
-            sim<- new("Sim.ssa", params=params)
+            sim<- Sim.ssa_complete(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf, stats=stats)
             return (sim)
           }
 )
