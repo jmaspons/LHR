@@ -26,6 +26,7 @@ SEXP binomialCompound(SEXP args){
     // res contain the probabilities of resulting distribution for values from 0 to maxSize
     Res = PROTECT(allocVector(REALSXP, maxSize));
     res = REAL(Res);
+    memset(res, 0, maxSize * sizeof(double)); // initialise res
     // Rprintf("\tmaxX:%i\tprob=%.2f,\tlog=%i\n", maxSize, * prob, * log);
     for  (i=0; i < maxSize; i++){
       for (j=0; j <= i; j++){
@@ -63,6 +64,7 @@ SEXP BetaBinomialCompound(SEXP args){
     // res contain the probabilities of resulting distribution for values from 0 to maxSize
     Res = PROTECT(allocVector(REALSXP, maxSize));
     res = REAL(Res);
+    memset(res, 0, maxSize * sizeof(double)); // initialise res
     // Rprintf("\tmaxX:%i\tshape1=%.2f; shape2=%.2f\tlog=%i\n", maxSize, * shape1, * shape2, * log);
     for  (i=0; i < maxSize; i++){
       for (j=0; j <= i; j++){
@@ -102,6 +104,7 @@ SEXP distrisum(SEXP args){
     // res contain the probabilities of resulting distribution for values from 0 to smax
     Res = PROTECT(allocVector(REALSXP, * max + 1));
     res = REAL(Res);
+    memset(res, 0, (* max + 1) * sizeof(double)); // initialise res
     // Rprintf("\tmaxX:%i\tlenX=%i,lenY=%i\n", * max, LENGTH(sx), LENGTH(sy));
     for  (i=0; i < LENGTH(sx); i++){
       for (j=0; j < LENGTH(sy); j++){
