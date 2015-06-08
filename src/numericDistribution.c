@@ -24,7 +24,8 @@ SEXP binomialCompound(SEXP args){
     maxSize = LENGTH(ssize);
     
     // res contain the probabilities of resulting distribution for values from 0 to maxSize
-    res = Calloc(maxSize, double);
+    Res = PROTECT(allocVector(REALSXP, maxSize));
+    res = REAL(Res);
     // Rprintf("\tmaxX:%i\tprob=%.2f,\tlog=%i\n", maxSize, * prob, * log);
     for  (i=0; i < maxSize; i++){
       for (j=0; j <= i; j++){
@@ -33,12 +34,6 @@ SEXP binomialCompound(SEXP args){
       }
     }
     
-    PROTECT(Res = allocVector(REALSXP, maxSize));
-    for (i=0; i <= maxSize; i++){
-      REAL(Res)[i] = res[i];
-    }
-    
-    Free(res);
     UNPROTECT(4);
     return (Res);
 }
@@ -66,7 +61,8 @@ SEXP BetaBinomialCompound(SEXP args){
     maxSize = LENGTH(ssize);
     
     // res contain the probabilities of resulting distribution for values from 0 to maxSize
-    res = Calloc(maxSize, double);
+    Res = PROTECT(allocVector(REALSXP, maxSize));
+    res = REAL(Res);
     // Rprintf("\tmaxX:%i\tshape1=%.2f; shape2=%.2f\tlog=%i\n", maxSize, * shape1, * shape2, * log);
     for  (i=0; i < maxSize; i++){
       for (j=0; j <= i; j++){
@@ -75,12 +71,6 @@ SEXP BetaBinomialCompound(SEXP args){
       }
     }
     
-    PROTECT(Res = allocVector(REALSXP, maxSize));
-    for (i=0; i <= maxSize; i++){
-      REAL(Res)[i] = res[i];
-    }
-    
-    Free(res);
     UNPROTECT(5);
     return (Res);
 }
@@ -91,7 +81,7 @@ SEXP distrisum(SEXP args){
     SEXP sx, spx, sy, spy, smax, Res;
     int * x, * y, * max, xy, i, j;
     double * px, * py, * res;
-  
+    
     args = CDR(args);
     PROTECT(sx = coerceVector(CAR(args), INTSXP));
     args = CDR(args);
@@ -110,7 +100,8 @@ SEXP distrisum(SEXP args){
     max = INTEGER(smax);
     
     // res contain the probabilities of resulting distribution for values from 0 to smax
-    res = Calloc(* max + 1, double);
+    Res = PROTECT(allocVector(REALSXP, * max + 1));
+    res = REAL(Res);
     // Rprintf("\tmaxX:%i\tlenX=%i,lenY=%i\n", * max, LENGTH(sx), LENGTH(sy));
     for  (i=0; i < LENGTH(sx); i++){
       for (j=0; j < LENGTH(sy); j++){
@@ -119,13 +110,7 @@ SEXP distrisum(SEXP args){
         // Rprintf("\tx:%i; p=%.4f; pp=%.4f\txx=%i; px=%.2f; xy=%i; py=%.2f\n", xy, res[xy], px[i] * py[j], x[i], px[i], y[j], py[j]);
       }
     }
-    
-    PROTECT(Res = allocVector(REALSXP, * max + 1));
-    for (i=0; i <= * max; i++){
-      REAL(Res)[i] = res[i];
-    }
-    
-    Free(res);
+
     UNPROTECT(6);
     return (Res);
 }
