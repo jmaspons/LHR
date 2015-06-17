@@ -30,7 +30,7 @@ setMethod("Sim.discretePopSim_complete",
 setGeneric("Sim.discretePopSim", function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=10, replicates=15, raw=TRUE, Ntf=TRUE) standardGeneric("Sim.discretePopSim"))
 setMethod("Sim.discretePopSim",
           signature(N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY"),
-          function(N0=c(2, 10), sexRatio=NA_real_, matingSystem=NA_character_, tf=10, replicates=15, raw=TRUE, Ntf=TRUE){
+          function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=10, replicates=15, raw=TRUE, Ntf=TRUE){
             sim<- Sim.discretePopSim_complete(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf)
             return (sim)
           }
