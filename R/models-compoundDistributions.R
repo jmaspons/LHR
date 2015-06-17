@@ -17,7 +17,7 @@ setMethod("t1distri_dispatch",  # function dispatcher
             }
             if (varJ != 0 | varBreedFail !=0){
               # Select one of the following options and think about correlation (same mean for juvenile survival and breeding fail?)
-              cm<- paste0(cm, "varJ=varJ, varBreedFail=0, ")
+              cm<- paste0(cm, "varJ=varJ, varBreedFail=varBreedFail, ")
               #               cm<- paste0(cm, "varJ=0, varBreedFail=varBreedFail, ")
               #               cm<- paste0(cm, "varJ=varJ, varBreedFail=varBreedFail,")
             }
@@ -40,16 +40,41 @@ setMethod("t1distri",
           }
 )
 setMethod("t1distri", 
+          signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="numeric", varBreedFail="ANY",
+                    sexRatio="missing", matingSystem="missing", N="numeric"),
+          function(b, j, a, varJ, N){ ## TODO: mFit-var
+            mFit_var.trans(fecundity=b, j=j, a=a, varJ=varJ, N=N)
+          }
+)
+
+setMethod("t1distri", 
           signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="missing", varBreedFail="missing",
                     sexRatio="missing", matingSystem="missing", N="numeric"),
           function(broods, b, j, a, breedFail, N){ #mSurvBV
             if (length(j) > 1 | length(a) > 1){
               mSurvBV.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N=N)
             }else{
-              mSurvBV.trans(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N=N)
+## TODO: fix bug when breedFail == 1. result is filled with NA when called from run(model)
+# cat("mSurvBV.trans(broods=", broods, ", b=", b, ", j=", j, ", a=", a, ", breedFail=", breedFail, ", N=", N, ")\n")
+              tmp<- mSurvBV.trans(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N=N)
+# print(tmp)
+# log("a") # Error to debug 
+# return(tmp)
             }
           }
 )
+setMethod("t1distri", 
+          signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="numeric", varBreedFail="numeric",
+                    sexRatio="missing", matingSystem="missing", N="numeric"),
+          function(broods, b, j, a, breedFail, varJ=varJ, varBreedFail=varBreedFail, N){ ##TODO: mSurvBV-var
+            if (length(j) > 1 | length(a) > 1){
+              # mSurvBV_var.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N=N)
+            }else{
+              mSurvBV_var.trans(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, N=N)
+            }
+          }
+)
+
 setMethod("t1distri", 
           signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="missing", varBreedFail="missing",
                     sexRatio="numeric", matingSystem="character", N="numeric"),
@@ -87,20 +112,60 @@ mFit.trans<- function(fecundity, j, a, N){
   return (N_t1)
 }
 
+# N_t+1 = B(n=N_t * fecundity, p=Beta(j, varJ)) + B(n=N_t, p=a)
+mFit_var.trans<- function(fecundity, j, a, varJ, N){
+  betaPars<- fbeta(mean=j, var=varJ)
+  ## Recruitment probability conditioned to the number of successful broods
+  recruits<- distriBetaBinom(N * fecundity, shape1=betaPars$shape1, shape2=betaPars$shape2)
+  
+  ## Adult survival
+  survivors<- distriBinom(size=N, prob=a)
+  N_t1<- distriSum(recruits, survivors)
+  
+  return (N_t1)
+}
+
 # Adult mortality + Brood mortality + offspring mortality
 # N_t+1 = B(n=B(n=N_t * broods, p=1-breedFail) * b, p=j) + B(n=N_t, p=a)
 mSurvBV.trans<- function(broods, b, j, a, breedFail, N){
   ## Probability of successful breeding attempt without complete brood fail
   nSuccessBroods<- distriBinom(N * broods, prob=1-breedFail)
   nSuccessBroods<- nSuccessBroods * b
-
+  
   ## Recruitment probability conditioned to the number of successful broods
   recruits<- distriBinom(nSuccessBroods, prob=j)
   
   ## Adult survival
   survivors<- distriBinom(size=N, prob=a)
   N_t1<- distriSum(recruits, survivors)
+  
+  return (N_t1)
+}
 
+# N_t+1 = B(n=B(n=N_t * broods, p=Beta(1-breedFail, varBreedFail)) * b, p=Beta(j, varJ)) + B(n=N_t, p=a)
+mSurvBV_var.trans<- function(broods, b, j, a, breedFail, varJ, varBreedFail, N){
+  ## Probability of successful breeding attempt without complete brood fail
+  if (varBreedFail > 0){
+    betaPars<- fbeta(mean=1-breedFail, var=varBreedFail)
+    nSuccessBroods<- distriBetaBinom(N * broods, shape1=betaPars$shape1, shape2=betaPars$shape2)
+  }else{
+    nSuccessBroods<- distriBinom(N * broods, prob=1-breedFail)
+  }
+  
+  nSuccessBroods<- nSuccessBroods * b
+  
+  ## Recruitment probability conditioned to the number of successful broods
+  if (varJ > 0){
+    betaPars<- fbeta(mean=j, var=varJ)
+    recruits<- distriBetaBinom(nSuccessBroods, shape1=betaPars$shape1, shape2=betaPars$shape2)
+  }else{
+    recruits<- distriBinom(nSuccessBroods, prob=j)
+  }
+  
+  ## Adult survival
+  survivors<- distriBinom(size=N, prob=a)
+  N_t1<- distriSum(recruits, survivors)
+  
   return (N_t1)
 }
 
