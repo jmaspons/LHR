@@ -16,11 +16,13 @@ setMethod("LH",
           signature(pars="data.frame", lambda="missing", fecundity="missing", broods="missing", b="missing",
                     a="missing", j="missing", s="missing", AFR="missing"),
           function(pars){
+            if (inherits(pars, "Model")) pars<- S3Part(pars)
             # if not defined, subadult survival is equal to adult survival
             if (!"s" %in% names(pars)){
               pars$s<- pars$a
-              pars<- pars[,c("lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")] # Sort columns
             }
+            pars<- unique(pars[,c("lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")]) # Sort columns
+            
             strategy<- new("LH", pars)
             return (strategy)
           }
@@ -100,6 +102,7 @@ setMethod("show", signature(object="LH"),
 
 ## Sample LH ----
 # imposing the deterministic relations between the lambda and the rest of parameters
+# lambda=1; broods=2^(0:2); b=1:10; j=c(.2, .8); a=seq(.3, .9, length=10); AFR=1
 # sampleLH<- function(lambda=seq(.8, 2, by=0.1), broods=2^(0:2), b=c(1, seq(2, 20, by=2)), 
 #                     j=seq(0.2, 0.8, by=0.1), a=seq(0.3, 0.9, by=0.1), AFR=1,
 #                     free=c("j", "lambda")[1], maxFecundity=20, higherJuvMortality=TRUE, method=c("regular", "MonteCarlo"), census="pre-breeding"){
