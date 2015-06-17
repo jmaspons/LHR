@@ -3,7 +3,6 @@
 setOldClass("numericDistri")
 
 ## TODO: call distriBeta* or distri* according to p parameter (p = c(shape1, shape2) | p)
-## TODO: port critical operations to c: distri*.numericDistri
 
 ## Binomial distribution ----
 distriBinom<- function(...){
@@ -18,16 +17,16 @@ distriBinom.numeric<- function(size, prob, log=FALSE){
   return (res)
 }
 
-# distri: numericDistri object which compound a binomial distribution as a size parameter.
+# size: numericDistri object which compound a binomial distribution as a size parameter.
 # p: probability
-distriBinom.numericDistri<- function(distri, prob, log=FALSE){
-  res<- .External("binomialCompound", distri$p, prob, log)
+distriBinom.numericDistri<- function(size, prob, log=FALSE){
+  res<- .External("binomialCompound", size$p, prob, log)
   res<- data.frame(x=0:(length(res) - 1), p=res)
   
   attributes(res)$p.omitted<- 1 - sum(res$p)
-  attributes(res)$parameters<- list(size=c(list(distribution=class(distri)[1]), attributes(distri)$parameters), prob=prob, log=log)
+  attributes(res)$parameters<- list(size=c(list(distribution=class(size)[1]), attributes(size)$parameters), prob=prob, log=log)
   class(res)<- "compoundBinom"
-  if (inherits(distri, "infiniteSuport")) class(res)<- c(class(res), "infiniteSuport")
+  if (inherits(size, "infiniteSuport")) class(res)<- c(class(res), "infiniteSuport")
   class(res)<- c(class(res), "numericDistri", "data.frame")
   
   return (res)
@@ -41,21 +40,23 @@ distriBetaBinom<- function(...){
 distriBetaBinom.numeric<- function(size, shape1, shape2, log=FALSE){
   res<- data.frame(x=0:size, p=dbetabinom(x=0:size, size, shape1, shape2, log=log))
   attributes(res)$p.omitted<- 0
-  attributes(res)$parameters<- list(size=size, shape1=shape1, shape2=shape2, log=log)
+  prob<- sbeta(shape1=shape1, shape2=shape2)
+  attributes(res)$parameters<- list(size=size, prob=prob$mean, var=prob$var, log=log)
   class(res)<- c("betaBinom", "finiteSuport","numericDistri", "data.frame")
   return (res)
 }
 
-# distri: numericDistribution object which compound a binomial distribution as a size parameter.
+# size: numericDistribution object which compound a binomial distribution as a size parameter.
 # p: probability
-distriBetaBinom.numericDistri<- function(distri, shape1, shape2, log=FALSE){
-  res<- .External("BetaBinomialCompound", distri$p, shape1, shape2, log)
+distriBetaBinom.numericDistri<- function(size, shape1, shape2, log=FALSE){
+  res<- .External("BetaBinomialCompound", size$p, shape1, shape2, log)
   res<- data.frame(x=0:(length(res) - 1), p=res)
   
   attributes(res)$p.omitted<- 1 - sum(res$p)
-  attributes(res)$parameters<- list(size=c(list(distribution=class(distri)[1]), attributes(distri)$parameters), prob=prob, log=log)
+  prob<- sbeta(shape1=shape1, shape2=shape2)
+  attributes(res)$parameters<- list(size=c(list(distribution=class(size)[1]), attributes(size)$parameters), prob=prob$mean, var=prob$var, log=log)
   class(res)<- "compoundBetaBinom"
-  if (inherits(distri, "infiniteSuport")) class(res)<- c(class(res), "infiniteSuport")
+  if (inherits(size, "infiniteSuport")) class(res)<- c(class(res), "infiniteSuport")
   class(res)<- c(class(res), "numericDistri", "data.frame")
   
   return (res)
@@ -87,7 +88,8 @@ distriBetaNegBinom<- function(size, shape1, shape2, log=FALSE, maxPomitted=0.01,
   }
   res<- data.frame(x=0:maxX, p=dbetanbinom(x=0:maxX, size=size, shape1=shape1, shape2=shape2, log=log))
   attributes(res)$p.omitted<- 1 - sum(res$p)
-  attributes(res)$parameters<- list(size=size, shape1=shape1, shape2=shape2, log=log)
+  prob<- sbeta(shape1=shape1, shape2=shape2)
+  attributes(res)$parameters<- list(size=size, prob=prob$mean, var=prob$var, log=log)
   class(res)<- c("betaNbinom", "infiniteSuport", "numericDistri", "data.frame")
   return (res)
 }
@@ -109,8 +111,51 @@ summary.numericDistri<- function(distri){
   if (attributes(distri)$p.omitted > 0) cat("Probability omitted: ", attributes(distri)$p.omitted, "\nParameters:\n")
   str(attributes(distri)$parameters)
   cat("\n")
-  print(sdistri(distri))
+  res<- sdistri(distri)
+  print(res)
+  invisible(res)
+}
+
+
+plot.numericDistri<- function(distri, cum=FALSE, ...){
+  if (cum){
+    distri$p<- cumsum(distri$p)
+  }
+  type<- ifelse(cum, "s", "p")
+  plot.default(distri, type=type, ...)
+}
+
+
+## Stats ----
+mean.numericDistri<- function(distri){
+  weighted.mean(distri$x, distri$p)
+}
+
+var.default<- var
+
+var<- function(distri, ...){
+  UseMethod("var")
+}
+
+var.numericDistri<- function(distri){
+  sum(distri$p * (distri$x - mean(distri))^2)
+}
+
+sdistri<- function(distri){
+  UseMethod("sdistri")
+}
+
+sdistri.numericDistri<- function(distri){
+  meanD<- mean(distri)
+  varD<- sum(distri$p * (distri$x - meanD)^2) #var(distri)
+  GmeanD<- G(meanD, varD)
   
+  return (data.frame(Gmean=GmeanD, mean=meanD, var=varD))
+}
+
+cumsum.numericDistri<- function(distri){
+  distri$cump<- cumsum(distri$p)
+  return(distri)
 }
 
 
@@ -123,24 +168,5 @@ rdistri.numericDistri<- function(n, distri){
   sample(distri$x, n, replace=TRUE, prob=distri$p)
 }
 
-# stats
-sdistri<- function(distri){
-  UseMethod("sdistri")
-}
 
-sdistri.numericDistri<- function(distri){
-  mean<- weighted.mean(distri$x, distri$p)
-  var<- sum(distri$p * (distri$x - mean)^2)
-  Gmean<- G(mean, var)
-  
-  return (data.frame(mean, var, Gmean))
-}
-
-plot.numericDistri<- function(distri, cum=FALSE, ...){
-  if (cum){
-    distri$p<- cumsum(distri$p)
-  }
-  type<- ifelse(cum, "s", "p")
-  plot.default(distri, type=type, ...)
-}
 
