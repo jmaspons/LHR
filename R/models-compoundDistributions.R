@@ -1,11 +1,11 @@
 ## S4 model dispatcher ----
 setGeneric("t1distri_dispatch", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0, sexRatio=.5,
-                                matingSystem=c("monogamy", "polygyny", "polyandry")[1], N) standardGeneric("t1distri_dispatch"))
+                                matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0) standardGeneric("t1distri_dispatch"))
 
 setMethod("t1distri_dispatch",  # function dispatcher
           signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="numeric", varBreedFail="numeric",
-                    sexRatio="ANY", matingSystem="ANY", N="numeric"),
-          function(broods=1, b, j, a, breedFail, varJ=0, varBreedFail=0, sexRatio=.5, matingSystem="monogamy", N){
+                    sexRatio="ANY", matingSystem="ANY", N0="numeric"),
+          function(broods=1, b, j, a, breedFail, varJ=0, varBreedFail=0, sexRatio=.5, matingSystem="monogamy", N0){
             cm<- paste0("t1distri(j=j, a=a, ")
             if (any(breedFail != 0)){ # ,  any for seasonal where j and breedFail can be a vector of broods length
               cm<- paste0(cm, "b=b, broods=broods, breedFail=breedFail, ")
@@ -22,41 +22,41 @@ setMethod("t1distri_dispatch",  # function dispatcher
               #               cm<- paste0(cm, "varJ=varJ, varBreedFail=varBreedFail,")
             }
             
-            cm<- paste0(cm, "N=N)")
+            cm<- paste0(cm, "N0=N0)")
 # print(cm)
             eval(expr=parse(text=cm))
           }
 )
 
 setGeneric("t1distri", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0, sexRatio=.5,
-                                matingSystem=c("monogamy", "polygyny", "polyandry")[1], N) standardGeneric("t1distri"))
+                                matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0) standardGeneric("t1distri"))
 
 ## Stable environment
 setMethod("t1distri", 
           signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="missing", varBreedFail="missing",
-                    sexRatio="missing", matingSystem="missing", N="numeric"),
-          function(b, j, a, N){ #mFit
-            mFit.trans(fecundity=b, j=j, a=a, N=N)
+                    sexRatio="missing", matingSystem="missing", N0="numeric"),
+          function(b, j, a, N0){ #mFit
+            mFit.trans(fecundity=b, j=j, a=a, N0=N0)
           }
 )
 setMethod("t1distri", 
           signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="numeric", varBreedFail="ANY",
-                    sexRatio="missing", matingSystem="missing", N="numeric"),
-          function(b, j, a, varJ, N){ ## TODO: mFit-var
-            mFit_var.trans(fecundity=b, j=j, a=a, varJ=varJ, N=N)
+                    sexRatio="missing", matingSystem="missing", N0="numeric"),
+          function(b, j, a, varJ, N0){ ## TODO: mFit-var
+            mFit_var.trans(fecundity=b, j=j, a=a, varJ=varJ, N0=N0)
           }
 )
 
 setMethod("t1distri", 
           signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="missing", varBreedFail="missing",
-                    sexRatio="missing", matingSystem="missing", N="numeric"),
-          function(broods, b, j, a, breedFail, N){ #mSurvBV
+                    sexRatio="missing", matingSystem="missing", N0="numeric"),
+          function(broods, b, j, a, breedFail, N0){ #mSurvBV
             if (length(j) > 1 | length(a) > 1){
-              mSurvBV.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N=N)
+              mSurvBV.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N0=N0)
             }else{
 ## TODO: fix bug when breedFail == 1. result is filled with NA when called from run(model)
-# cat("mSurvBV.trans(broods=", broods, ", b=", b, ", j=", j, ", a=", a, ", breedFail=", breedFail, ", N=", N, ")\n")
-              tmp<- mSurvBV.trans(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N=N)
+# cat("mSurvBV.trans(broods=", broods, ", b=", b, ", j=", j, ", a=", a, ", breedFail=", breedFail, ", N0=", N0, ")\n")
+              tmp<- mSurvBV.trans(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N0=N0)
 # print(tmp)
 # log("a") # Error to debug 
 # return(tmp)
@@ -65,31 +65,31 @@ setMethod("t1distri",
 )
 setMethod("t1distri", 
           signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="numeric", varBreedFail="numeric",
-                    sexRatio="missing", matingSystem="missing", N="numeric"),
-          function(broods, b, j, a, breedFail, varJ=varJ, varBreedFail=varBreedFail, N){ ##TODO: mSurvBV-var
+                    sexRatio="missing", matingSystem="missing", N0="numeric"),
+          function(broods, b, j, a, breedFail, varJ=varJ, varBreedFail=varBreedFail, N0){ ##TODO: mSurvBV-var
             if (length(j) > 1 | length(a) > 1){
-              # mSurvBV_var.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N=N)
+              # mSurvBV_var.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N0=N0)
             }else{
-              mSurvBV_var.trans(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, N=N)
+              mSurvBV_var.trans(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, N0=N0)
             }
           }
 )
 
 setMethod("t1distri", 
           signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="missing", varBreedFail="missing",
-                    sexRatio="numeric", matingSystem="character", N="numeric"),
-          function(b, j, a, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N){ #mFitSex
-            mFitSex.trans(fecundity=b, j=j, a=a, sexRatio=sexRatio, matingSystem=matingSystem, N=N)
+                    sexRatio="numeric", matingSystem="character", N0="numeric"),
+          function(b, j, a, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0){ #mFitSex
+            mFitSex.trans(fecundity=b, j=j, a=a, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0)
           }
 )
 setMethod("t1distri", 
           signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="missing", varBreedFail="missing",
-                    sexRatio="numeric", matingSystem="character", N="numeric"),
-          function(broods, b, j, a, breedFail, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N){ #mSurvBVSex
+                    sexRatio="numeric", matingSystem="character", N0="numeric"),
+          function(broods, b, j, a, breedFail, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0){ #mSurvBVSex
             if (length(j) > 1 | length(a) > 1){
-              mSurvBVSex.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N=N)
+              mSurvBVSex.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0)
             }else{
-              mSurvBVSex.trans(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N=N)
+              mSurvBVSex.trans(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0)
             }
           }
 )
@@ -101,25 +101,25 @@ setMethod("t1distri",
 ## Transition models N_t+1 = f(N_t) ----
 # Adult mortality + offspring mortality
 # N_t+1 = B(n=N_t * fecundity, p=j) + B(n=N_t, p=a)
-mFit.trans<- function(fecundity, j, a, N){
+mFit.trans<- function(fecundity, j, a, N0){
   ## Recruitment probability conditioned to the number of successful broods
-  recruits<- distriBinom(N * fecundity, prob=j)
+  recruits<- distriBinom(N0 * fecundity, prob=j)
   
   ## Adult survival
-  survivors<- distriBinom(size=N, prob=a)
+  survivors<- distriBinom(size=N0, prob=a)
   N_t1<- distriSum(recruits, survivors)
 
   return (N_t1)
 }
 
 # N_t+1 = B(n=N_t * fecundity, p=Beta(j, varJ)) + B(n=N_t, p=a)
-mFit_var.trans<- function(fecundity, j, a, varJ, N){
+mFit_var.trans<- function(fecundity, j, a, varJ, N0){
   betaPars<- fbeta(mean=j, var=varJ)
   ## Recruitment probability conditioned to the number of successful broods
-  recruits<- distriBetaBinom(N * fecundity, shape1=betaPars$shape1, shape2=betaPars$shape2)
+  recruits<- distriBetaBinom(N0 * fecundity, shape1=betaPars$shape1, shape2=betaPars$shape2)
   
   ## Adult survival
-  survivors<- distriBinom(size=N, prob=a)
+  survivors<- distriBinom(size=N0, prob=a)
   N_t1<- distriSum(recruits, survivors)
   
   return (N_t1)
@@ -127,29 +127,29 @@ mFit_var.trans<- function(fecundity, j, a, varJ, N){
 
 # Adult mortality + Brood mortality + offspring mortality
 # N_t+1 = B(n=B(n=N_t * broods, p=1-breedFail) * b, p=j) + B(n=N_t, p=a)
-mSurvBV.trans<- function(broods, b, j, a, breedFail, N){
+mSurvBV.trans<- function(broods, b, j, a, breedFail, N0){
   ## Probability of successful breeding attempt without complete brood fail
-  nSuccessBroods<- distriBinom(N * broods, prob=1-breedFail)
+  nSuccessBroods<- distriBinom(N0 * broods, prob=1-breedFail)
   nSuccessBroods<- nSuccessBroods * b
   
   ## Recruitment probability conditioned to the number of successful broods
   recruits<- distriBinom(nSuccessBroods, prob=j)
   
   ## Adult survival
-  survivors<- distriBinom(size=N, prob=a)
+  survivors<- distriBinom(size=N0, prob=a)
   N_t1<- distriSum(recruits, survivors)
   
   return (N_t1)
 }
 
 # N_t+1 = B(n=B(n=N_t * broods, p=Beta(1-breedFail, varBreedFail)) * b, p=Beta(j, varJ)) + B(n=N_t, p=a)
-mSurvBV_var.trans<- function(broods, b, j, a, breedFail, varJ, varBreedFail, N){
+mSurvBV_var.trans<- function(broods, b, j, a, breedFail, varJ, varBreedFail, N0){
   ## Probability of successful breeding attempt without complete brood fail
   if (varBreedFail > 0){
     betaPars<- fbeta(mean=1-breedFail, var=varBreedFail)
-    nSuccessBroods<- distriBetaBinom(N * broods, shape1=betaPars$shape1, shape2=betaPars$shape2)
+    nSuccessBroods<- distriBetaBinom(N0 * broods, shape1=betaPars$shape1, shape2=betaPars$shape2)
   }else{
-    nSuccessBroods<- distriBinom(N * broods, prob=1-breedFail)
+    nSuccessBroods<- distriBinom(N0 * broods, prob=1-breedFail)
   }
   
   nSuccessBroods<- nSuccessBroods * b
@@ -163,7 +163,7 @@ mSurvBV_var.trans<- function(broods, b, j, a, breedFail, varJ, varBreedFail, N){
   }
   
   ## Adult survival
-  survivors<- distriBinom(size=N, prob=a)
+  survivors<- distriBinom(size=N0, prob=a)
   N_t1<- distriSum(recruits, survivors)
   
   return (N_t1)
