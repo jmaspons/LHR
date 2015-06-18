@@ -20,7 +20,7 @@ distriBinom.numeric<- function(size, prob, log=FALSE){
 # size: numericDistri object which compound a binomial distribution as a size parameter.
 # p: probability
 distriBinom.numericDistri<- function(size, prob, log=FALSE){
-  res<- .External("binomialCompound", size$p, prob, log)
+  res<- .External("binomialCompound", size$x, size$p, prob, log, max(size$x))
   res<- data.frame(x=0:(length(res) - 1), p=res)
   
   attributes(res)$p.omitted<- 1 - sum(res$p)
@@ -49,7 +49,7 @@ distriBetaBinom.numeric<- function(size, shape1, shape2, log=FALSE){
 # size: numericDistribution object which compound a binomial distribution as a size parameter.
 # p: probability
 distriBetaBinom.numericDistri<- function(size, shape1, shape2, log=FALSE){
-  res<- .External("BetaBinomialCompound", size$p, shape1, shape2, log)
+  res<- .External("BetaBinomialCompound", size$x, size$p, shape1, shape2, log, max(size$x))
   res<- data.frame(x=0:(length(res) - 1), p=res)
   
   attributes(res)$p.omitted<- 1 - sum(res$p)

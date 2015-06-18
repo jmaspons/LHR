@@ -1,11 +1,12 @@
 ## Sum ----
 distriSum<- function(x, y){
   if (!inherits(x, "numericDistri") | !inherits(y, "numericDistri")) stop("parameter must be numericDistri objects")
+  
   res<- .External("distrisum", x$x, x$p, y$x, y$p, max(x$x) + max(y$x))
   
   res<- data.frame(x=0:(length(res) - 1), p=res)
   infiniteDomain<- inherits(x, "infiniteSuport") | inherits(y, "infiniteSuport")
-  attributes(res)$p.omitted<- ifelse(infiniteDomain, 1 - sum(res$p), 0)
+  attributes(res)$p.omitted<- 1 - sum(res$p)
   attributes(res)$parameters<- list(x=attributes(x)$parameters, y=attributes(y)$parameters)
   class(res)<- "sumOfDistri"
   if (infiniteDomain) class(res)<- c(class(res), "infiniteSuport")
@@ -53,13 +54,13 @@ distriScalarProd<- function(distri, x){
   
   distri$x<- distri$x * x
   
-  domain<- 0:max(distri$x)
-  domain<- domain[!domain %in% distri$x]
-  domain<- data.frame(x=domain, p=0)
-  
-  distri<- rbind(distri, domain)
-  distri<- distri[order(distri$x),]
-  rownames(distri)<- NULL
+#   domain<- 0:max(distri$x)
+#   domain<- domain[!domain %in% distri$x]
+#   domain<- data.frame(x=domain, p=0)
+#   
+#   distri<- rbind(distri, domain)
+#   distri<- distri[order(distri$x),]
+#   rownames(distri)<- NULL
   
   attributes(distri)$parameters<- c(list(scalarProd=x), attributes(distri)$parameters)
   class(distri)<- c("scalarProdDistri", class(distri))
