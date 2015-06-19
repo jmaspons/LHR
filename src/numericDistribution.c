@@ -7,8 +7,8 @@
 
 SEXP binomialCompound(SEXP args){
     SEXP ssize, spsize, sprob, slog, smaxsize, Res;
-    int log, maxsize, i, j;
-    double * size, * psize, prob, * res;
+    int logP, maxsize, i, j;
+    double * size, * psize, prob, p, * res;
   
     args = CDR(args);
     PROTECT(ssize = coerceVector(CAR(args), REALSXP));
@@ -24,20 +24,38 @@ SEXP binomialCompound(SEXP args){
     size = REAL(ssize);
     psize = REAL(spsize);
     prob = asReal(sprob);
-    log = asLogical(slog);
+    logP = asLogical(slog);
     maxsize = asInteger(smaxsize);
     
     // res contain the probabilities of resulting distribution for values from 0 to maxSize
     Res = PROTECT(allocVector(REALSXP, maxsize + 1));
     res = REAL(Res);
-    memset(res, 0, (maxsize + 1) * sizeof(double)); // initialise res
-    // Rprintf("\tmaxX:%i\tprob=%.2f,\tlog=%i\n", maxsize, prob, log);
-    for  (i=0; i < LENGTH(ssize); i++){
-      for (j=0; j <= size[i]; j++){
-          res[j] += dbinom((double) j, size[i], prob, log) * psize[i];
-        // Rprintf("\ti:%i; x=%i; p*psize=%.6f; xcum=%.6f; p=%.3f, size=%.0f, psize=%.2f\n", i, j, dbinom((double) j, size[i], prob, log) * psize[i], res[j], dbinom((double) j, size[i], prob, log), size[i], psize[i]);
+    memset(res, 0, (maxsize + 1) * sizeof(double)); // initialise res. Take care later about the logP scale
+    // Rprintf("\tmaxX:%i\tprob=%.2f,\tlog=%i\n", maxsize, prob, logP);
+    if (logP){
+      for  (i=0; i < LENGTH(ssize); i++){
+        for (j=0; j <= size[i]; j++){
+          p = dbinom((double) j, size[i], prob, logP);
+          // Rprintf("\ti:%i; x=%i; size=%.0f; psize=%.2f; p=%.3f; ## ", i, j, size[i], psize[i], p);
+          // Rprintf("p + psize=%.6f; pcum=%.6f; pcumC=%6f; logpcumC=%.3f\n", p + psize[i], logspace_add(res[j], p + psize[i]), exp(res[j]) + exp(p+psize[i]), log(exp(res[j]) + exp(p+psize[i])));
+          res[j] = logspace_add(res[j], p + psize[i]);
+        }
+      }
+      // substract 0 for the initialization on the log scale
+      for (i=0; i <= maxsize; i++){
+        res[i] = logspace_sub(res[i], 0);
+      }
+    }else{
+      for  (i=0; i < LENGTH(ssize); i++){
+        for (j=0; j <= size[i]; j++){
+          p = dbinom((double) j, size[i], prob, logP);
+          res[j] += p * psize[i];
+          // Rprintf("\ti:%i; x=%i; size=%.0f; psize=%.2f; p=%.3f; ## ", i, j, size[i], psize[i], p);
+          // Rprintf("p * psize=%.6f; xcum=%.6f\n", p * psize[i], res[j]);
+        }
       }
     }
+
     
     UNPROTECT(6);
     return (Res);
@@ -46,8 +64,8 @@ SEXP binomialCompound(SEXP args){
 
 SEXP BetaBinomialCompound(SEXP args){
     SEXP ssize, spsize, sshape1, sshape2, slog, smaxsize, Res;
-    int log, maxsize, i, j;
-    double * size, * psize, * shape1, * shape2, * res;
+    int logP, maxsize, i, j;
+    double * size, * psize, * shape1, * shape2, p, * res;
   
     args = CDR(args);
     PROTECT(ssize = coerceVector(CAR(args), REALSXP));
@@ -66,18 +84,35 @@ SEXP BetaBinomialCompound(SEXP args){
     psize = REAL(spsize);
     shape1 = REAL(sshape1);
     shape2 = REAL(sshape2);
-    log = asLogical(slog);
+    logP = asLogical(slog);
     maxsize = asInteger(smaxsize);
     
     // res contain the probabilities of resulting distribution for values from 0 to maxSize
     Res = PROTECT(allocVector(REALSXP, maxsize + 1));
     res = REAL(Res);
-    memset(res, 0, (maxsize + 1) * sizeof(double)); // initialise res
-    // Rprintf("\tmaxX:%i\tshape1=%.2f; shape2=%.2f\tlog=%i\n", maxSize, * shape1, * shape2, * log);
-    for  (i=0; i < LENGTH(ssize); i++){
-      for (j=0; j <= size[i]; j++){
-        res[j] += dbetabinom(j, size[i], * shape1, * shape2, log) * psize[i];
-        // Rprintf("\ti:%i; j=%i; p=%.6f; cum=%.6f\n", i, j, dbetabinom(j, size[i], * shape1, * shape2, log) * psize[i], res[j]);
+    memset(res, 0, (maxsize + 1) * sizeof(double)); // initialise res. Take care later about the logP scale
+    // Rprintf("\tmaxX:%i\tshape1=%.2f; shape2=%.2f\tlog=%i\n", maxsize, * shape1, * shape2, * logP);
+    if (logP){
+      for  (i=0; i < LENGTH(ssize); i++){
+        for (j=0; j <= size[i]; j++){
+          p = dbetabinom(j, size[i], * shape1, * shape2, logP);
+          res[j] = logspace_add(res[j], p + psize[i]);
+          // Rprintf("\ti:%i; x=%i; size=%.0f; psize=%.2f; p=%.3f; ## ", i, j, size[i], psize[i], p);
+          // Rprintf("p + psize=%.6f; pcum=%.6f; pcumC=%6f; logpcumC=%.3f\n", p + psize[i], logspace_add(res[j], p + psize[i]), exp(res[j]) + exp(p+psize[i]), log(exp(res[j]) + exp(p+psize[i])));
+        }
+      }
+      // substract 0 for the initialization on the log scale
+      for (i=0; i <= maxsize; i++){
+        res[i] = logspace_sub(res[i], 0);
+      }
+    }else{
+      for  (i=0; i < LENGTH(ssize); i++){
+        for (j=0; j <= size[i]; j++){
+          p = dbetabinom(j, size[i], * shape1, * shape2, logP);
+          res[j] += p * psize[i];
+          // Rprintf("\ti:%i; x=%i; size=%.0f; psize=%.2f; p=%.3f; ## ", i, j, size[i], psize[i], p);
+          // Rprintf("p + psize=%.6f; pcum=%.6f; pcumC=%6f; logpcumC=%.3f\n", p + psize[i], logspace_add(res[j], p + psize[i]), exp(res[j]) + exp(p+psize[i]), log(exp(res[j]) + exp(p+psize[i])));
+        }
       }
     }
     
@@ -88,8 +123,8 @@ SEXP BetaBinomialCompound(SEXP args){
 
 //smax<- max(x) + max(y)
 SEXP distrisum(SEXP args){
-    SEXP sx, spx, sy, spy, smax, Res;
-    int * x, * y, max, xy, i, j;
+    SEXP sx, spx, sy, spy, slog, smax, Res;
+    int * x, * y, max, xy, logP, i, j;
     double * px, * py, * res;
     
     args = CDR(args);
@@ -101,27 +136,44 @@ SEXP distrisum(SEXP args){
     args = CDR(args);
     PROTECT(spy = coerceVector(CAR(args), REALSXP));
     args = CDR(args);
+    PROTECT(slog = coerceVector(CAR(args), LGLSXP));
+    args = CDR(args);
     PROTECT(smax = coerceVector(CAR(args), INTSXP));
     
     x = INTEGER(sx);
     px = REAL(spx);
     y = INTEGER(sy);
     py = REAL(spy);
+    logP = asLogical(slog);
     max = asInteger(smax);
     
     // res contain the probabilities of resulting distribution for values from 0 to smax
     Res = PROTECT(allocVector(REALSXP, max + 1));
     res = REAL(Res);
-    memset(res, 0, (max + 1) * sizeof(double)); // initialise res
+    memset(res, 0, (max + 1) * sizeof(double)); // initialise res. Take care later about the logP scale
     // Rprintf("\tmaxX:%i\tlenX=%i,lenY=%i\n", * max, LENGTH(sx), LENGTH(sy));
-    for  (i=0; i < LENGTH(sx); i++){
-      for (j=0; j < LENGTH(sy); j++){
-        xy = x[i] + y[j];
-        res[xy] += px[i] * py[j];
-        // Rprintf("\tx:%i; p=%.4f; pp=%.4f\txx=%i; px=%.2f; xy=%i; py=%.2f\n", xy, res[xy], px[i] * py[j], x[i], px[i], y[j], py[j]);
+    if (logP){
+      for  (i=0; i < LENGTH(sx); i++){
+        for (j=0; j < LENGTH(sy); j++){
+          xy = x[i] + y[j];
+          res[xy] = logspace_add(res[xy], px[i] + py[j]);
+          // Rprintf("\tx:%i; p=%.4f; pp=%.4f\txx=%i; px=%.2f; xy=%i; py=%.2f\n", xy, res[xy], px[i] * py[j], x[i], px[i], y[j], py[j]);
+        }
+      }
+      // substract 0 for the initialization on the log scale
+      for (i=0; i <= max; i++){
+        res[i] = logspace_sub(res[i], 0);
+      }
+    }else{
+      for  (i=0; i < LENGTH(sx); i++){
+        for (j=0; j < LENGTH(sy); j++){
+          xy = x[i] + y[j];
+          res[xy] += px[i] * py[j];
+          // Rprintf("\tx:%i; p=%.4f; pp=%.4f\txx=%i; px=%.2f; xy=%i; py=%.2f\n", xy, res[xy], px[i] * py[j], x[i], px[i], y[j], py[j]);
+        }
       }
     }
-
-    UNPROTECT(6);
+    
+    UNPROTECT(7);
     return (Res);
 }

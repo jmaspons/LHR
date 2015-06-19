@@ -1,13 +1,19 @@
 ## Sum ----
 distriSum<- function(x, y){
-  if (!inherits(x, "numericDistri") | !inherits(y, "numericDistri")) stop("parameter must be numericDistri objects")
-  
-  res<- .External("distrisum", x$x, x$p, y$x, y$p, max(x$x) + max(y$x))
+  if (!inherits(x, "numericDistri") | !inherits(y, "numericDistri")) stop("Parameters must be numericDistri objects.")
+  if (attributes(x)$logP != attributes(y)$logP) stop("Parameters must have probabilities on the same scale. Use logP(x, log=T/F) change it.")
+  log<- attributes(x)$logP
+  res<- .External("distrisum", x$x, x$p, y$x, y$p, log, max(x$x) + max(y$x))
   
   res<- data.frame(x=0:(length(res) - 1), p=res)
   infiniteDomain<- inherits(x, "infiniteSuport") | inherits(y, "infiniteSuport")
-  attributes(res)$p.omitted<- 1 - sum(res$p)
+  if (log){
+    attributes(res)$p.omitted<- 1 - sum(exp(res$p))
+  }else{
+    attributes(res)$p.omitted<- 1 - sum(res$p)
+  }
   attributes(res)$parameters<- list(x=attributes(x)$parameters, y=attributes(y)$parameters)
+  attributes(res)$logP<- log
   class(res)<- "sumOfDistri"
   if (infiniteDomain) class(res)<- c(class(res), "infiniteSuport")
   class(res)<- c(class(res), "numericDistri", "data.frame")
