@@ -181,18 +181,19 @@ run.numericDistri<- function(model){
     for (n in 1:length(pars$N0)){
       N0<- pars$N0[n]
       ## TODO: check error when breedFail == 1:
-      # only happens on run(model), not when calling mSurvBV.trans with the same parameters!!
+      # only happens on run(model), not when calling mSurvBV.distri with the same parameters!!
       # maybe var collide with var()?? It seems is not the case...
-      distri<- with(scenario[i,], t1distri_dispatch(broods=broods, b=b, j=jindSeason, a=a, breedFail=1 - jbrSeason,
+      distri<- with(scenario[i,], tDistri_dispatch(broods=broods, b=b, j=jindSeason, a=a, breedFail=1 - jbrSeason,
                                               varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
-                                              sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N=N0))
+                                              sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, tf=pars$tf))
       
       ## TODO: pop<- list(popF, popM)
-      distri$cump<- cumsum(distri$p)
+      distri<- logP(distri, log=FALSE)
+      distri<- cumsum(distri)
       selN0<- which(distri$x == N0)
       tmp<- c(increase= 1 - distri$cump[selN0], decrease=distri$cump[selN0-1], stable=distri$p[selN0], extinct=distri$p[1])
-      distriLambda<- lambda(distri, N0)
-      distriR<- r(distri, N0)
+      distriLambda<- lambda(distri, N0=N0, tf=pars$tf)
+      distriR<- r(distri, N0=N0, tf=pars$tf)
 
       res[k,]<- c(i, N0, tmp, as.numeric(sdistri(distriR)), as.numeric(sdistri(distriLambda)))
       

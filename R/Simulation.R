@@ -41,21 +41,21 @@ setMethod("Sim.discretePopSim",
 #TODO: sexRatio
 setClass("Sim.numericDistri", contains="Sim")
 ## TODO: don't export Sim.numericDistri_complete
-setGeneric("Sim.numericDistri_complete", function(N0, envVar, sexRatio, matingSystem, raw) standardGeneric("Sim.numericDistri_complete"))
+setGeneric("Sim.numericDistri_complete", function(N0, envVar, sexRatio, matingSystem, tf, raw) standardGeneric("Sim.numericDistri_complete"))
 setMethod("Sim.numericDistri_complete",
-          signature(N0="numeric", envVar="list", sexRatio="numeric", matingSystem="character", raw="logical"),
-          function(N0, envVar, sexRatio, matingSystem, raw){
-            params<- list(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, raw=raw)
+          signature(N0="numeric", envVar="list", sexRatio="numeric", matingSystem="character", tf="numeric", raw="logical"),
+          function(N0, envVar, sexRatio, matingSystem, tf, raw){
+            params<- list(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, tf=tf, raw=raw)
             sim<- new("Sim.numericDistri", params=params)
             return (sim)
           }
 )
 
-setGeneric("Sim.numericDistri", function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, raw=TRUE) standardGeneric("Sim.numericDistri"))
+setGeneric("Sim.numericDistri", function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=1, raw=TRUE) standardGeneric("Sim.numericDistri"))
 setMethod("Sim.numericDistri",
-          signature(N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", raw="ANY"),
-          function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, raw=TRUE){
-            sim<- Sim.numericDistri_complete(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, raw=raw)
+          signature(N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", tf="ANY", raw="ANY"),
+          function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=1, raw=TRUE){
+            sim<- Sim.numericDistri_complete(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, tf=tf, raw=raw)
 
             return (sim)
           }

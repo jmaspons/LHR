@@ -63,7 +63,7 @@ i<- 1
 j<- tmp$j[i]
 jind<- tmp$jind[i]
 jbr<- tmp$jbr[i]
-sdistri(l<- lambda(mSurvBV.trans(broods=broods, b=b, j=jind, a=a, breedFail=1-jbr, N=N0), N0=N0))
+sdistri(l<- lambda(mSurvBV.distri(broods=broods, b=b, j=jind, a=a, breedFail=1-jbr, N=N0), N0=N0))
 lambda(LefkovitchPre(a=a, bj=fecundity * j))
 
 
