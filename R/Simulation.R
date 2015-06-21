@@ -68,7 +68,7 @@ setClass("Sim.ssa", slots=list(Ntf="data.frame"), contains="Sim") #slots=list(re
 # TODO: don't export Sim.ssa_complete
 setGeneric("Sim.ssa_complete", function(N0, transitionMat, rateFunc, tf, replicates, raw, Ntf, stats) standardGeneric("Sim.ssa_complete"))
 setMethod("Sim.ssa_complete",
-          signature(N0="list", transitionMat="closure", rateFunc="closure", tf="numeric", replicates="numeric", raw="logical", Ntf="logical", stats="logical"),
+          signature(N0="list", transitionMat="function", rateFunc="function", tf="numeric", replicates="numeric", raw="logical", Ntf="logical", stats="logical"),
           function(N0, transitionMat, rateFunc, tf, replicates, raw, Ntf, stats){
             params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf, stats=stats)
             sim<- new("Sim.ssa", params=params)

@@ -2,7 +2,7 @@ setOldClass("ssa")
 
 ## Explore SSA ----
 exploreSSA<- function(x0L, params, transitionMat, rateFunc, tf=10, replicates=100,
-                      discretePop=FALSE, finalPop=TRUE, burnin=-1, dtDiscretize=NULL, cores=1, mc.preschedule=TRUE, ...){
+                      discretePop=FALSE, finalPop=TRUE, burnin=-1, dtDiscretize=NULL, cl=makeCluster(cores, type="FORK"), cores=detectCores(), ...){
   if (is.numeric(x0L)){
     x0L<- list(x0L)
   }
@@ -25,13 +25,17 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, tf=10, replicates=10
 #     if (finalPop) Ntf[[i]]<- as.data.frame(matrix(nrow=length(x0L), ncol=replicates, dimnames=list(N0=sapply(x0L, sum), Nf=NULL)))
 
     for (j in seq_along(x0L)){
-      RNGkind("L'Ecuyer-CMRG") # ?mcparallel > Random numbers
-      mc.reset.stream()
-      simL<- mclapply(1:replicates, function(x){
-        sim<- ssa.adaptivetau(init.values=x0L[[j]], transitions=transitions, rateFunc=rateFunc, params=params[i,], tf=tf)# TODO, ...)
+      N0<- x0L[[j]]
+      pars<- params[i,]
+      clusterExport(cl=cl, c("N0", "transitions", "rateFunc", "pars", "tf", "dtDiscretize", "burnin"))
+      clusterSetRNGStream(cl=cl, iseed=NULL)
+      clusterEvalQ(cl, library(LHR))
+      
+      simL<- parLapply(cl=cl, 1:replicates, function(x){
+        sim<- ssa.adaptivetau(init.values=N0, transitions=transitions, rateFunc=rateFunc, params=pars, tf=tf)# TODO, ...)
         sim<- discretizePopSim(sim, dt=dtDiscretize, burnin=burnin)
         return (sim)
-      }, mc.cores=cores, mc.set.seed=TRUE, mc.preschedule=mc.preschedule)
+      })
 
       if (length(unique(sapply(simL, ncol))) > 1){warning("Discrete simulation results differs in time steps")} ## important when !is.null(dtDiscretize)
       pop<- do.call("rbind", simL) ## TODO: Check different times for extinctions for models-discreteTime.R
@@ -69,6 +73,7 @@ if(paste0(rownames(params)[i], "_N", sum(x0L[[j]])) != rownames(resStats)[k]) st
     res<- c(res, list(pop=resPop))
   }
   if (finalPop){
+    Ntf[,-1]<- apply(Ntf[,2:ncol(Ntf)], 2, as.numeric)
     res<- c(res, list(Ntf=Ntf))
   }
   res<- c(res, list(params=params))

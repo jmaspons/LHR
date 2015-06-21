@@ -47,8 +47,11 @@ params<- getParamsCombination()
 
 system.time(res<- exploreSSA(x0L=x0L, params=params, transitionMat=transitionMat, rateFunc=rateFunc,
                              tf=tf, replicates=replicates,
-                             discretePop=discretePop, finalPop=finalPop, burnin=burnin, dtDiscretize=dtDiscretize, cores=cores, mc.preschedule=mc.preschedule))
+                             discretePop=discretePop, finalPop=finalPop, burnin=burnin, dtDiscretize=dtDiscretize))
 
+model<- Model.ssa()
+res<- run(model)
+d<- result(res)
 
 # Try to find deterministic character of the strategies in a simple demographic model.
 params<- getParams()
