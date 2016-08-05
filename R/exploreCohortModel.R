@@ -1,7 +1,7 @@
 ## IMPLEMENTED IN C: USE exploreCohortModel() INSTEAD
 # simulation<- data.frame(n0, survA, var.survA, broods, B, survJ, var.survJ, meanSeason, amplSeason, breedInterval, alignCriterion=c("bestFirst", "bestMean"))
 runCohortModel<- function(simulation, maxPomitted=0.05, verbose=FALSE){
-  ans<- data.frame(mean=numeric(nrow(simulation)), var=numeric(nrow(simulation)), G=numeric(nrow(simulation)), Preplacement=numeric(nrow(simulation)), error=logical(nrow(simulation)))
+  ans<- data.frame(G=numeric(nrow(simulation), mean=numeric(nrow(simulation)), var=numeric(nrow(simulation))), Preplacement=numeric(nrow(simulation)), error=logical(nrow(simulation)))
   surv<- unique(simulation[,1:3]) # reuse survival distribution for all the simulations with the same parameters  (n0, survA, var.survA)
   
   reg<- which(simulation$n0 == surv$n0[1] & simulation$survA == surv$survA[1] & simulation$var.survA == surv$var.survA[1])

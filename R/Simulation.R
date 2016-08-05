@@ -13,6 +13,18 @@ setMethod("Sim",
           }
 )
 
+setMethod("Sim",
+          signature(params="data.frame"),
+          function(params){
+            if (inherits(params, "Model")){
+              par<- params@sim@params
+              switch(class(params@sim))
+              sim<- Sim.numericDistri_complete(N0=par$N0, envVar=par$envVar, sexRatio=par$sexRatio, matingSystem=par$matingSystem, tf=par$tf, raw=par$raw)
+            }
+            return (sim)
+          }
+)
+
 ## Subclasses
 ## Sim.discretePopSim Class ----
 setClass("Sim.discretePopSim", slots=list(Ntf="data.frame"), contains="Sim")
@@ -64,7 +76,7 @@ setMethod("Sim.numericDistri",
 
 ## Sim.ssa Class ----
 # setOldClass("ssa")
-setClass("Sim.ssa", slots=list(Ntf="data.frame"), contains="Sim") #slots=list(result="ssa"), needs S3 class prototype
+setClass("Sim.ssa", slots=list(Ntf="data.frame", deterministic="data.frame"), contains="Sim") #slots=list(result="ssa"), needs S3 class prototype
 # TODO: don't export Sim.ssa_complete
 setGeneric("Sim.ssa_complete", function(N0, transitionMat, rateFunc, tf, replicates, raw, Ntf, stats) standardGeneric("Sim.ssa_complete"))
 setMethod("Sim.ssa_complete",

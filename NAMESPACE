@@ -17,6 +17,7 @@ exportClasses("Sim.numericDistri")
 exportClasses("Sim.ssa")
 exportClasses("Model")
 
+S3method("cumsum", "numericDistri")
 S3method("+", "numericDistri")
 S3method("-", "numericDistri")
 S3method("*", "numericDistri")

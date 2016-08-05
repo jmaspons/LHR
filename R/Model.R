@@ -83,6 +83,7 @@ setMethod("run",
                         S3Part(model),
                         sim=simRes,
                         params=model@params)
+            # modelRes@sim<- simRes
             return(modelRes)
           }
           
@@ -111,7 +112,7 @@ run.discretePopSim<- function(model, cl=makeCluster(cores, type="FORK"), cores=d
   res<- as.data.frame(res)
 
   simRes<- new("Sim.discretePopSim", res, params=pars)
-  
+  # S3Part(model@sim)<- res
   if (pars$raw){
     rawSim<- lapply(sim, function(x) x$raw)
     simRes@raw<- rawSim
@@ -192,12 +193,12 @@ run.numericDistri<- function(model, cl=makeCluster(cores, type="FORK"), cores=de
   clusterEvalQ(cl, library(LHR))
   sim<- parLapply(cl=cl, scenario, runScenario.numericDistri, pars=pars)
   
-  #   sim<- lapply(scenario, runScenario.discretePopSim, pars=pars)
-  #   
-  #   sim<- list()
-  #   for (i in seq_along(scenario)){
-  #     sim[[i]]<- runScenario.discretePopSim(scenario=scenario[[i]], pars=pars)
-  #   }
+#   sim<- lapply(scenario, runScenario.numericDistri, pars=pars)
+#   
+#   sim<- list()
+#   for (i in seq_along(scenario)){
+#     sim[[i]]<- runScenario.numericDistri(scenario=scenario[[i]], pars=pars)
+#   }
   
   
   res<- lapply(sim, function(x) x$res)
@@ -206,7 +207,7 @@ run.numericDistri<- function(model, cl=makeCluster(cores, type="FORK"), cores=de
   res<- res[order(res$scenario, res$N0),]
   
   simRes<- new("Sim.discretePopSim", res, params=pars)
-  
+  # S3Part(model@sim)<- res
   if (pars$raw){
     rawSim<- lapply(sim, function(x) x$raw)
     simRes@raw<- rawSim
@@ -267,6 +268,7 @@ runScenario.numericDistri<- function(scenario, pars){
   return (res)
 }
 
+## Post process ----
 setGeneric("result", function(model, type="stats") standardGeneric("result"))
 # Create a data frame with the aggregated results and parameters
 setMethod("result", 

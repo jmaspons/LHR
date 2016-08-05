@@ -205,18 +205,18 @@ strategyName<- function(strategy, sep="\t"){
 }
 
 ## Result's variables
-Gdemo<- array(dim=c(nrow(strategy), 5, length(n0)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0))
-GenvJ<- array(dim=c(nrow(strategy), 5, length(n0), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, var.survJ=envir$var))
-GenvA<- array(dim=c(nrow(strategy), 5, length(n0), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, var.survA=envir$var))
-GenvJA<- array(dim=c(nrow(strategy), 5, length(n0), nrow(envirJA)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, var.survJ_survA=paste(envirJA$varJ, envirJA$varA, sep="_"))
-GseasonBestFirst<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, amplSeason=season$amplSeason))
-GseasonBestMean<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, amplSeason=season$amplSeason))
-GenvJ_seasonBestFirst<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, amplSeason=season$amplSeason, var.survJ=envir$var))
-GenvJ_seasonBestMean<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, amplSeason=season$amplSeason, var.survJ=envir$var))
-GenvA_seasonBestFirst<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, amplSeason=season$amplSeason, var.survA=envir$var))
-GenvA_seasonBestMean<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, amplSeason=season$amplSeason, var.survA=envir$var))
-GenvJA_seasonBestFirst<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envirJA)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, amplSeason=season$amplSeason), var.survJ_survA=paste(envirJA$varJ, envirJA$varA, sep="_"))
-GenvJA_seasonBestMean<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envirJA)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("mean", "var", "Gmean", "replacement", "error"), n0=n0, amplSeason=season$amplSeason, var.survJ_survA=paste(envirJA$varJ, envirJA$varA, sep="_"))
+Gdemo<- array(dim=c(nrow(strategy), 5, length(n0)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("Gmean", "mean", "var", "replacement", "error"), n0=n0))
+GenvJ<- array(dim=c(nrow(strategy), 5, length(n0), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("Gmean", "mean", "var", "replacement", "error"), n0=n0, var.survJ=envir$var))
+GenvA<- array(dim=c(nrow(strategy), 5, length(n0), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("Gmean", "mean", "var", "replacement", "error"), n0=n0, var.survA=envir$var))
+GenvJA<- array(dim=c(nrow(strategy), 5, length(n0), nrow(envirJA)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("Gmean", "mean", "var", "replacement", "error"), n0=n0, var.survJ_survA=paste(envirJA$varJ, envirJA$varA, sep="_"))
+GseasonBestFirst<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("Gmean", "mean", "var", "replacement", "error"), n0=n0, amplSeason=season$amplSeason))
+GseasonBestMean<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("Gmean", "mean", "var", "replacement", "error"), n0=n0, amplSeason=season$amplSeason))
+GenvJ_seasonBestFirst<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("Gmean", "mean", "var", "replacement", "error"), n0=n0, amplSeason=season$amplSeason, var.survJ=envir$var))
+GenvJ_seasonBestMean<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("Gmean", "mean", "var", "replacement", "error"), n0=n0, amplSeason=season$amplSeason, var.survJ=envir$var))
+GenvA_seasonBestFirst<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("Gmean", "mean", "var", "replacement", "error"), n0=n0, amplSeason=season$amplSeason, var.survA=envir$var))
+GenvA_seasonBestMean<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envir)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("Gmean", "mean", "var", "replacement", "error"), n0=n0, amplSeason=season$amplSeason, var.survA=envir$var))
+GenvJA_seasonBestFirst<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envirJA)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("Gmean", "mean", "var", "replacement", "error"), n0=n0, amplSeason=season$amplSeason), var.survJ_survA=paste(envirJA$varJ, envirJA$varA, sep="_"))
+GenvJA_seasonBestMean<- array(dim=c(nrow(strategy), 5, length(n0), nrow(season), nrow(envirJA)), dimnames=list(strategy=character(nrow(strategy)), descriptors=c("Gmean", "mean", "var", "replacement", "error"), n0=n0, amplSeason=season$amplSeason, var.survJ_survA=paste(envirJA$varJ, envirJA$varA, sep="_"))
 
 ## Simulation
 # library(doMC) #no desa els resultats correctament

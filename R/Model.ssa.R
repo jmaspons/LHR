@@ -38,6 +38,15 @@ run.ssa<- function(model, cl=makeCluster(cores, type="FORK"), cores=detectCores(
   return (res)
 }
 
+run.ssa.deterministic<- function(model, cl=makeCluster(cores, type="FORK"), cores=detectCores(), ...){
+  x0L<- model@sim@params$N0
+  params<- S3Part(model)
+
+  res<- exploreSSA.deterministic(params=params, transitionMat=model@sim@params$transitionMat, rateFunc=model@sim@params$rateFunc, cl=cl, ...)
+  ## TODO: return the Model adding this result to model@sim@deterministic
+  res<- new("Sim.ssa", res$stats, params=model@sim@params, raw=unclass(res))
+  return (res)
+}
 ## Graphics ----
 plotPest<- function(model){
   res<- result(model)

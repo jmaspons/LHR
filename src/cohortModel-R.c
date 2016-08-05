@@ -1,7 +1,6 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <Rmath.h>
-#include <R_ext/Utils.h>
 #include "cohortModel.h"
 #include "environment.h"
 

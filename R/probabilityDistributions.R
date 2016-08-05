@@ -6,7 +6,8 @@
 sbeta<- function(shape1, shape2){
   mean<- shape1 / (shape1 + shape2)
   var<- shape1 * shape2 / ((shape1 + shape2)^2 * (shape1 + shape2 + 1))
-  
+  if (is.na(mean)) return (list(mean=NA, var=NA))
+                           
   if (shape1 < 0 || shape2 < 0){
   	mean[which(shape1 < 0 | shape2 < 0)]<- NaN
   	var[which(is.na(mean))]<- NaN

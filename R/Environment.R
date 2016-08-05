@@ -44,7 +44,8 @@ setMethod("Env",
 setMethod("Env",
           signature(mean="data.frame", var="missing", seasonAmplitude="missing", seasonRange="missing", breedFail="missing"),
           function(mean){
-            x<- mean
+            if (inherits(mean, "Model")) mean<- S3Part(mean)
+            x<- unique(mean[,c("mean", "var", "seasonAmplitude", "breedFail")])
             env<- Env(mean=x$mean, var=x$var, seasonAmplitude=x$seasonAmplitude, breedFail=x$breedFail)
             return (env)
           }
