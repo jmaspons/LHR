@@ -1,7 +1,47 @@
 setOldClass("ssa")
 
+## Explore the deterministic part of the model ----
+# For inspiration chapter 3: Tuljapurkar, Shripad, and Hal Caswell, eds. Structured-population models in marine, terrestrial, and freshwater systems. Vol. 18. Springer Science & Business Media, 2012.
+# Simulate the model with discrete time and continuous population size
+# Useful to find the stable state structure and deterministic growth rate
+# normalize=TRUE work with the proportions of states instead of the population size.
+#   It converges faster and allows to calculated the maximum grow rates for models with densodependence,
+#   assuming that the carring capacity >> 1
+ssa.deterministic<- function(init.values=rep(1, nrow(transitions)), transitions, rateFunc, params, maxTf=500, normalize=TRUE){
+  res<- matrix(NA_real_, nrow=maxTf, ncol=9, dimnames=list(NULL, state=c("time", "N1s",  "N1b",  "N1bF", "N1j",  "N2s",  "N2b",  "N2bF", "N2j")))
+
+  res[1,]<- c(1, init.values / sum(init.values))
+  converge<- FALSE
+  i<- 1
+  while (i < maxTf & !converge){
+    i<- i + 1
+    freqs<- rateFunc(res[i-1,], params=params)
+    if (normalize) freqs<- freqs / sum(freqs)
+    delta<- t(freqs * t(transitions))
+    delta<- rowSums(delta)
+    
+    N<- res[i-1,-1] + delta
+    N[which(N < 0)]<- 0
+    if (sum(N) == 0){
+      res[i,]<- c(i, N)
+      break
+    }
+    
+    if (normalize) N<- N / sum(N)
+    res[i,]<- c(i, N)
+    if (sum(diff(res[c(i-1, i), -1])) == 0) converge<- TRUE
+  }
+  
+  stableStructure<- res[i,-1]
+  lambda<- sum(delta) + 1 # Nt+1 / Nt
+  r<- sum(delta) # (Nt+1 - Nt) / Nt
+  
+  return (list(stableStructure=stableStructure, lambda=lambda, r=r))
+}
+
+
 ## Explore SSA ----
-exploreSSA<- function(x0L, params, transitionMat, rateFunc, tf=10, replicates=100,
+exploreSSA<- function(x0L, params, transitionMat, rateFunc, maxTf=10, replicates=100,
                       discretePop=FALSE, finalPop=TRUE, burnin=-1, dtDiscretize=NULL, cl=makeCluster(cores, type="FORK"), cores=detectCores(), ...){
   if (is.numeric(x0L)){
     x0L<- list(x0L)
@@ -10,11 +50,6 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, tf=10, replicates=10
   resStats<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=12,
                                   dimnames=list(scenario=paste0(rep(rownames(params), each=length(x0L)), "_N", rep(sapply(x0L, sum), times=nrow(params))),
                                                                 stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))))
-#                                                         , "increase.dtF", "decrease.dtF", "stable.dtF", "extinct.dtF", "GR.dtF", "meanR.dtF", "varR.dtF", "GL.dtF", "meanL.dtF", "varL.dtF"))))
-  if (finalPop) Ntf<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=2 + replicates, 
-                                            dimnames=list(scenario=paste0(rep(rownames(params), each=length(x0L)), "_N", rep(sapply(x0L, sum), times=nrow(params))), 
-                                                          Ntf=c("scenario", "N0", 1:replicates))))
-  if (discretePop) resPop<- list()
 
   k<- 1
   for (i in 1:nrow(params)){
@@ -27,6 +62,7 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, tf=10, replicates=10
     for (j in seq_along(x0L)){
       N0<- x0L[[j]]
       pars<- params[i,]
+
       clusterExport(cl=cl, c("N0", "transitions", "rateFunc", "pars", "tf", "dtDiscretize", "burnin"))
       clusterSetRNGStream(cl=cl, iseed=NULL)
       clusterEvalQ(cl, library(LHR))
@@ -81,6 +117,28 @@ if(paste0(rownames(params)[i], "_N", sum(x0L[[j]])) != rownames(resStats)[k]) st
   class(res)<- "ssa"
   return (res)
 }
+
+
+exploreSSA.deterministic<- function(x0=rep(1, nrow(transitionMat())), params, transitionMat, rateFunc, maxTf=500, normalize=TRUE,
+                                    cl=makeCluster(cores, type="FORK"), cores=detectCores(), ...){
+  params<- split(params, rownames(params))
+
+  clusterExport(cl=cl, c("x0", "transitionMat", "rateFunc", "maxTf", "normalize"))
+  clusterSetRNGStream(cl=cl, iseed=NULL)
+  clusterEvalQ(cl, library(LHR))
+  
+  res<- parLapply(cl=cl, params, function(x){
+    transitions<- transitionMat(x)
+    sim<- ssa.deterministic(init.values=x0, transitions=transitions, rateFunc=rateFunc, params=x, maxTf=maxTf, normalize=normalize)
+    sim<- c(lambda=sim$lambda, r=sim$r, sim$stableStructure)
+    return (sim)
+  })
+  
+  res<- as.data.frame(do.call("rbind", res))
+  
+  return (res)
+}
+
 
 ## Discretize the result of a ssa simulations from adaptivetau ----
 # sim: matrix(ncol=1:tf, nrow=nStates, dimnames=list(time=NULL, state=c("time", states))) from ssa (e.g. models-IBM-ssa_LH_behavior.R)

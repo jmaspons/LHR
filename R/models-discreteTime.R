@@ -21,16 +21,18 @@ setMethod("discretePopSim_dispatch",  # function dispatcher
           signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="numeric", varBreedFail="numeric",
                     sexRatio="ANY", matingSystem="ANY", N0="numeric", replicates="numeric", tf="numeric", maxN="ANY"),
           function(broods=1, b, j, a, breedFail, varJ=0, varBreedFail=0, sexRatio=.5, matingSystem="monogamy", N0, replicates, tf, maxN=100000){
-            cm<- paste0("discretePopSim(j=j, a=a, b=b, ")
+            cm<- paste0("discretePopSim(j=j, a=a, ")
             if (any(breedFail != 0)){ # any for seasonal where j and breedFail can be a vector of broods length
-              cm<- paste0(cm, "broods=broods, breedFail=breedFail, ")
+              cm<- paste0(cm, "b=b, broods=broods, breedFail=breedFail, ")
+            }else{
+			  cm<- paste0(cm, "b=b * broods, ")
             }
             if (!is.na(sexRatio)){
               cm<- paste0(cm, "sexRatio=sexRatio, matingSystem=matingSystem, ")
             }
             if (varJ != 0 | varBreedFail !=0){
               # Select one of the following options and think about correlation (same mean for juvenile survival and breeding fail?)
-              cm<- paste0(cm, "varJ=varJ, varBreedFail=0, ")
+              cm<- paste0(cm, "varJ=varJ, varBreedFail=varBreedFail, ")
 #               cm<- paste0(cm, "varJ=0, varBreedFail=varBreedFail, ")
 #               cm<- paste0(cm, "varJ=varJ, varBreedFail=varBreedFail,")
             }
@@ -272,7 +274,7 @@ mSurvBV.tvar<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, N0, 
   pop<- matrix(NA, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
   pop[,1]<- N0
   if (varJ > 0) betaParsJ<- fbeta(mean=j, var=varJ)
-  if (varBreedFail > 0) betaParsBreedFail<- fbeta(mean=breedFail, var=varBreedFail)
+  if (varBreedFail > 0) betaParsBreedFail<- fbeta(mean=1 - breedFail, var=varBreedFail)
   jEnv<- j
   breedFailEnv<- breedFail
   
