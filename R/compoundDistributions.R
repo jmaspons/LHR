@@ -9,32 +9,32 @@ distriBinom<- function(...){
   UseMethod("distriBinom")
 }
 
-distriBinom.numeric<- function(size, prob, log=FALSE){
-  res<- data.frame(x=0:size, p=dbinom(x=0:size, size, prob, log))
+distriBinom.numeric<- function(size, prob, logP=FALSE){
+  res<- data.frame(x=0:size, p=dbinom(x=0:size, size, prob, log=logP))
   attributes(res)$p.omitted<- 0
   attributes(res)$parameters<- list(size=size, prob=prob)
-  attributes(res)$logP<- log
+  attributes(res)$logP<- logP
   class(res)<- c("binom", "finiteSuport","numericDistri", "data.frame")
   return (res)
 }
 
 # size: numericDistri object which compound a binomial distribution as a size parameter.
 # p: probability
-distriBinom.numericDistri<- function(size, prob, log=FALSE){
-  if (log != attributes(size)$logP){ # Transform p to log scale if necessary
-    size<- logP(size, log=log)
+distriBinom.numericDistri<- function(size, prob, logP=FALSE){
+  if (logP != attributes(size)$logP){ # Transform p to log scale if necessary
+    size<- logP(size, logP=logP)
   }
   
-  res<- .External("binomialCompound", size$x, size$p, prob, log, max(size$x))
+  res<- .External("binomialCompound", size$x, size$p, prob, logP, max(size$x))
   res<- data.frame(x=0:(length(res) - 1), p=res)
   
-  if (log){
+  if (logP){
     attributes(res)$p.omitted<- 1 - sum(exp(res$p))
   }else{
     attributes(res)$p.omitted<- 1 - sum(res$p)
   }
   attributes(res)$parameters<- list(size=c(list(distribution=class(size)[1]), attributes(size)$parameters), prob=prob)
-  attributes(res)$logP<- log
+  attributes(res)$logP<- logP
   class(res)<- "compoundBinom"
   if (inherits(size, "infiniteSuport")) class(res)<- c(class(res), "infiniteSuport")
   class(res)<- c(class(res), "numericDistri", "data.frame")
@@ -47,34 +47,34 @@ distriBetaBinom<- function(...){
   UseMethod("distriBetaBinom")
 }
 
-distriBetaBinom.numeric<- function(size, shape1, shape2, log=FALSE){
-  res<- data.frame(x=0:size, p=dbetabinom(x=0:size, size, shape1, shape2, log=log))
+distriBetaBinom.numeric<- function(size, shape1, shape2, logP=FALSE){
+  res<- data.frame(x=0:size, p=dbetabinom(x=0:size, size, shape1, shape2, log=logP))
   attributes(res)$p.omitted<- 0
   prob<- sbeta(shape1=shape1, shape2=shape2)
   attributes(res)$parameters<- list(size=size, prob=prob$mean, var=prob$var)
-  attributes(res)$logP<- log
+  attributes(res)$logP<- logP
   class(res)<- c("betaBinom", "finiteSuport","numericDistri", "data.frame")
   return (res)
 }
 
 # size: numericDistribution object which compound a binomial distribution as a size parameter.
 # p: probability
-distriBetaBinom.numericDistri<- function(size, shape1, shape2, log=FALSE){
-  if (log != attributes(size)$logP){ # Transform p to log scale if necessary
-    size<- logP(size, log=log)
+distriBetaBinom.numericDistri<- function(size, shape1, shape2, logP=FALSE){
+  if (logP != attributes(size)$logP){ # Transform p to log scale if necessary
+    size<- logP(size, logP=logP)
   }
   
-  res<- .External("BetaBinomialCompound", size$x, size$p, shape1, shape2, log, max(size$x))
+  res<- .External("BetaBinomialCompound", size$x, size$p, shape1, shape2, logP, max(size$x))
   res<- data.frame(x=0:(length(res) - 1), p=res)
   
-  if (log){
+  if (logP){
     attributes(res)$p.omitted<- 1 - sum(exp(res$p))
   }else{
     attributes(res)$p.omitted<- 1 - sum(res$p)
   }
   prob<- sbeta(shape1=shape1, shape2=shape2)
   attributes(res)$parameters<- list(size=c(list(distribution=class(size)[1]), attributes(size)$parameters), prob=prob$mean, var=prob$var)
-  attributes(res)$logP<- log
+  attributes(res)$logP<- logP
   class(res)<- "compoundBetaBinom"
   if (inherits(size, "infiniteSuport")) class(res)<- c(class(res), "infiniteSuport")
   class(res)<- c(class(res), "numericDistri", "data.frame")
@@ -87,20 +87,20 @@ distriNegBinom<- function(...){
   UseMethod("distriNegBinom")
 }
   
-distriNegBinom.numeric<- function(size, prob, mu, log=FALSE, maxPomitted=0.01, maxX){
+distriNegBinom.numeric<- function(size, prob, mu, logP=FALSE, maxPomitted=0.01, maxX){
   if (missing(prob) & !missing(mu)) prob<- size / (size+mu) #alternative parametrization ?dnbinom
   if (missing(maxX)){
-    maxX<- qnbinom(maxPomitted, size=size, prob=prob, lower.tail=FALSE, log.p=log)
+    maxX<- qnbinom(maxPomitted, size=size, prob=prob, lower.tail=FALSE, log.p=logP)
   }
-  res<- data.frame(x=0:maxX, p=dnbinom(x=0:maxX, size=size, prob=prob, log=log))
+  res<- data.frame(x=0:maxX, p=dnbinom(x=0:maxX, size=size, prob=prob, log=logP))
   
-  if (log){
+  if (logP){
     attributes(res)$p.omitted<- 1 - sum(exp(res$p))
   }else{
     attributes(res)$p.omitted<- 1 - sum(res$p)
   }
   attributes(res)$parameters<- list(size=size, prob=prob)
-  attributes(res)$logP<- log
+  attributes(res)$logP<- logP
   class(res)<- c("nbinom", "infiniteSuport", "numericDistri", "data.frame")
   return (res)
 }
@@ -108,34 +108,34 @@ distriNegBinom.numeric<- function(size, prob, mu, log=FALSE, maxPomitted=0.01, m
 #TODO distriNegBinom.numericDistri
 
 ## Beta negative binomial distribution ----
-distriBetaNegBinom<- function(size, shape1, shape2, log=FALSE, maxPomitted=0.01, maxX){
+distriBetaNegBinom<- function(size, shape1, shape2, logP=FALSE, maxPomitted=0.01, maxX){
   if (missing(maxX)){
-    maxX<- qbetanbinom(maxPomitted, size=size, shape1=shape1, shape2=shape2, lower.tail=FALSE, log.p=log)
+    maxX<- qbetanbinom(maxPomitted, size=size, shape1=shape1, shape2=shape2, lower.tail=FALSE, log.p=logP)
   }
-  res<- data.frame(x=0:maxX, p=dbetanbinom(x=0:maxX, size=size, shape1=shape1, shape2=shape2, log=log))
+  res<- data.frame(x=0:maxX, p=dbetanbinom(x=0:maxX, size=size, shape1=shape1, shape2=shape2, log=logP))
   
-  if (log){
+  if (logP){
     attributes(res)$p.omitted<- 1 - sum(exp(res$p))
   }else{
     attributes(res)$p.omitted<- 1 - sum(res$p)
   }
   prob<- sbeta(shape1=shape1, shape2=shape2)
   attributes(res)$parameters<- list(size=size, prob=prob$mean, var=prob$var)
-  attributes(res)$logP<- log
+  attributes(res)$logP<- logP
   class(res)<- c("betaNbinom", "infiniteSuport", "numericDistri", "data.frame")
   return (res)
 }
 
 ## Change probability scale (p vs logp) ----
-logP<- function(distri, log=TRUE){
-  if (attributes(distri)$logP == log) return (distri)
+logP<- function(distri, logP=TRUE){
+  if (attributes(distri)$logP == logP) return (distri)
   
-  if (log){
+  if (logP){
     distri$p<- log(distri$p)
   }else{
     distri$p<- exp(distri$p)
   }
-  attributes(distri)$logP<- log
+  attributes(distri)$logP<- logP
   return (distri)
 }
 
@@ -192,8 +192,8 @@ var<- function(distri, ...){
 }
 
 var.numericDistri<- function(distri){
-  distri<- logP(distri, log=FALSE)
-  sum(p * (distri$x - mean(distri))^2)
+  distri<- logP(distri, logP=FALSE)
+  sum(distri$p * (distri$x - mean(distri))^2)
 }
 
 sdistri<- function(distri){
@@ -201,7 +201,7 @@ sdistri<- function(distri){
 }
 
 sdistri.numericDistri<- function(distri){
-  distri<- logP(distri, log=FALSE)
+  distri<- logP(distri, logP=FALSE)
 
   meanD<- mean(distri)
   varD<- sum(distri$p * (distri$x - meanD)^2) #var(distri)

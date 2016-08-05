@@ -63,7 +63,7 @@ setMethod("tDistri",
 # cat("mSurvBV.distri(broods=", broods, ", b=", b, ", j=", j, ", a=", a, ", breedFail=", breedFail, ", N0=", N0, ")\n")
               tmp<- mSurvBV.distri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N0=N0)
 # print(tmp)
-# log("a") # Error to debug 
+# logP("a") # Error to debug 
 # return(tmp)
             }
           }
@@ -130,7 +130,7 @@ setMethod("tDistri",
               # cat("mSurvBV.tdistri(broods=", broods, ", b=", b, ", j=", j, ", a=", a, ", breedFail=", breedFail, ", N0=", N0, ")\n")
               tmp<- mSurvBV.tdistri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N0=N0, tf=tf)
               # print(tmp)
-              # log("a") # Error to debug 
+              # logP("a") # Error to debug 
               # return(tmp)
             }
           }
@@ -172,25 +172,26 @@ setMethod("tDistri",
 ## Transition models N_t+1 = f(N_t) ----
 # Adult mortality + offspring mortality
 # N_t+1 = B(n=N_t * fecundity, p=j) + B(n=N_t, p=a)
-mFit.distri<- function(fecundity, j, a, N0, log=FALSE){
+mFit.distri<- function(fecundity, j, a, N0, logP=FALSE){
   ## Recruitment probability conditioned to the number of successful broods
-  recruits<- distriBinom(size=N0 * fecundity, prob=j, log=log)
+  recruits<- distriBinom(size=N0 * fecundity, prob=j, logP=logP)
   
   ## Adult survival
-  survivors<- distriBinom(size=N0, prob=a, log=log)
+  survivors<- distriBinom(size=N0, prob=a, logP=logP)
   N_t1<- distriSum(recruits, survivors)
 
   return (N_t1)
 }
 
 # N_t+1 = B(n=N_t * fecundity, p=Beta(j, varJ)) + B(n=N_t, p=a)
-mFit_var.distri<- function(fecundity, j, a, varJ, N0, log=FALSE){
+mFit_var.distri<- function(fecundity, j, a, varJ, N0, logP=FALSE){
   betaPars<- fbeta(mean=j, var=varJ)
+  # if (all(is.na(betaPars)))
   ## Recruitment probability conditioned to the number of successful broods
-  recruits<- distriBetaBinom(N0 * fecundity, shape1=betaPars$shape1, shape2=betaPars$shape2, log=log)
+  recruits<- distriBetaBinom(N0 * fecundity, shape1=betaPars$shape1, shape2=betaPars$shape2, logP=logP)
   
   ## Adult survival
-  survivors<- distriBinom(size=N0, prob=a, log=log)
+  survivors<- distriBinom(size=N0, prob=a, logP=logP)
   N_t1<- distriSum(recruits, survivors)
   
   return (N_t1)
@@ -198,29 +199,29 @@ mFit_var.distri<- function(fecundity, j, a, varJ, N0, log=FALSE){
 
 # Adult mortality + Brood mortality + offspring mortality
 # N_t+1 = B(n=B(n=N_t * broods, p=1-breedFail) * b, p=j) + B(n=N_t, p=a)
-mSurvBV.distri<- function(broods, b, j, a, breedFail, N0, log=FALSE){
+mSurvBV.distri<- function(broods, b, j, a, breedFail, N0, logP=FALSE){
   ## Probability of successful breeding attempt without complete brood fail
-  nSuccessBroods<- distriBinom(N0 * broods, prob=1-breedFail, log=log)
+  nSuccessBroods<- distriBinom(N0 * broods, prob=1-breedFail, logP=logP)
   nSuccessBroods<- nSuccessBroods * b
   
   ## Recruitment probability conditioned to the number of successful broods
-  recruits<- distriBinom(nSuccessBroods, prob=j, log=log)
+  recruits<- distriBinom(nSuccessBroods, prob=j, logP=logP)
   
   ## Adult survival
-  survivors<- distriBinom(size=N0, prob=a, log=log)
+  survivors<- distriBinom(size=N0, prob=a, logP=logP)
   N_t1<- distriSum(recruits, survivors)
   
   return (N_t1)
 }
 
 # N_t+1 = B(n=B(n=N_t * broods, p=Beta(1-breedFail, varBreedFail)) * b, p=Beta(j, varJ)) + B(n=N_t, p=a)
-mSurvBV_var.distri<- function(broods, b, j, a, breedFail, varJ, varBreedFail, N0, log=FALSE){
+mSurvBV_var.distri<- function(broods, b, j, a, breedFail, varJ, varBreedFail, N0, logP=FALSE){
   ## Probability of successful breeding attempt without complete brood fail
   if (varBreedFail > 0){
     betaPars<- fbeta(mean=1-breedFail, var=varBreedFail)
-    nSuccessBroods<- distriBetaBinom(N0 * broods, shape1=betaPars$shape1, shape2=betaPars$shape2, log=log)
+    nSuccessBroods<- distriBetaBinom(N0 * broods, shape1=betaPars$shape1, shape2=betaPars$shape2, logP=logP)
   }else{
-    nSuccessBroods<- distriBinom(N0 * broods, prob=1-breedFail, log=log)
+    nSuccessBroods<- distriBinom(N0 * broods, prob=1-breedFail, logP=logP)
   }
   
   nSuccessBroods<- nSuccessBroods * b
@@ -228,13 +229,13 @@ mSurvBV_var.distri<- function(broods, b, j, a, breedFail, varJ, varBreedFail, N0
   ## Recruitment probability conditioned to the number of successful broods
   if (varJ > 0){
     betaPars<- fbeta(mean=j, var=varJ)
-    recruits<- distriBetaBinom(nSuccessBroods, shape1=betaPars$shape1, shape2=betaPars$shape2, log=log)
+    recruits<- distriBetaBinom(nSuccessBroods, shape1=betaPars$shape1, shape2=betaPars$shape2, logP=logP)
   }else{
-    recruits<- distriBinom(nSuccessBroods, prob=j, log=log)
+    recruits<- distriBinom(nSuccessBroods, prob=j, logP=logP)
   }
   
   ## Adult survival
-  survivors<- distriBinom(size=N0, prob=a, log=log)
+  survivors<- distriBinom(size=N0, prob=a, logP=logP)
   N_t1<- distriSum(recruits, survivors)
   
   return (N_t1)
@@ -245,19 +246,19 @@ mSurvBV_var.distri<- function(broods, b, j, a, breedFail, varJ, varBreedFail, N0
 
 # Adult mortality + offspring mortality + sex ratio
 # N_t+1 = B(n=B(n=N_t * fecundity, p=j), p=sexRatio) + B(n=N_t, p=a)
-mFitSex.distri<- function(fecundity, j, a, sexRatio=0.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], Nf, Nm=Nf, log=FALSE){
+mFitSex.distri<- function(fecundity, j, a, sexRatio=0.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], Nf, Nm=Nf, logP=FALSE){
   ## Recruitment probability conditioned to the number of successful broods
   N<- switch(matingSystem, 
                   monogamy=min(Nf, Nm),
                   polygyny=Nf,
                   polyandry=Nm)
-  recruits<- distriBinom(N * fecundity, prob=j, log=log)
-  recruitsF<- distriBinom(recruits, prob=sexRatio, log=log)
+  recruits<- distriBinom(N * fecundity, prob=j, logP=logP)
+  recruitsF<- distriBinom(recruits, prob=sexRatio, logP=logP)
   recruitsM<- recruits - recruitsF
   
   ## Adult survival
-  survivorsF<- distriBinom(size=Nf, prob=a, log=log)
-  survivorsM<- distriBinom(size=Nm, prob=a, log=log)
+  survivorsF<- distriBinom(size=Nf, prob=a, logP=logP)
+  survivorsM<- distriBinom(size=Nm, prob=a, logP=logP)
   Nf_t1<- distriSum(recruitsF, survivorsF)
   Nm_t1<- distriSum(recruitsF, survivorsM)
   N_t1<- list(females=Nf_t1, males=Nm_t1)
@@ -267,34 +268,34 @@ mFitSex.distri<- function(fecundity, j, a, sexRatio=0.5, matingSystem=c("monogam
 
 # Adult mortality + Brood mortality + offspring mortality + sex ratio
 # N_t+1 = B(n=B(n=B(n=N_t * broods, p=1-breedFail) * b, p=j), p=sexRatio) + B(n=N_t, p=a)
-mSurvBVSex.distri<- function(broods, b, j, a, breedFail, sexRatio=0.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], Nf, Nm, log=FALSE){
+mSurvBVSex.distri<- function(broods, b, j, a, breedFail, sexRatio=0.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], Nf, Nm, logP=FALSE){
 
 }
 
 ## Multiple time steps models ----
-## Decrease accuracy after 50 timesteps aprox. Use log(p) reduce omitted probability
-mFit.tdistri<- function(fecundity, j, a, N0, tf, log=TRUE){
-  N<- mFit.distri(fecundity, j, a, N0, log=log)
+## Decrease accuracy after 50 timesteps aprox. Use logP(p) reduce omitted probability
+mFit.tdistri<- function(fecundity, j, a, N0, tf, logP=TRUE){
+  N<- mFit.distri(fecundity, j, a, N0, logP=logP)
   at<- attributes(N)
   for (i in 2:tf){
-    cat(i, "/", tf, nrow(N), "p=", sum(logP(N, log=FALSE)$p), "max x=", N$x[nrow(N)], "\n")
-    N<- mFit.distri(fecundity, j, a, N, log=log)
+    cat(i, "/", tf, nrow(N), "p=", sum(logP(N, logP=FALSE)$p), "max x=", N$x[nrow(N)], "\n")
+    N<- mFit.distri(fecundity, j, a, N, logP=logP)
     print(head(N$x[N$p %in% c(-Inf, 0)]))
     N<- N[!N$p %in% c(-Inf, 0),]
   }
-  attributes(N)$p.omitted<- 1 - sum(logP(N, log=FALSE)$p)
+  attributes(N)$p.omitted<- 1 - sum(logP(N, logP=FALSE)$p)
   attributes(N)$parameters<- at$parameters
   attributes(N)$tf<- tf
   
   return (N)
 }
 
-mSurvBV.tdistri<- function(broods, b, j, a, breedFail, N0, tf, log=TRUE){
-  N<- mSurvBV.distri(broods, b, j, a, breedFail, N0, log=log)
+mSurvBV.tdistri<- function(broods, b, j, a, breedFail, N0, tf, logP=TRUE){
+  N<- mSurvBV.distri(broods, b, j, a, breedFail, N0, logP=logP)
   at<- attributes(N)
   for (i in 2:tf){
-    cat(i, "/", tf, nrow(N), "p=", sum(logP(N, log=FALSE)$p), "max x=", N$x[nrow(N)], "\n")
-    N<- mSurvBV.distri(broods, b, j, a, breedFail, N, log=log)
+    cat(i, "/", tf, nrow(N), "p=", sum(logP(N, logP=FALSE)$p), "max x=", N$x[nrow(N)], "\n")
+    N<- mSurvBV.distri(broods, b, j, a, breedFail, N, logP=logP)
     N<- N[!N$p %in% c(-Inf, 0),]
   }
   attributes(N)$p.omitted<- 1 - sum(N$p)
