@@ -1,11 +1,13 @@
 #' LH.ssa
+#' 
+#' @name LH.ssa
 #'
 #' @include LH.R
 #' @export
 setClass("LH.ssa", contains="LH")
 
 ## Constructors ----
-#' @describeIn LH.ssa
+#' @rdname LH.ssa
 #' @param pars a data.frame.
 #'
 #' @export

@@ -1,6 +1,8 @@
 ## Simulation Class
 # setClass("Sim", slots=list(discreteTime="discretePopSim"), contains="data.frame")
 #' Simulation class
+#' 
+#' @name Sim
 #'
 #' @slot params list. 
 #' @slot raw list. 
@@ -10,7 +12,7 @@ setClass("Sim", slots=list(params="list", raw="list"),
          contains="data.frame")
 
 ## Constructor ----
-#' @describeIn Sim
+#' @rdname Sim
 #'
 #' @param params 
 #'
@@ -41,6 +43,8 @@ setMethod("Sim",
 ## Subclasses
 ## Sim.discretePopSim Class ----
 #' Discrete Simulation Class
+#' 
+#' @name Sim.discretePopSim
 #'
 #' @slot Ntf data.frame. 
 #'
@@ -58,7 +62,7 @@ setMethod("Sim.discretePopSim_complete",
           }
 )
 
-#' @describeIn Sim.discretePopSim
+#' @rdname Sim.discretePopSim
 #'
 #' @param N0 
 #' @param envVar 
@@ -86,6 +90,8 @@ setMethod("Sim.discretePopSim",
 ## Sim.numericDistri Class ----
 #TODO: sexRatio
 #' Numeric Distribution Simulation Class
+#' 
+#' @name Sim.numericDistri
 #'
 #' @slot Ntf data.frame. 
 #'
@@ -103,7 +109,7 @@ setMethod("Sim.numericDistri_complete",
           }
 )
 
-#' @describeIn Sim.numericDistri
+#' @rdname Sim.numericDistri
 #'
 #' @param N0 
 #' @param envVar 
@@ -129,6 +135,8 @@ setMethod("Sim.numericDistri",
 ## Sim.ssa Class ----
 # setOldClass("ssa")
 #' SSA Simulation Class
+#' 
+#' @name Sim.ssa
 #'
 #' @slot Ntf data.frame. 
 #'
@@ -146,7 +154,7 @@ setMethod("Sim.ssa_complete",
           }
 )
 
-#' @describeIn Sim.ssa
+#' @rdname Sim.ssa
 #'
 #' @param N0 
 #' @param transitionMat 

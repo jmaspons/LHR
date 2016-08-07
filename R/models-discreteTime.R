@@ -1,4 +1,5 @@
 ## return object of class c("discretePopSim", "data.frame") with replicates on rows and time in columns
+#' @name discretePopSim
 #' @exportClass discretePopSim
 setOldClass("discretePopSim")
 
@@ -44,8 +45,8 @@ setMethod("discretePopSim_dispatch",  # function dispatcher
 )
 
 #' Disctrete time and population models
-#' 
-#' @name discretePopSim
+#'
+#' @rdname discretePopSim
 #' @param broods 
 #' @param b 
 #' @param j 

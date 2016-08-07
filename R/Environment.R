@@ -1,7 +1,8 @@
 ## Temporal variability class
 
 #' Environment class
-#'
+#' 
+#' @name Env
 #' @slot seasonRange data.frame. 
 #'
 #' @examples Env()
@@ -10,7 +11,7 @@ setClass("Env", slots=list(seasonRange="data.frame"), contains="data.frame")
 
 ## Constructor ----
 
-#' @describeIn Env
+#' @rdname Env
 #'
 #' @param mean 
 #' @param var 
@@ -70,7 +71,7 @@ setMethod("Env",
 )  
 
 ## Seasonal pattern ----
-#' @describeIn Env 
+#' @rdname Env 
 #'
 #' @param env 
 #' @param resolution 
@@ -95,7 +96,7 @@ setMethod("seasonalPattern",
 )
 
 # Align a number of events separed by an interval to maximize a seasonal pattern of Env
-#' @describeIn Env
+#' @rdname Env
 #'
 #' @param env 
 #' @param resolution 

@@ -8,12 +8,14 @@
 # fecundity * j: net fecundity
 
 #' Life histories class
+#' 
+#' @name LH
 #'
 #' @export
 setClass("LH", contains="data.frame")
 
 ## Constructors ----
-#' @describeIn LH
+#' @rdname LH
 #'
 #' @param pars 
 #' @param lambda 

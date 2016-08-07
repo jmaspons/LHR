@@ -30,7 +30,7 @@
 #' @exportClass leslieMatrix
 setOldClass("leslieMatrix")
 
-#' @describeIn lefkovitch
+#' @rdname lefkovitch
 #' @export
 LefkovitchPre<- function(a, s, bj, AFR=1){
   rows<- max(AFR, 2)
@@ -61,7 +61,7 @@ LefkovitchPre<- function(a, s, bj, AFR=1){
 # j 0 0
 # 0 s a
 
-#' @describeIn lefkovitch
+#' @rdname lefkovitch
 #' @export
 LefkovitchPost<- function(a, s, j, b, AFR=1){
   rows<- AFR + 1
@@ -125,7 +125,7 @@ lambda.leslieMatrix<- function(mat){ # Ted J. Case. "An Illustrated Guide to The
 #' @param AFR
 NULL
 
-#' @describeIn EulerLotka
+#' @rdname EulerLotka
 #' @export
 findF_EulerLotka<- function(lambda, a, AFR){
   F<- -(a * lambda^AFR - lambda^(AFR+1)) / (a^(AFR-1) * lambda)
@@ -133,7 +133,7 @@ findF_EulerLotka<- function(lambda, a, AFR){
   return (F)
 }
 
-#' @describeIn EulerLotka
+#' @rdname EulerLotka
 #' @export
 findJ_EulerLotka<- function(lambda, b, a, AFR){
   F<- findF_EulerLotka(lambda, a, AFR)
@@ -142,7 +142,7 @@ findJ_EulerLotka<- function(lambda, b, a, AFR){
   return (j)
 }
 
-#' @describeIn EulerLotka
+#' @rdname EulerLotka
 #' @export
 findA_EulerLotka<- function(lambda, b, j, AFR){
   a<- -(b * j^2 * a^(AFR-1) * lambda - lambda^(AFR + 1)) / (lambda^AFR)
@@ -150,7 +150,7 @@ findA_EulerLotka<- function(lambda, b, j, AFR){
   return (a)
 }
 
-#' @describeIn EulerLotka
+#' @rdname EulerLotka
 #' @export
 findB_EulerLotka<- function(lambda, j, a, AFR){
   F<- findF_EulerLotka(lambda, a, AFR)

@@ -1,5 +1,7 @@
 #' Environment class with temporal variability
 #'
+#' @name Model
+#' 
 #' @slot sim Sim. 
 #' @slot params list. 
 #'
@@ -27,6 +29,7 @@ setMethod("Model_complete",
 
 #' Model constructor
 #'
+#' @rdname Model
 #' @param lh 
 #' @param env 
 #' @param sim 
@@ -85,7 +88,7 @@ setMethod("combineLH_Env",
 ## Simulate ----
 # cl=makeCluster(detectCores())
 # clF=makeCluster(detectCores(), type="FORK")
-#' @describeIn Model
+#' @rdname Model
 #'
 #' @param model 
 #' @param cl 
@@ -297,7 +300,7 @@ runScenario.numericDistri<- function(scenario, pars){
 }
 
 ## Post process ----
-#' @describeIn Model
+#' @rdname Model
 #'
 #' @param model 
 #' @param type 

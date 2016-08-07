@@ -1,11 +1,13 @@
 #' Model.ssa
+#' 
+#' @name Model.ssa
 #'
 #' @include Model.R
 #' @export
 setClass("Model.ssa", contains="Model")
 
 ## Model.ssa ----
-#' @describeIn Model.ssa
+#' @rdname Model.ssa
 #'
 #' @param pars 
 #' @param sim 
@@ -63,7 +65,7 @@ run.ssa.deterministic<- function(model, cl=makeCluster(cores, type="FORK"), core
 
 
 ## Graphics ----
-#' @describeIn Model.ssa
+#' @rdname Model.ssa
 #'
 #' @param model 
 #'
@@ -73,7 +75,7 @@ plotPest<- function(model){
   ggplot(data=res, aes(N0, 1 - decrease, colour=behavior)) + facet_grid(environment ~ LH) + geom_line() + geom_point() + coord_cartesian(ylim=c(0, 1))
 }
 
-#' @describeIn Model.ssa
+#' @rdname Model.ssa
 #'
 #' @param model 
 #'
@@ -96,7 +98,7 @@ plotNtf<- function(model){
 }
 
 ##TODO: plot grow rates ~ time
-#' @describeIn Model.ssa
+#' @rdname Model.ssa
 #'
 #' @param model 
 #'
@@ -111,7 +113,7 @@ plotR<- function(gr, firstOnly=TRUE, omitOutliers=TRUE, ylim=quantile(gr$r, prob
   }
 }
 
-#' @describeIn Model.ssa
+#' @rdname Model.ssa
 #'
 #' @param model 
 #'

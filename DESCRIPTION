@@ -4,7 +4,11 @@ Title: Tools for life history modeling.
 Version: 0.1
 Date: 2012-05-23
 Authors@R: person("Joan", "Maspons", email = "j.maspons@creaf.uab.cat", role = c("aut", "cre"))
-Imports: 
+Description: Implements stochastic demographic models. Compound distributions
+    (Beta binomial, Beta negative binomial and binomial with random size parameter
+    following a binomial distribution)
+License: GPL (>= 2)
+Imports:
     methods,
     adaptivetau,
     parallel,
@@ -12,10 +16,6 @@ Imports:
 Suggests:
     popbio,
     testthat
-Description: Implements stochastic demographic models. Compound distributions
-    (Beta binomial, Beta negative binomial and binomial with random size parameter
-    following a binomial distribution)
-License: GPL (>= 2)
 Packaged: 2013-01-07 11:06:19 UTC; joan
 RoxygenNote: 5.0.1
 Collate:
@@ -48,4 +48,3 @@ Collate:
     'probabilityDistributions.R'
     'sampleParameters.R'
     'seasonalEnvironment.R'
-

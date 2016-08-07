@@ -35,13 +35,13 @@ G<- function(...){
   UseMethod("G")
 }
 
-#' @describeIn G
+#' @rdname G
 #' @export
 G.numeric<- function(mu, sigma2){
   return (mu - sigma2 / (2 * mu))
 }
 
-#' @describeIn G
+#' @rdname G
 #' @export
 G.discretePopSim<- function(pop, growRate=c("r", "lambda")[1], ...){
   Gres<- switch(growRate,

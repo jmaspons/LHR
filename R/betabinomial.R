@@ -14,7 +14,7 @@
 #' @useDynLib LHR
 NULL
 
-#' @describeIn betabinom
+#' @rdname betabinom
 #' @export
 dbetabinom <- function(x, size, shape1, shape2, mean, variance, log = FALSE){
   if (!missing(mean) & !missing(variance)) {
@@ -26,7 +26,7 @@ dbetabinom <- function(x, size, shape1, shape2, mean, variance, log = FALSE){
   else .External("actuar_do_dpq", "dbetabinom", x, size, shape1, shape2, log)
 }
 
-#' @describeIn betabinom
+#' @rdname betabinom
 #' @export
 pbetabinom <- function(q, size, shape1, shape2, mean, variance, lower.tail = TRUE, log.p = FALSE){
   if (!missing(mean) & !missing(variance)) {
@@ -38,7 +38,7 @@ pbetabinom <- function(q, size, shape1, shape2, mean, variance, lower.tail = TRU
   else .External("actuar_do_dpq", "pbetabinom", q, size, shape1, shape2, lower.tail, log.p)
 }
 
-#' @describeIn betabinom
+#' @rdname betabinom
 #' @export
 qbetabinom <- function(p, size, shape1, shape2, mean, variance, lower.tail = TRUE, log.p = FALSE){
   if (!missing(mean) & !missing(variance)) {
@@ -50,7 +50,7 @@ qbetabinom <- function(p, size, shape1, shape2, mean, variance, lower.tail = TRU
   else .External("actuar_do_dpq", "qbetabinom", p, size, shape1, shape2, lower.tail, log.p)
 }
 
-#' @describeIn betabinom
+#' @rdname betabinom
 #' @export
 rbetabinom <- function(n, size, shape1, shape2, mean, variance){
   if (!missing(mean) & !missing(variance)) {
@@ -62,7 +62,7 @@ rbetabinom <- function(n, size, shape1, shape2, mean, variance){
   else .External("actuar_do_random", "rbetabinom", n, size, shape1, shape2)
 }
 
-#' @describeIn betabinom
+#' @rdname betabinom
 #' @export
 sbetabinom <- function(size, shape1, shape2){
   mean<- size * shape1 / (shape1 + shape2)
@@ -77,7 +77,7 @@ sbetabinom <- function(size, shape1, shape2){
   return (list(mean=mean, var=var))
 }
 
-#' @describeIn betabinom
+#' @rdname betabinom
 #' @export
 fbetabinom<- function(size, mean, var){
 # Hi ha restriccions en l'espai mean ~ var: alpha > 1 & beta > 1 -> unimodal

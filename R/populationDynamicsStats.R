@@ -1,6 +1,6 @@
 # pop: matrix(nrow=replicates, ncol=tf+1, dimnames=list(replicate=NULL, t=0:tf)) from models-discreteTime.R
 # pop<- mSurvBV.t(broods=2, b=2, breedFail=.5, j=.5, a=.7, N0=20, replicates=100, tf=10)
-#' @describeIn discretePopSim
+#' @rdname discretePopSim
 #'
 #' @param pop 
 #' @param dt 
@@ -27,7 +27,7 @@ r<- function(...){
   UseMethod("r")  
 }
 
-#' @describeIn discretePopSim
+#' @rdname discretePopSim
 #' @export
 r.discretePopSim<- function(pop, dt=1){
   sampleT<- seq(1, ncol(pop), by=dt)
@@ -46,7 +46,7 @@ lambda<- function(...){
   UseMethod("lambda")  
 }
 
-#' @describeIn discretePopSim
+#' @rdname discretePopSim
 #' @export
 lambda.discretePopSim<- function(pop, dt=1){
   sampleT<- seq(1, ncol(pop), by=dt)
@@ -64,7 +64,7 @@ trendsProp<- function(...){
   UseMethod("trendsProp")
 }
 
-#' @describeIn discretePopSim
+#' @rdname discretePopSim
 #' @export
 trendsProp.discretePopSim<- function(pop, dt=1){
   sampleT<- seq(1, ncol(pop), by=dt)
@@ -85,7 +85,7 @@ trendsProp.discretePopSim<- function(pop, dt=1){
   return (data.frame(increase, decrease, stable, extinct))
 }
 
-#' @describeIn numericDistri
+#' @rdname numericDistri
 #' @export
 trendsProp.numericDistri<- function(distri, N0){
   increase<- sum(distri$p[which(distri$x == (N0 + 1)):nrow(distri)])
