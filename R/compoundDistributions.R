@@ -1,14 +1,27 @@
 # Functions for compound discrete probability distributions resolved numerically
-# numericDistri class 
+# numericDistri class
+
+#' @name numericDistri
+#' @exportClass numericDistri
 setOldClass("numericDistri")
 
 ## TODO: call distriBeta* or distri* according to p parameter (p = c(shape1, shape2) | p)
 
 ## Binomial distribution ----
+#' @describeIn  numericDistri
+#'
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 distriBinom<- function(...){
   UseMethod("distriBinom")
 }
 
+#' @describeIn  numericDistri
+#' @export
 distriBinom.numeric<- function(size, prob, logP=FALSE){
   res<- data.frame(x=0:size, p=dbinom(x=0:size, size, prob, log=logP))
   attributes(res)$p.omitted<- 0
@@ -20,6 +33,8 @@ distriBinom.numeric<- function(size, prob, logP=FALSE){
 
 # size: numericDistri object which compound a binomial distribution as a size parameter.
 # p: probability
+#' @describeIn  numericDistri
+#' @export
 distriBinom.numericDistri<- function(size, prob, logP=FALSE){
   if (logP != attributes(size)$logP){ # Transform p to log scale if necessary
     size<- logP(size, logP=logP)
@@ -43,10 +58,20 @@ distriBinom.numericDistri<- function(size, prob, logP=FALSE){
 }
 
 ## Beta binomial distribution ----
+#' @describeIn  numericDistri
+#'
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 distriBetaBinom<- function(...){
   UseMethod("distriBetaBinom")
 }
 
+#' @describeIn  numericDistri
+#' @export
 distriBetaBinom.numeric<- function(size, shape1, shape2, logP=FALSE){
   res<- data.frame(x=0:size, p=dbetabinom(x=0:size, size, shape1, shape2, log=logP))
   attributes(res)$p.omitted<- 0
@@ -59,6 +84,8 @@ distriBetaBinom.numeric<- function(size, shape1, shape2, logP=FALSE){
 
 # size: numericDistribution object which compound a binomial distribution as a size parameter.
 # p: probability
+#' @describeIn  numericDistri
+#' @export
 distriBetaBinom.numericDistri<- function(size, shape1, shape2, logP=FALSE){
   if (logP != attributes(size)$logP){ # Transform p to log scale if necessary
     size<- logP(size, logP=logP)
@@ -83,10 +110,20 @@ distriBetaBinom.numericDistri<- function(size, shape1, shape2, logP=FALSE){
 }
 
 ## Negative binomial distribution ----
+#' @describeIn  numericDistri
+#'
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 distriNegBinom<- function(...){
   UseMethod("distriNegBinom")
 }
-  
+
+#' @describeIn  numericDistri
+#' @export  
 distriNegBinom.numeric<- function(size, prob, mu, logP=FALSE, maxPomitted=0.01, maxX){
   if (missing(prob) & !missing(mu)) prob<- size / (size+mu) #alternative parametrization ?dnbinom
   if (missing(maxX)){
@@ -108,6 +145,8 @@ distriNegBinom.numeric<- function(size, prob, mu, logP=FALSE, maxPomitted=0.01, 
 #TODO distriNegBinom.numericDistri
 
 ## Beta negative binomial distribution ----
+#' @describeIn  numericDistri
+#' @export
 distriBetaNegBinom<- function(size, shape1, shape2, logP=FALSE, maxPomitted=0.01, maxX){
   if (missing(maxX)){
     maxX<- qbetanbinom(maxPomitted, size=size, shape1=shape1, shape2=shape2, lower.tail=FALSE, log.p=logP)
@@ -126,7 +165,10 @@ distriBetaNegBinom<- function(size, shape1, shape2, logP=FALSE, maxPomitted=0.01
   return (res)
 }
 
+
 ## Change probability scale (p vs logp) ----
+#' @describeIn  numericDistri
+#' @export
 logP<- function(distri, logP=TRUE){
   if (attributes(distri)$logP == logP) return (distri)
   
@@ -141,32 +183,36 @@ logP<- function(distri, logP=TRUE){
 
 
 ## Generic methods for numericDistri class ----
-print.numericDistri<- function(distri){
-  cat("\t", class(distri)[1], "distribution\n")
-  cat("Probability omitted: ", attributes(distri)$p.omitted, "\n")
-  if (attributes(distri)$logP) cat("p in Log probability scale\n")
+#' @export
+print.numericDistri<- function(x, ...){
+  cat("\t", class(x)[1], "distribution\n")
+  cat("Probability omitted: ", attributes(x)$p.omitted, "\n")
+  if (attributes(x)$logP) cat("p in Log probability scale\n")
   cat("Parameters:\n")
-  str(attributes(distri)$parameters)
+  str(attributes(x)$parameters)
   cat("\n")
-  print(head(data.frame(distri), n=15))
-  if (nrow(distri) > 15) cat("\t ...\t", nrow(distri) - 15, "rows omited.\n")
+  print(head(data.frame(x), n=15), ...)
+  if (nrow(x) > 15) cat("\t ...\t", nrow(x) - 15, "rows omited.\n")
 }
 
-summary.numericDistri<- function(distri){
-  cat("\t", class(distri)[1], "distribution\n")
-  cat("Probability omitted: ", attributes(distri)$p.omitted, "\nParameters:\n")
-  if (attributes(distri)$logP) cat("p in Log probability scale\n")
-  str(attributes(distri)$parameters)
+#' @describeIn  numericDistri
+#' @export
+summary.numericDistri<- function(object, ...){
+  cat("\t", class(object)[1], "distribution\n")
+  cat("Probability omitted: ", attributes(object)$p.omitted, "\nParameters:\n")
+  if (attributes(object)$logP) cat("p in Log probability scale\n")
+  str(attributes(object)$parameters)
   cat("\n")
-  res<- sdistri(distri)
+  res<- sdistri(object)
   print(res)
   invisible(res)
 }
 
-
-plot.numericDistri<- function(distri, cum=FALSE, ...){
+#' @describeIn  numericDistri
+#' @export
+plot.numericDistri<- function(x, y, cum=FALSE, ...){
   if (cum){
-    distri<- cumsum(distri)
+    distri<- cumsum(x)
     distri$p<- distri$cump
   }
   type<- ifelse(cum, "s", "p")
@@ -175,31 +221,41 @@ plot.numericDistri<- function(distri, cum=FALSE, ...){
 
 
 ## Stats ----
-mean.numericDistri<- function(distri){
-  if(attributes(distri)$logP){
-      distri$p<- exp(distri$p)
+#' @describeIn  numericDistri
+#' @export
+mean.numericDistri<- function(x){
+  if(attributes(x)$logP){
+      x$p<- exp(x$p)
   }
   
-  res<- weighted.mean(distri$x, distri$p)
+  res<- weighted.mean(x$x, x$p)
 
   return (res)
 }
 
+
+#' @export
 var.default<- var
 
-var<- function(distri, ...){
+#' @export
+var<- function(x, ...){
   UseMethod("var")
 }
 
-var.numericDistri<- function(distri){
-  distri<- logP(distri, logP=FALSE)
+#' @describeIn numericDistri
+#' @export
+var.numericDistri<- function(x){
+  distri<- logP(x, logP=FALSE)
   sum(distri$p * (distri$x - mean(distri))^2)
 }
 
+#' @export
 sdistri<- function(distri){
   UseMethod("sdistri")
 }
 
+#' @describeIn numericDistri
+#' @export
 sdistri.numericDistri<- function(distri){
   distri<- logP(distri, logP=FALSE)
 
@@ -210,6 +266,9 @@ sdistri.numericDistri<- function(distri){
   return (data.frame(Gmean=GmeanD, mean=meanD, var=varD))
 }
 
+#' @describeIn numericDistri
+#' @export
+# TODO generic cumsum function
 cumsum.numericDistri<- function(distri){
   if(attributes(distri)$logP){
     p<- exp(distri$p)
@@ -223,10 +282,13 @@ cumsum.numericDistri<- function(distri){
 
 
 # random deviates from a numericDistribution
+#' @export
 rdistri<- function(n, distri){
   UseMethod("rdistri", distri)
 }
 
+#' @describeIn numericDistri
+#' @export
 rdistri.numericDistri<- function(n, distri){
   if(attributes(distri)$logP){
     distri$p<- exp(distri$p)

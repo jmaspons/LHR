@@ -7,9 +7,30 @@
 # fecundity = b  * broods: number of offspring per year
 # fecundity * j: net fecundity
 
+#' Life histories class
+#'
+#' @export
 setClass("LH", contains="data.frame")
 
 ## Constructors ----
+#' @describeIn LH
+#'
+#' @param pars 
+#' @param lambda 
+#' @param fecundity 
+#' @param broods 
+#' @param b 
+#' @param a 
+#' @param s 
+#' @param j 
+#' @param AFR 
+#'
+#' @return a \code{LH} object.
+#' @examples 
+#'  LH()
+#'  LH(sampleLH())
+#' 
+#' @export
 setGeneric("LH", function(pars, lambda, fecundity, broods, b, a, s=a, j, AFR) standardGeneric("LH"))
 
 setMethod("LH",
@@ -82,12 +103,14 @@ setMethod("LH",
 )
 
 ## Generic ----
+#' @export
 setMethod("print", signature(x="LH"),
           function(x, ...){
             print(S3Part(x), ...)
           }
 )
 
+#' @export
 setMethod("show", signature(object="LH"),
           function(object){
             cat("Object of class \"LH\" with", nrow(object), "strategies\n")
@@ -96,6 +119,7 @@ setMethod("show", signature(object="LH"),
 )
 
 # Only allowed to subset by rows but $ and [[i]] works for columns
+#' @export
 `[.LH`<- function(x, ...){
             LH(S3Part(x)[...])
 }
@@ -106,6 +130,25 @@ setMethod("show", signature(object="LH"),
 # sampleLH<- function(lambda=seq(.8, 2, by=0.1), broods=2^(0:2), b=c(1, seq(2, 20, by=2)), 
 #                     j=seq(0.2, 0.8, by=0.1), a=seq(0.3, 0.9, by=0.1), AFR=1,
 #                     free=c("j", "lambda")[1], maxFecundity=20, higherJuvMortality=TRUE, method=c("regular", "MonteCarlo"), census="pre-breeding"){
+
+#' Sample LH
+#'
+#' @param lambda 
+#' @param broods 
+#' @param b 
+#' @param j 
+#' @param a 
+#' @param AFR 
+#' @param free 
+#' @param maxFecundity 
+#' @param higherJuvMortality 
+#' @param method 
+#' @param census 
+#'
+#' @return a data.frame with different strategies
+#' @examples sampleLH()
+#'
+#' @export
 sampleLH<- function(lambda=seq(.8, 1.2, by=0.2), broods=2^(0:2), b=c(1, 2, 5, 10), 
                     j=seq(0.2, 0.8, by=0.2), a=seq(0.3, 0.9, by=0.2), AFR=1,
                     free=c("j", "lambda")[1], maxFecundity=20, higherJuvMortality=TRUE, method=c("regular", "MonteCarlo"), census="pre-breeding"){

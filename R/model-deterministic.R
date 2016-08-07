@@ -17,6 +17,21 @@
 # s a
 
 
+#' Lefkovich matrix
+#' 
+#' @name lefkovitch 
+#' @param a 
+#' @param s
+#' @param j
+#' @param b 
+#' @param bj 
+#' @param AFR 
+#'
+#' @exportClass leslieMatrix
+setOldClass("leslieMatrix")
+
+#' @describeIn lefkovitch
+#' @export
 LefkovitchPre<- function(a, s, bj, AFR=1){
   rows<- max(AFR, 2)
   mat<- matrix(0, nrow=rows, ncol=rows)
@@ -46,6 +61,8 @@ LefkovitchPre<- function(a, s, bj, AFR=1){
 # j 0 0
 # 0 s a
 
+#' @describeIn lefkovitch
+#' @export
 LefkovitchPost<- function(a, s, j, b, AFR=1){
   rows<- AFR + 1
   stages<- c("J", rep("S", rows-2), "A")
@@ -63,6 +80,14 @@ LefkovitchPost<- function(a, s, j, b, AFR=1){
 }
 
 
+#' Lambda
+#'
+#' @param mat 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 lambda.leslieMatrix<- function(mat){ # Ted J. Case. "An Illustrated Guide to Theoretical Ecology" pàg. 64-73
   return (max(Re(eigen(mat, only.values=TRUE)$values)))
 }
@@ -92,12 +117,24 @@ lambda.leslieMatrix<- function(mat){ # Ted J. Case. "An Illustrated Guide to The
 # solve(lambda^alpha * (1 - (a / lambda)) = j * a^(alpha-1) * j * b, b);
 # solve(lambda^alpha * (1 - (a / lambda)) = j * a^(alpha-1) * j * b, alpha);
 
+#' Euler-Lotka equations
+#'
+#' @name EulerLotka
+#' @param lambda 
+#' @param a 
+#' @param AFR
+NULL
+
+#' @describeIn EulerLotka
+#' @export
 findF_EulerLotka<- function(lambda, a, AFR){
   F<- -(a * lambda^AFR - lambda^(AFR+1)) / (a^(AFR-1) * lambda)
   F[F < 0]<- NA
   return (F)
 }
 
+#' @describeIn EulerLotka
+#' @export
 findJ_EulerLotka<- function(lambda, b, a, AFR){
   F<- findF_EulerLotka(lambda, a, AFR)
   j<- F / b
@@ -105,12 +142,16 @@ findJ_EulerLotka<- function(lambda, b, a, AFR){
   return (j)
 }
 
+#' @describeIn EulerLotka
+#' @export
 findA_EulerLotka<- function(lambda, b, j, AFR){
   a<- -(b * j^2 * a^(AFR-1) * lambda - lambda^(AFR + 1)) / (lambda^AFR)
   a[a < 0 | a > 1]<- NA
   return (a)
 }
 
+#' @describeIn EulerLotka
+#' @export
 findB_EulerLotka<- function(lambda, j, a, AFR){
   F<- findF_EulerLotka(lambda, a, AFR)
   b<- F / j
@@ -119,12 +160,21 @@ findB_EulerLotka<- function(lambda, j, a, AFR){
 
 
 ## Rmax ----
-## Cole 1954. The population consequences of life history phenomena. The Quarterly Review of Biology 29 (2) pp: 103-137 
 cole<- function(x, fecundity, ageFirstBreeding, lifespan){
   return(exp(-x) + fecundity * exp(-(x * ageFirstBreeding)) - fecundity * exp(-(x * lifespan)) - 1)
 }
 
-Rmax<- function(fecundity, ageFirstBreeding, lifespan, cole){ # values in years
+#' Cole's Rmax
+#'
+#' @param fecundity 
+#' @param ageFirstBreeding 
+#' @param lifespan 
+#'
+#' @return Rmax
+#' @examples Rmax(2, 2, 5)
+#' @references Cole 1954. The population consequences of life history phenomena. The Quarterly Review of Biology 29 (2) pp: 103-137 
+#' @export
+Rmax<- function(fecundity, ageFirstBreeding, lifespan){ # values in years
   return (uniroot(cole, c(0.01,30), fecundity=fecundity, ageFirstBreeding=ageFirstBreeding, lifespan=lifespan)$root)
 }
 

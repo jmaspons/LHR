@@ -1,4 +1,10 @@
-## Temporal variability class
+#' Environment class with temporal variability
+#'
+#' @slot sim Sim. 
+#' @slot params list. 
+#'
+#' @export
+#' @include LH.R Environment.R Simulation.R
 setClass("Model", slots=list(sim="Sim", params="list"), contains="data.frame")
 
 ## Constructor ----
@@ -19,7 +25,18 @@ setMethod("Model_complete",
           }
 )
 
+#' Model constructor
+#'
+#' @param lh 
+#' @param env 
+#' @param sim 
+#'
+#' @return a \code{Model} object.
+#' @examples Model()
+#' @export
 setGeneric("Model", function(lh=LH(), env=Env(), sim=Sim()) standardGeneric("Model"))
+
+#' @export
 setMethod("Model",
           signature(lh="ANY", env="ANY", sim="ANY"),
           function(lh=LH(), env=Env(), sim=Sim()){
@@ -68,6 +85,17 @@ setMethod("combineLH_Env",
 ## Simulate ----
 # cl=makeCluster(detectCores())
 # clF=makeCluster(detectCores(), type="FORK")
+#' @describeIn Model
+#'
+#' @param model 
+#' @param cl 
+#' @param cores 
+#' @param ... 
+#'
+#' @return a \code{Model} object with the result of the simulation.
+#' @examples run(Model())
+#' 
+#' @export
 setGeneric("run", function(model, cl=makeCluster(cores, type="FORK"), cores=detectCores(), ...) standardGeneric("run"))
 
 # Create a Sim object with the results
@@ -269,8 +297,17 @@ runScenario.numericDistri<- function(scenario, pars){
 }
 
 ## Post process ----
+#' @describeIn Model
+#'
+#' @param model 
+#' @param type 
+#'
+#' @return a data frame with the aggregated results and parameters of a simulation.
+#' @examples result(run(Model()))
+#' 
+#' @export
 setGeneric("result", function(model, type="stats") standardGeneric("result"))
-# Create a data frame with the aggregated results and parameters
+
 setMethod("result", 
           signature(model="Model", type="ANY"),
           function(model, type="stats"){
@@ -301,12 +338,14 @@ setMethod("result",
 
 
 ## Generic methods ----
+#' @export
 setMethod("print", signature(x="Model"),
           function(x, ...){
             print(S3Part(x), ...)
           }
 )
 
+#' @export
 setMethod("show", signature(object="Model"),
           function(object){
             cat("Object of class \"Model\" with", nrow(object), "scenarios\n")
@@ -322,6 +361,7 @@ setMethod("show", signature(object="Model"),
 )
 
 # Only allowed to subset by rows but $ and [[i]] works for columns
+#' @export
 `[.Model`<- function(x, ...){
   Model(S3Part(x)[...])
 }

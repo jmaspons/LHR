@@ -27,11 +27,29 @@ setMethod("tDistri_dispatch",  # function dispatcher
               cm<- paste0(cm, "N0=N0, tf=tf)")
             }
             
-# print(cm)
+print(cm)
             eval(expr=parse(text=cm))
           }
 )
 
+#' Numeric distribution models
+#'
+#' @param broods 
+#' @param b 
+#' @param j 
+#' @param a 
+#' @param breedFail 
+#' @param varJ 
+#' @param varBreedFail 
+#' @param sexRatio 
+#' @param matingSystem 
+#' @param N0 
+#' @param tf 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 setGeneric("tDistri", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0, sexRatio=.5,
                                 matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, tf) standardGeneric("tDistri"))
 

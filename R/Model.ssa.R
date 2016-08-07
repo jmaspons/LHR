@@ -1,6 +1,19 @@
+#' Model.ssa
+#'
+#' @include Model.R
+#' @export
 setClass("Model.ssa", contains="Model")
 
 ## Model.ssa ----
+#' @describeIn Model.ssa
+#'
+#' @param pars 
+#' @param sim 
+#'
+#' @return a \code{Model.ssa} object.
+#' @examples Model.ssa()
+#' 
+#' @export
 setGeneric("Model.ssa", function(pars=getParams.LH_Beh(), sim=Sim.ssa()) standardGeneric("Model.ssa"))
 
 setMethod("Model.ssa",
@@ -47,12 +60,24 @@ run.ssa.deterministic<- function(model, cl=makeCluster(cores, type="FORK"), core
   res<- new("Sim.ssa", res$stats, params=model@sim@params, raw=unclass(res))
   return (res)
 }
+
+
 ## Graphics ----
+#' @describeIn Model.ssa
+#'
+#' @param model 
+#'
+#' @export
 plotPest<- function(model){
   res<- result(model)
   ggplot(data=res, aes(N0, 1 - decrease, colour=behavior)) + facet_grid(environment ~ LH) + geom_line() + geom_point() + coord_cartesian(ylim=c(0, 1))
 }
 
+#' @describeIn Model.ssa
+#'
+#' @param model 
+#'
+#' @export
 plotNtf<- function(model){
   res<- model@sim@Ntf
   scenario<- strsplit(rownames(res), "_")
@@ -71,6 +96,11 @@ plotNtf<- function(model){
 }
 
 ##TODO: plot grow rates ~ time
+#' @describeIn Model.ssa
+#'
+#' @param model 
+#'
+#' @export
 plotR<- function(gr, firstOnly=TRUE, omitOutliers=TRUE, ylim=quantile(gr$r, probs=c(.025, .975), na.rm=TRUE, names=FALSE)){
   if (firstOnly) gr<- gr[grep("[", gr$period, fixed=TRUE),]
   gg<- ggplot(data=gr, aes(N0, r, colour=behavior)) + facet_grid(environment ~ LH) + coord_cartesian(ylim=ylim) + geom_hline(yintercept=0, colour="red")
@@ -81,6 +111,11 @@ plotR<- function(gr, firstOnly=TRUE, omitOutliers=TRUE, ylim=quantile(gr$r, prob
   }
 }
 
+#' @describeIn Model.ssa
+#'
+#' @param model 
+#'
+#' @export
 plotLambda<- function(gr, firstOnly=TRUE, omitOutliers=TRUE, ylim=quantile(gr$lambda, probs=c(.025, .975), na.rm=TRUE, names=FALSE)){
   if (firstOnly) gr<- gr[grep("[", gr$period, fixed=TRUE),]
   gg<- ggplot(data=gr, aes(N0, lambda, colour=behavior)) + facet_grid(environment ~ LH) + coord_cartesian(ylim=ylim) + geom_hline(yintercept=1, colour="red")

@@ -1,9 +1,22 @@
 ## Simulation Class
 # setClass("Sim", slots=list(discreteTime="discretePopSim"), contains="data.frame")
+#' Simulation class
+#'
+#' @slot params list. 
+#' @slot raw list. 
+#'
+#' @export
 setClass("Sim", slots=list(params="list", raw="list"), 
          contains="data.frame")
 
 ## Constructor ----
+#' @describeIn Sim
+#'
+#' @param params 
+#'
+#' @return a \code{Sim} object.
+#' @examples Sim()
+#' @export
 setGeneric("Sim", function(params) standardGeneric("Sim"))
 
 setMethod("Sim",
@@ -27,6 +40,12 @@ setMethod("Sim",
 
 ## Subclasses
 ## Sim.discretePopSim Class ----
+#' Discrete Simulation Class
+#'
+#' @slot Ntf data.frame. 
+#'
+#' @seealso \code{\link{Sim}}
+#' @export
 setClass("Sim.discretePopSim", slots=list(Ntf="data.frame"), contains="Sim")
 ## TODO: don't export Sim.discretePopSim_complete
 setGeneric("Sim.discretePopSim_complete", function(N0, envVar, sexRatio, matingSystem, tf, replicates, raw, Ntf) standardGeneric("Sim.discretePopSim_complete"))
@@ -39,6 +58,21 @@ setMethod("Sim.discretePopSim_complete",
           }
 )
 
+#' @describeIn Sim.discretePopSim
+#'
+#' @param N0 
+#' @param envVar 
+#' @param sexRatio 
+#' @param matingSystem 
+#' @param tf 
+#' @param replicates 
+#' @param raw 
+#' @param Ntf 
+#'
+#' @return a \code{Sim.discretePopSim} object.
+#' @examples Sim.discretePopSim()
+#' 
+#' @export
 setGeneric("Sim.discretePopSim", function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=10, replicates=15, raw=TRUE, Ntf=TRUE) standardGeneric("Sim.discretePopSim"))
 setMethod("Sim.discretePopSim",
           signature(N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY"),
@@ -51,6 +85,12 @@ setMethod("Sim.discretePopSim",
 
 ## Sim.numericDistri Class ----
 #TODO: sexRatio
+#' Numeric Distribution Simulation Class
+#'
+#' @slot Ntf data.frame. 
+#'
+#' @seealso \code{\link{Sim}}
+#' @export
 setClass("Sim.numericDistri", contains="Sim")
 ## TODO: don't export Sim.numericDistri_complete
 setGeneric("Sim.numericDistri_complete", function(N0, envVar, sexRatio, matingSystem, tf, raw) standardGeneric("Sim.numericDistri_complete"))
@@ -63,6 +103,18 @@ setMethod("Sim.numericDistri_complete",
           }
 )
 
+#' @describeIn Sim.numericDistri
+#'
+#' @param N0 
+#' @param envVar 
+#' @param sexRatio 
+#' @param matingSystem 
+#' @param tf 
+#' @param raw 
+#'
+#' @return a \code{Sim.numericDistri} object.
+#' @examples Sim.numericDistri()
+#' @export
 setGeneric("Sim.numericDistri", function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=1, raw=TRUE) standardGeneric("Sim.numericDistri"))
 setMethod("Sim.numericDistri",
           signature(N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", tf="ANY", raw="ANY"),
@@ -76,6 +128,12 @@ setMethod("Sim.numericDistri",
 
 ## Sim.ssa Class ----
 # setOldClass("ssa")
+#' SSA Simulation Class
+#'
+#' @slot Ntf data.frame. 
+#'
+#' @seealso \code{\link{Sim}}
+#' @export
 setClass("Sim.ssa", slots=list(Ntf="data.frame", deterministic="data.frame"), contains="Sim") #slots=list(result="ssa"), needs S3 class prototype
 # TODO: don't export Sim.ssa_complete
 setGeneric("Sim.ssa_complete", function(N0, transitionMat, rateFunc, tf, replicates, raw, Ntf, stats) standardGeneric("Sim.ssa_complete"))
@@ -88,6 +146,21 @@ setMethod("Sim.ssa_complete",
           }
 )
 
+#' @describeIn Sim.ssa
+#'
+#' @param N0 
+#' @param transitionMat 
+#' @param rateFunc 
+#' @param tf 
+#' @param replicates 
+#' @param raw 
+#' @param Ntf 
+#' @param stats 
+#'
+#' @return a \code{Sim.ssa} object.
+#' @examples Sim.ssa()
+#' 
+#' @export
 setGeneric("Sim.ssa", function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, 
                                tf=10, replicates=15, raw=TRUE, Ntf=TRUE, stats=TRUE) standardGeneric("Sim.ssa"))
 setMethod("Sim.ssa",
@@ -105,12 +178,14 @@ setMethod("Sim.ssa",
 
 
 ## Generic ----
+#' @export
 setMethod("print", signature(x="Sim"),
           function(x, ...){
             print(S3Part(x), ...)
           }
 )
 
+#' @export
 setMethod("show", signature(object="Sim"),
           function(object){
             cat("Object of class \"Sim\" with", nrow(object), "simulations\n Parameters:\n")
@@ -121,6 +196,7 @@ setMethod("show", signature(object="Sim"),
           }
 )
 
+#' @export
 setMethod("show", signature(object="Sim.ssa"),
           function(object){
             cat("Object of class \"Sim\" with", nrow(object), "simulations\n Parameters:\n")
@@ -132,6 +208,7 @@ setMethod("show", signature(object="Sim.ssa"),
 )
 
 # Only allowed to subset by rows but $ and [[i]] works for columns
+#' @export
 `[.Sim`<- function(x, ...){
   Sim(S3Part(x)[...])
 }

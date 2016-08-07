@@ -3,6 +3,15 @@
 # f* find functions return the parameters of the probability distribution for the disired mean and var
 
 ## Beta distribution
+#' Beta moments
+#'
+#' @param shape1 
+#' @param shape2 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 sbeta<- function(shape1, shape2){
   mean<- shape1 / (shape1 + shape2)
   var<- shape1 * shape2 / ((shape1 + shape2)^2 * (shape1 + shape2 + 1))
@@ -17,6 +26,15 @@ sbeta<- function(shape1, shape2){
   return (list(mean=mean, var=var))
 }
 
+#' Find beta parameters
+#'
+#' @param mean 
+#' @param var 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 fbeta<- function(mean, var="max"){
 # Restrictions on the parameter space: max(var) = mean - mean^2 
 #   (max var = 0.25 & mean= 0.5)
@@ -44,6 +62,15 @@ fbeta<- function(mean, var="max"){
 maxVarBeta<- function(mean) mean - mean^2 # max var is the superior limit (not included)
 
 ## Binomial distribution
+#' Binommial distribution summary
+#'
+#' @param size 
+#' @param prob 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 sbinom<- function(size, prob){
   mean<- size * prob
   var<- size * prob * (1 - prob)
@@ -58,6 +85,15 @@ sbinom<- function(size, prob){
 }
 
 ## Negative binomial distribution
+#' Negative binomial distribution summary
+#'
+#' @param size 
+#' @param prob 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 snbinom<- function(size, prob){
   mean<- prob*size/(1-prob)
   var<- size*prob/((1-prob)^2)

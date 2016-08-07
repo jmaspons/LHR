@@ -1,4 +1,5 @@
 ## Sum ----
+#' @export
 distriSum<- function(x, y){
   if (!inherits(x, "numericDistri") | !inherits(y, "numericDistri")) stop("Parameters must be numericDistri objects.")
   if (attributes(x)$logP != attributes(y)$logP) stop("Parameters must have probabilities on the same scale. Use logP(x, log=T/F) change it.")
@@ -25,6 +26,7 @@ distriSum<- function(x, y){
 # distri<- distriBinom(5, .5)
 # sapply(1:50, function(x) sum(distriSum(distri, distri)$p))
 
+#' @export
 "+.numericDistri"<- function(x, y){
   return(distriSum(x, y))
 }
@@ -32,6 +34,7 @@ distriSum<- function(x, y){
 
 ## Difference ----
 ## R implementation
+#' @export
 distriDiff<- function(x, y){
   names(x)<- c("x", "px")
   names(y)<- c("y", "py")
@@ -49,12 +52,14 @@ distriDiff<- function(x, y){
   return (res)
 }
 
+#' @export
 "-.numericDistri"<- function(x, y){
   return(distriDiff(x, y))
 }
 
 ## Scalar product ----
 # x is a positive integer
+#' @export
 distriScalarProd<- function(distri, x){
   if (x == 1) return (distri)
   
@@ -74,6 +79,7 @@ distriScalarProd<- function(distri, x){
   return(distri)
 }
 
+#' @export
 "*.numericDistri"<- function(distri, x){
   return(distriScalarProd(distri, x))
 }

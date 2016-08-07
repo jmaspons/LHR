@@ -1,4 +1,21 @@
+#' Beta binomial probability distribution
+#' @name betabinom
+#' @param x 
+#' @param q
+#' @param p
+#' @param n
+#' @param size 
+#' @param shape1 
+#' @param shape2 
+#' @param mean 
+#' @param variance 
+#' @param log 
+#'
+#' @useDynLib LHR
+NULL
 
+#' @describeIn betabinom
+#' @export
 dbetabinom <- function(x, size, shape1, shape2, mean, variance, log = FALSE){
   if (!missing(mean) & !missing(variance)) {
     if (!missing(shape1) | !missing(shape2)) 
@@ -9,6 +26,8 @@ dbetabinom <- function(x, size, shape1, shape2, mean, variance, log = FALSE){
   else .External("actuar_do_dpq", "dbetabinom", x, size, shape1, shape2, log)
 }
 
+#' @describeIn betabinom
+#' @export
 pbetabinom <- function(q, size, shape1, shape2, mean, variance, lower.tail = TRUE, log.p = FALSE){
   if (!missing(mean) & !missing(variance)) {
     if (!missing(shape1) | !missing(shape2)) 
@@ -19,6 +38,8 @@ pbetabinom <- function(q, size, shape1, shape2, mean, variance, lower.tail = TRU
   else .External("actuar_do_dpq", "pbetabinom", q, size, shape1, shape2, lower.tail, log.p)
 }
 
+#' @describeIn betabinom
+#' @export
 qbetabinom <- function(p, size, shape1, shape2, mean, variance, lower.tail = TRUE, log.p = FALSE){
   if (!missing(mean) & !missing(variance)) {
     if (!missing(shape1) | !missing(shape2)) 
@@ -29,6 +50,8 @@ qbetabinom <- function(p, size, shape1, shape2, mean, variance, lower.tail = TRU
   else .External("actuar_do_dpq", "qbetabinom", p, size, shape1, shape2, lower.tail, log.p)
 }
 
+#' @describeIn betabinom
+#' @export
 rbetabinom <- function(n, size, shape1, shape2, mean, variance){
   if (!missing(mean) & !missing(variance)) {
     if (!missing(shape1) | !missing(shape2)) 
@@ -39,6 +62,8 @@ rbetabinom <- function(n, size, shape1, shape2, mean, variance){
   else .External("actuar_do_random", "rbetabinom", n, size, shape1, shape2)
 }
 
+#' @describeIn betabinom
+#' @export
 sbetabinom <- function(size, shape1, shape2){
   mean<- size * shape1 / (shape1 + shape2)
   var<- size*shape1*shape2 *(shape1+shape2+size) / (((shape1+shape2)^2) * (shape1+shape2+1))
@@ -52,7 +77,8 @@ sbetabinom <- function(size, shape1, shape2){
   return (list(mean=mean, var=var))
 }
 
-
+#' @describeIn betabinom
+#' @export
 fbetabinom<- function(size, mean, var){
 # Hi ha restriccions en l'espai mean ~ var: alpha > 1 & beta > 1 -> unimodal
 # Maxima: solve([mean=size*shape1/(shape1+shape2) , var= size*shape1*shape2*(shape1+shape2+size)/(((shape1+shape2)^2)*(shape1+shape2+1))], [shape1,shape2]);

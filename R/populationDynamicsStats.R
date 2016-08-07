@@ -1,5 +1,14 @@
 # pop: matrix(nrow=replicates, ncol=tf+1, dimnames=list(replicate=NULL, t=0:tf)) from models-discreteTime.R
 # pop<- mSurvBV.t(broods=2, b=2, breedFail=.5, j=.5, a=.7, N0=20, replicates=100, tf=10)
+#' @describeIn discretePopSim
+#'
+#' @param pop 
+#' @param dt 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 summary.discretePopSim<- function(pop, dt=1){
   R<- unlist(r(pop, dt=dt)) # intrinsic growth rate
   L<- unlist(lambda(pop, dt=dt)) # lambda
@@ -18,6 +27,8 @@ r<- function(...){
   UseMethod("r")  
 }
 
+#' @describeIn discretePopSim
+#' @export
 r.discretePopSim<- function(pop, dt=1){
   sampleT<- seq(1, ncol(pop), by=dt)
   if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
@@ -35,6 +46,8 @@ lambda<- function(...){
   UseMethod("lambda")  
 }
 
+#' @describeIn discretePopSim
+#' @export
 lambda.discretePopSim<- function(pop, dt=1){
   sampleT<- seq(1, ncol(pop), by=dt)
   if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
@@ -51,6 +64,8 @@ trendsProp<- function(...){
   UseMethod("trendsProp")
 }
 
+#' @describeIn discretePopSim
+#' @export
 trendsProp.discretePopSim<- function(pop, dt=1){
   sampleT<- seq(1, ncol(pop), by=dt)
   if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
@@ -70,6 +85,8 @@ trendsProp.discretePopSim<- function(pop, dt=1){
   return (data.frame(increase, decrease, stable, extinct))
 }
 
+#' @describeIn numericDistri
+#' @export
 trendsProp.numericDistri<- function(distri, N0){
   increase<- sum(distri$p[which(distri$x == (N0 + 1)):nrow(distri)])
   decrease<- sum(distri$p[1:which(distri$x == (N0 - 1))])

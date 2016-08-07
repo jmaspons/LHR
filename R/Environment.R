@@ -1,7 +1,25 @@
 ## Temporal variability class
+
+#' Environment class
+#'
+#' @slot seasonRange data.frame. 
+#'
+#' @examples Env()
+#' @export
 setClass("Env", slots=list(seasonRange="data.frame"), contains="data.frame")
 
 ## Constructor ----
+
+#' @describeIn Env
+#'
+#' @param mean 
+#' @param var 
+#' @param seasonAmplitude 
+#' @param seasonRange 
+#' @param breedFail 
+#'
+#' @return a Env class object
+#' @export
 setGeneric("Env", function(mean=1, var=0, seasonAmplitude=0, seasonRange, breedFail=0) standardGeneric("Env"))
 
 setMethod("Env",
@@ -52,9 +70,18 @@ setMethod("Env",
 )  
 
 ## Seasonal pattern ----
+#' @describeIn Env 
+#'
+#' @param env 
+#' @param resolution 
+#' @param cicles
+#' 
+#' @return A numeric vector with a sinusoidal pattern
+#'
+#' @export
 setGeneric("seasonalPattern", function(env, resolution=12, cicles=1) standardGeneric("seasonalPattern"))
 
-# return a sinusoidal pattern
+
 setMethod("seasonalPattern", 
           signature(env="Env", resolution="ANY", cicles="ANY"),
           function(env, resolution=12, cicles=1){ 
@@ -68,15 +95,26 @@ setMethod("seasonalPattern",
 )
 
 # Align a number of events separed by an interval to maximize a seasonal pattern of Env
+#' @describeIn Env
+#'
+#' @param env 
+#' @param resolution 
+#' @param nSteps 
+#' @param interval 
+#' @param criterion 
+#'
+#' @export
 setGeneric("seasonOptimCal", function(env, resolution=12, nSteps=2, interval=1, criterion="maxFirst") standardGeneric("seasonOptimCal"))
 
+#' @export
 setMethod("seasonOptimCal", 
           signature(env="Env", resolution="missing", nSteps="missing", interval="missing", criterion="missing"),
           function(env){
             seasonOptimCal(env, resolution=12, nSteps=2, interval=1, criterion="maxFirst")
           }
 )
-            
+
+#' @export  
 setMethod("seasonOptimCal", 
           signature(env="Env", resolution="numeric", nSteps="numeric", interval="numeric", criterion="character"),
           function(env, resolution, nSteps, interval, criterion){
@@ -139,6 +177,7 @@ setMethod("seasonOptimCal",
 
 # Seasonality auxiliary functions ----
 # resolution: time steps in one cicle (e.g. 12 for months, 365 for days)
+#' @export
 seasonPars<- function(seasonRange){
   seasonMean<- apply(seasonRange, 1, function(x) (min(x) + max(x))/2)
   seasonAmplitude<- apply(seasonRange, 1, function (x) max(x) - min(x))
@@ -146,6 +185,7 @@ seasonPars<- function(seasonRange){
   return (data.frame(seasonMean, seasonAmplitude))
 }
 
+#' @export
 seasonRange<- function(seasonMean, seasonAmplitude){
   seasonPars<- data.frame(seasonMean, seasonAmplitude)
   seasonRange<- with(seasonPars,  data.frame(min=seasonMean - seasonAmplitude/2, max=seasonMean + seasonAmplitude/2))
@@ -159,12 +199,15 @@ seasonRange<- function(seasonMean, seasonAmplitude){
 # TODO
 
 ## Generic ----
+#' @export
 setMethod("print", signature(x="Env"),
           function(x, ...){
             print(S3Part(x), ...)
           }
 )
 
+
+#'  @export
 setMethod("show", signature(object="Env"),
           function(object){
             cat("Object of class \"Environment\" with", nrow(object), "parameter sets\n")

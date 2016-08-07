@@ -1,3 +1,5 @@
+
+#' @exportClass ssa
 setOldClass("ssa")
 
 ## Explore the deterministic part of the model ----

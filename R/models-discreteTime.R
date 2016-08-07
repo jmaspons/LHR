@@ -1,5 +1,5 @@
 ## return object of class c("discretePopSim", "data.frame") with replicates on rows and time in columns
-
+#' @exportClass discretePopSim
 setOldClass("discretePopSim")
 
 # When the population gets extinct it fills results with NAs.
@@ -43,6 +43,27 @@ setMethod("discretePopSim_dispatch",  # function dispatcher
           }
 )
 
+#' Disctrete time and population models
+#' 
+#' @name discretePopSim
+#' @param broods 
+#' @param b 
+#' @param j 
+#' @param a 
+#' @param breedFail 
+#' @param varJ 
+#' @param varBreedFail 
+#' @param sexRatio 
+#' @param matingSystem 
+#' @param N0 
+#' @param replicates 
+#' @param tf 
+#' @param maxN 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 setGeneric("discretePopSim", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0, 
                                                sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], 
                                                N0, replicates, tf, maxN=100000) standardGeneric("discretePopSim"))

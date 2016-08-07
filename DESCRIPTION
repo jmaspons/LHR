@@ -3,11 +3,49 @@ Type: Package
 Title: Tools for life history modeling.
 Version: 0.1
 Date: 2012-05-23
-Author: Joan Maspons
-Maintainer: Joan Maspons <joanmaspons@gmail.com>
-Depends: adaptivetau, parallel, reshape2
-Suggests: popbio,
+Authors@R: person("Joan", "Maspons", email = "j.maspons@creaf.uab.cat", role = c("aut", "cre"))
+Imports: 
+    methods,
+    adaptivetau,
+    parallel,
+    reshape2
+Suggests:
+    popbio,
     testthat
-Description: Implements stochastic demographic models. Compound distributions (Beta binomial, Beta negative binomial and binomial with random size parameter following a binomial distribution)
+Description: Implements stochastic demographic models. Compound distributions
+    (Beta binomial, Beta negative binomial and binomial with random size parameter
+    following a binomial distribution)
 License: GPL (>= 2)
 Packaged: 2013-01-07 11:06:19 UTC; joan
+RoxygenNote: 5.0.1
+Collate:
+    'Environment.R'
+    'Gmean.R'
+    'LH.R'
+    'LH.ssa.R'
+    'LHR-package.r'
+    'Simulation.R'
+    'Model.R'
+    'Model.ssa.R'
+    'autocorrEnvironment.R'
+    'betabinomial.R'
+    'betanegativebinomial.R'
+    'cohortModel.R'
+    'compoundDistributions.R'
+    'distributionOperators.R'
+    'environmentaltemporalAutocorrelation.R'
+    'exploreCohortModel.R'
+    'exploreSSA.R'
+    'exploreStructures.R'
+    'model-IBM-ssa_LH_behavior.R'
+    'model-deterministic.R'
+    'model-ssa_LH.R'
+    'models-compoundDistributions.R'
+    'models-compoundDistributions0.R'
+    'models-discreteTime.R'
+    'models-stochastic_master.R'
+    'populationDynamicsStats.R'
+    'probabilityDistributions.R'
+    'sampleParameters.R'
+    'seasonalEnvironment.R'
+
