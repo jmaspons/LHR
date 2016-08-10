@@ -95,8 +95,8 @@ setMethod("LH",
 
 setMethod("LH",
           signature(pars="missing", lambda="numeric", fecundity="numeric", broods="numeric", b="numeric",
-                    a="numeric", j="missing", s="ANY", AFR="numeric"),
-          function(lambda, fecundity, broods, b,   a, s=a, AFR=1){
+                    a="missing", j="numeric", s="missing", AFR="numeric"),
+          function(lambda, fecundity, broods, b, j, AFR=1){
             pars<- sampleLH(lambda="numeric", broods=broods, b=b, j=j, AFR=AFR, free="a", 
                             maxFecundity=9999, higherJuvMortality=FALSE, census="pre-breeding")
             strategy<- LH(pars)

@@ -36,7 +36,7 @@ int survdist(int n0, double surv, double varSurv, double limit, double ** pSurv)
 {
 #ifdef IEEE_754
     /* NaNs propagated correctly */
-    if (ISNAN(n0) || ISNAN(surv) || ISNAN(limit)) {
+    if (ISNAN((double) n0) || ISNAN(surv) || ISNAN(limit)) {
 //       pSurv = NULL;
         return 0;
     }
@@ -119,7 +119,7 @@ int fertdist(double * years, int maxYear, int broods, int B, double surv, double
 {
 #ifdef IEEE_754
     /* NaNs propagated correctly */
-    if (ISNAN(* years) || ISNAN(maxYear)|| ISNAN(broods) || ISNAN(B) || ISNAN(surv) || ISNAN(varSurv)) {
+    if (ISNAN(* years) || ISNAN((double) maxYear)|| ISNAN((double) broods) || ISNAN((double) B) || ISNAN(surv) || ISNAN(varSurv)) {
 //         pFert = NULL;
         return 0;
     }

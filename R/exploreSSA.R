@@ -44,7 +44,7 @@ ssa.deterministic<- function(init.values=rep(1, nrow(transitions)), transitions,
 
 ## Explore SSA ----
 exploreSSA<- function(x0L, params, transitionMat, rateFunc, maxTf=10, replicates=100,
-                      discretePop=FALSE, finalPop=TRUE, burnin=-1, dtDiscretize=NULL, cl=makeCluster(cores, type="FORK"), cores=detectCores(), ...){
+                      discretePop=FALSE, finalPop=TRUE, burnin=-1, dtDiscretize=NULL, cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores(), ...){
   if (is.numeric(x0L)){
     x0L<- list(x0L)
   }
@@ -65,12 +65,12 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, maxTf=10, replicates
       N0<- x0L[[j]]
       pars<- params[i,]
 
-      clusterExport(cl=cl, c("N0", "transitions", "rateFunc", "pars", "tf", "dtDiscretize", "burnin"))
-      clusterSetRNGStream(cl=cl, iseed=NULL)
-      clusterEvalQ(cl, library(LHR))
+      parallel::clusterExport(cl=cl, c("N0", "transitions", "rateFunc", "pars", "maxTf", "dtDiscretize", "burnin"))
+      parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
+      parallel::clusterEvalQ(cl, library(LHR))
       
-      simL<- parLapply(cl=cl, 1:replicates, function(x){
-        sim<- ssa.adaptivetau(init.values=N0, transitions=transitions, rateFunc=rateFunc, params=pars, tf=tf)# TODO, ...)
+      simL<- parallel::parLapply(cl=cl, 1:replicates, function(x){
+        sim<- adaptivetau::ssa.adaptivetau(init.values=N0, transitions=transitions, rateFunc=rateFunc, params=pars, tf=maxTf, ...)
         sim<- discretizePopSim(sim, dt=dtDiscretize, burnin=burnin)
         return (sim)
       })
@@ -80,7 +80,7 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, maxTf=10, replicates
 
       # Save discrete population stats
       # pop: dt= dtDiscretize
-      # popDtF: dt= tf - 0
+      # popDtF: dt= maxTf - 0
       popDtF<- pop[,c(1,ncol(pop))]
       popDtF[is.na(popDtF[,2]),2]<- 0
       tmp<- data.frame(scenario=rownames(params)[i], N0=sum(x0L[[j]]), summary(popDtF), stringsAsFactors=FALSE) ## TODO check params column. It's always 1!!
@@ -115,21 +115,21 @@ if(paste0(rownames(params)[i], "_N", sum(x0L[[j]])) != rownames(resStats)[k]) st
     res<- c(res, list(Ntf=Ntf))
   }
   res<- c(res, list(params=params))
-  res<- c(res, list(simParams=list(x0L=x0L, tf=tf, replicates=replicates, burnin=burnin, dtDiscretize=dtDiscretize)))
+  res<- c(res, list(simParams=list(x0L=x0L, tf=maxTf, replicates=replicates, burnin=burnin, dtDiscretize=dtDiscretize)))
   class(res)<- "ssa"
   return (res)
 }
 
 
 exploreSSA.deterministic<- function(x0=rep(1, nrow(transitionMat())), params, transitionMat, rateFunc, maxTf=500, normalize=TRUE,
-                                    cl=makeCluster(cores, type="FORK"), cores=detectCores(), ...){
+                                    cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores(), ...){
   params<- split(params, rownames(params))
 
-  clusterExport(cl=cl, c("x0", "transitionMat", "rateFunc", "maxTf", "normalize"))
-  clusterSetRNGStream(cl=cl, iseed=NULL)
-  clusterEvalQ(cl, library(LHR))
+  parallel::clusterExport(cl=cl, c("x0", "transitionMat", "rateFunc", "maxTf", "normalize"))
+  parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
+  parallel::clusterEvalQ(cl, library(LHR))
   
-  res<- parLapply(cl=cl, params, function(x){
+  res<- parallel::parLapply(cl=cl, params, function(x){
     transitions<- transitionMat(x)
     sim<- ssa.deterministic(init.values=x0, transitions=transitions, rateFunc=rateFunc, params=x, maxTf=maxTf, normalize=normalize)
     sim<- c(lambda=sim$lambda, r=sim$r, sim$stableStructure)

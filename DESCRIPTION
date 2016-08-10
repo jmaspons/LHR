@@ -1,18 +1,19 @@
 Package: LHR
 Type: Package
-Title: Tools for life history modeling.
+Title: Tools for life history modeling
 Version: 0.1
 Date: 2012-05-23
 Authors@R: person("Joan", "Maspons", email = "j.maspons@creaf.uab.cat", role = c("aut", "cre"))
 Description: Implements stochastic demographic models. Compound distributions
     (Beta binomial, Beta negative binomial and binomial with random size parameter
-    following a binomial distribution)
+    following a binomial distribution).
 License: GPL (>= 2)
 Imports:
     methods,
     adaptivetau,
     parallel,
-    reshape2
+    reshape2,
+    ggplot2
 Suggests:
     popbio,
     testthat
@@ -41,9 +42,7 @@ Collate:
     'model-deterministic.R'
     'model-ssa_LH.R'
     'models-compoundDistributions.R'
-    'models-compoundDistributions0.R'
     'models-discreteTime.R'
-    'models-stochastic_master.R'
     'populationDynamicsStats.R'
     'probabilityDistributions.R'
     'sampleParameters.R'

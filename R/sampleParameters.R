@@ -7,7 +7,7 @@ paramSpaceBeta<- function(method=c("meanVar", "freeShape"), pattern=c("montecarl
         betaDist<- seq(.05, .95, length=n)
         betaDist<- expand.grid(mean=betaDist, var=betaDist[which(betaDist<.25)])
       }else if (pattern == "montecarlo"){
-        betaDist<- data.frame(mean=runif(n^2, .05, .95), var=runif(n^2,.05, .2499999999999999999999))
+        betaDist<- data.frame(mean=stats::runif(n^2, .05, .95), var=stats::runif(n^2,.05, .2499999999999999999999))
       }
       betaDist<- data.frame(betaDist, fbeta(betaDist$mean, betaDist$var))
       betaDist<- betaDist[!is.na(betaDist$shape1),]
@@ -20,7 +20,7 @@ paramSpaceBeta<- function(method=c("meanVar", "freeShape"), pattern=c("montecarl
         betaDist<- seq(1e-999, 100, length=n)
         betaDist<- expand.grid(shape1=betaDist, shape2=betaDist)
       }else if (pattern == "montecarlo"){
-        betaDist<- data.frame(shape2=runif(n^2,1e-999, 100), shape1=runif(n^2,1e-999, 100))
+        betaDist<- data.frame(shape2=stats::runif(n^2,1e-999, 100), shape1=stats::runif(n^2,1e-999, 100))
       }
       betaDist<- data.frame(sbeta(betaDist$shape1, betaDist$shape2), betaDist)
     })

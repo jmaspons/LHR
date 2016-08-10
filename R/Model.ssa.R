@@ -33,7 +33,7 @@ setMethod("Model.ssa",
 )
 
 ## Called from run(Model.ssa)
-run.ssa<- function(model, cl=makeCluster(cores, type="FORK"), cores=detectCores(), ...){
+run.ssa<- function(model, cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores(), ...){
   x0L<- model@sim@params$N0
   params<- S3Part(model)
   transitionMat<- model@sim@params$transitionMat
@@ -53,7 +53,7 @@ run.ssa<- function(model, cl=makeCluster(cores, type="FORK"), cores=detectCores(
   return (res)
 }
 
-run.ssa.deterministic<- function(model, cl=makeCluster(cores, type="FORK"), cores=detectCores(), ...){
+run.ssa.deterministic<- function(model, cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores(), ...){
   x0L<- model@sim@params$N0
   params<- S3Part(model)
 
@@ -72,7 +72,8 @@ run.ssa.deterministic<- function(model, cl=makeCluster(cores, type="FORK"), core
 #' @export
 plotPest<- function(model){
   res<- result(model)
-  ggplot(data=res, aes(N0, 1 - decrease, colour=behavior)) + facet_grid(environment ~ LH) + geom_line() + geom_point() + coord_cartesian(ylim=c(0, 1))
+  ggplot2::ggplot(data=res, ggplot2::aes(N0, 1 - decrease, colour=behavior)) + ggplot2::geom_line() + ggplot2::geom_point() + 
+    ggplot2::facet_grid(environment ~ LH) + ggplot2::coord_cartesian(ylim=c(0, 1))
 }
 
 #' @rdname Model.ssa
@@ -90,40 +91,49 @@ plotNtf<- function(model){
 #   rownames(res)<- NULL
   rownames(scenario)<- rownames(res)
   mRes<- data.frame(scenario, res, stringsAsFactors=TRUE)
-  mRes<- melt(mRes, value.name="N")
+  mRes<- reshape2::melt(mRes, value.name="N")
   mRes$quantile<- as.numeric(gsub("V", "", mRes$variable))
   mRes$quantile<- mRes$quantile / length(unique(mRes$quantile))
   resSel<- mRes[which(mRes$N0 == 2),]
-  ggplot(data=resSel, aes(quantile, N, colour=behavior, group=scenario)) + facet_grid(environment ~ LH) + geom_line()# + geom_point()# + coord_cartesian(ylim=c(0, 1))
+  ggplot2::ggplot(data=resSel, ggplot2::aes(quantile, N, colour=behavior, group=scenario)) + ggplot2::geom_line() + 
+    ggplot2::facet_grid(environment ~ LH) # + ggplot2::geom_point()# + ggplot2::coord_cartesian(ylim=c(0, 1))
 }
 
 ##TODO: plot grow rates ~ time
 #' @rdname Model.ssa
 #'
-#' @param model 
+#' @param gr ???
+#' @param firstOnly 
+#' @param omitOutliers 
+#' @param ylim 
 #'
 #' @export
-plotR<- function(gr, firstOnly=TRUE, omitOutliers=TRUE, ylim=quantile(gr$r, probs=c(.025, .975), na.rm=TRUE, names=FALSE)){
+plotR<- function(gr, firstOnly=TRUE, omitOutliers=TRUE, ylim=stats::quantile(gr$r, probs=c(.025, .975), na.rm=TRUE, names=FALSE)){
   if (firstOnly) gr<- gr[grep("[", gr$period, fixed=TRUE),]
-  gg<- ggplot(data=gr, aes(N0, r, colour=behavior)) + facet_grid(environment ~ LH) + coord_cartesian(ylim=ylim) + geom_hline(yintercept=0, colour="red")
+  gg<- ggplot2::ggplot(data=gr, ggplot2::aes(N0, r, colour=behavior)) + 
+    ggplot2::facet_grid(environment ~ LH) + ggplot2::coord_cartesian(ylim=ylim) + ggplot2::geom_hline(yintercept=0, colour="red")
   if (omitOutliers){
-    gg + geom_boxplot(outlier.size=0)
+    gg + ggplot2::geom_boxplot(outlier.size=0)
   }else{
-    gg + geom_boxplot()
+    gg + ggplot2::geom_boxplot()
   }
 }
 
 #' @rdname Model.ssa
 #'
-#' @param model 
+#' @param gr ????
+#' @param firstOnly 
+#' @param omitOutliers 
+#' @param ylim 
 #'
 #' @export
-plotLambda<- function(gr, firstOnly=TRUE, omitOutliers=TRUE, ylim=quantile(gr$lambda, probs=c(.025, .975), na.rm=TRUE, names=FALSE)){
+plotLambda<- function(gr, firstOnly=TRUE, omitOutliers=TRUE, ylim=stats::quantile(gr$lambda, probs=c(.025, .975), na.rm=TRUE, names=FALSE)){
   if (firstOnly) gr<- gr[grep("[", gr$period, fixed=TRUE),]
-  gg<- ggplot(data=gr, aes(N0, lambda, colour=behavior)) + facet_grid(environment ~ LH) + coord_cartesian(ylim=ylim) + geom_hline(yintercept=1, colour="red")
+  gg<- ggplot2::ggplot(data=gr, ggplot2::aes(N0, lambda, colour=behavior)) + ggplot2::facet_grid(environment ~ LH) + 
+    ggplot2::coord_cartesian(ylim=ylim) + ggplot2::geom_hline(yintercept=1, colour="red")
   if (omitOutliers){
-    gg + geom_boxplot(outlier.size=0)
+    gg + ggplot2::geom_boxplot(outlier.size=0)
   }else{
-    gg + geom_boxplot()
+    gg + ggplot2::geom_boxplot()
   }
 }

@@ -298,7 +298,7 @@ mFit.tdistri<- function(fecundity, j, a, N0, tf, logP=TRUE){
   for (i in 2:tf){
     cat(i, "/", tf, nrow(N), "p=", sum(logP(N, logP=FALSE)$p), "max x=", N$x[nrow(N)], "\n")
     N<- mFit.distri(fecundity, j, a, N, logP=logP)
-    print(head(N$x[N$p %in% c(-Inf, 0)]))
+    print(utils::head(N$x[N$p %in% c(-Inf, 0)]))
     N<- N[!N$p %in% c(-Inf, 0),]
   }
   attributes(N)$p.omitted<- 1 - sum(logP(N, logP=FALSE)$p)

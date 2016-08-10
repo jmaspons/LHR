@@ -50,19 +50,31 @@ setMethod("Model",
 
 
 ## Combine LH and Environment ----
-setGeneric("combineLH_Env", function(lh=LH(), env=Env(), resolution=12, nSteps, interval=2, criterion=c("maxFirst", "maxMean")[1]) standardGeneric("combineLH_Env"))
+#' Combine a LH and a Env object in a set of scenarios
+#'
+#' @param lh 
+#' @param env 
+#' @param resolution 
+#' @param interval 
+#' @param criterion 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+setGeneric("combineLH_Env", function(lh=LH(), env=Env(), resolution=12, interval=2, criterion=c("maxFirst", "maxMean")[1]) standardGeneric("combineLH_Env"))
 
 # return a sinusoidal pattern
 setMethod("combineLH_Env", 
-          signature(lh="missing", env="missing", resolution="missing", nSteps="missing", interval="missing", criterion="missing"),
+          signature(lh="missing", env="missing", resolution="missing", interval="missing", criterion="missing"),
           function(lh=LH(), env=Env()){
             combineLH_Env(lh, env)
           }
 )
 
 setMethod("combineLH_Env", 
-          signature(lh="LH", env="Env", resolution="ANY", nSteps="ANY", interval="ANY", criterion="ANY"),
-          function(lh, env, resolution=12, nSteps, interval=1, criterion="maxFirst"){
+          signature(lh="LH", env="Env", resolution="ANY", interval="ANY", criterion="ANY"),
+          function(lh=LH(), env=Env(), resolution=12, interval=1, criterion="maxFirst"){
             scenario<- merge(S3Part(lh), S3Part(env))
             
             ## Brood failure (e.g. nest predation)
@@ -99,12 +111,12 @@ setMethod("combineLH_Env",
 #' @examples run(Model())
 #' 
 #' @export
-setGeneric("run", function(model, cl=makeCluster(cores, type="FORK"), cores=detectCores(), ...) standardGeneric("run"))
+setGeneric("run", function(model, cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores(), ...) standardGeneric("run"))
 
 # Create a Sim object with the results
 setMethod("run", 
           signature(model="Model", cl="ANY", cores="ANY"),
-          function(model, cl=makeCluster(cores, type="FORK"), cores=detectCores(), ...){
+          function(model, cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores(), ...){
             simRes<- switch(class(model@sim),
                                Sim.discretePopSim=run.discretePopSim(model, cl=cl, cores=cores),
                                Sim.numericDistri=run.numericDistri(model, cl=cl, cores=cores),
@@ -120,15 +132,15 @@ setMethod("run",
           
 )
 
-run.discretePopSim<- function(model, cl=makeCluster(cores, type="FORK"), cores=detectCores()){
+run.discretePopSim<- function(model, cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores()){
   scenario<- S3Part(model)
   scenario<- split(scenario, as.numeric(rownames(scenario)))
   pars<- model@sim@params
 
   # clusterExport(cl=cl, "pars")
-  clusterSetRNGStream(cl=cl, iseed=NULL)
-  clusterEvalQ(cl, library(LHR))
-  sim<- parLapply(cl=cl, scenario, runScenario.discretePopSim, pars=pars)
+  parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
+  parallel::clusterEvalQ(cl, library(LHR))
+  sim<- parallel::parLapply(cl=cl, scenario, runScenario.discretePopSim, pars=pars)
 
 #   sim<- lapply(scenario, runScenario.discretePopSim, pars=pars)
 #   
@@ -157,7 +169,9 @@ run.discretePopSim<- function(model, cl=makeCluster(cores, type="FORK"), cores=d
     simRes@Ntf<- Ntf
   }
   
-  stopCluster(cl=cl)
+  ##TODO: improve cl API and stop cluster only when created inside the function 
+#   parallel::stopCluster(cl=cl)
+  
   return(simRes)
 }
 
@@ -215,14 +229,14 @@ runScenario.discretePopSim<- function (scenario, pars){
 
 
 
-run.numericDistri<- function(model, cl=makeCluster(cores, type="FORK"), cores=detectCores()){
+run.numericDistri<- function(model, cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores()){
   scenario<- S3Part(model)
   scenario<- split(scenario, rownames(scenario))
   pars<- model@sim@params
 
   # clusterExport(cl=cl, "pars")
-  clusterEvalQ(cl, library(LHR))
-  sim<- parLapply(cl=cl, scenario, runScenario.numericDistri, pars=pars)
+  parallel::clusterEvalQ(cl, library(LHR))
+  sim<- parallel::parLapply(cl=cl, scenario, runScenario.numericDistri, pars=pars)
   
 #   sim<- lapply(scenario, runScenario.numericDistri, pars=pars)
 #   
@@ -244,7 +258,8 @@ run.numericDistri<- function(model, cl=makeCluster(cores, type="FORK"), cores=de
     simRes@raw<- rawSim
   }
   
-  stopCluster(cl=cl)
+  ##TODO: improve cl API and stop cluster only when created inside the function 
+#   parallel::stopCluster(cl=cl)
   return(simRes)
 }
 
@@ -278,7 +293,7 @@ runScenario.numericDistri<- function(scenario, pars){
                                                  sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, tf=pars$tf))
     
     ## TODO: pop<- list(popF, popM)
-    distri<- logP(distri, log=FALSE)
+    distri<- logP(distri, logP=FALSE)
     distri<- cumsum(distri)
     selN0<- which(distri$x == N0)
     tmp<- c(increase= 1 - distri$cump[selN0], decrease=distri$cump[selN0-1], stable=distri$p[selN0], extinct=distri$p[1])
@@ -328,7 +343,7 @@ setMethod("result",
                 res},
               Ntf={
                 res<- model@sim@Ntf
-                res<- melt(res, id.vars=1:2, value.name="Ntf") # id vars: scenario and N0
+                res<- reshape2::melt(res, id.vars=1:2, value.name="Ntf") # id vars: scenario and N0
                 res$quantile<- as.numeric(res$variable)
                 res$quantile<- (res$quantile - 1) / (model@sim@params$replicates - 1) # length(unique(res$quantile)) == replicates
                 res<- res[,-3]

@@ -40,7 +40,7 @@ setMethod("Env",
           signature(mean="missing", var="missing", seasonAmplitude="missing", seasonRange="missing", breedFail="missing"),
           function(){
             season<- data.frame(mean=c(1,.5), seasonAmplitude=c(0,1))
-            comb<- expand.grid(list(var=c(0,0.1), breedFail=c(0, 0.5, 1)))
+            comb<- expand.grid(list(var=c(0, 0.1), breedFail=c(0, 0.5, 1)))
             comb<- merge(season, comb)
             env<- with(comb, Env(mean=mean, var=var, seasonAmplitude=seasonAmplitude, breedFail=breedFail))
             return (env)
@@ -109,34 +109,28 @@ setGeneric("seasonOptimCal", function(env, resolution=12, nSteps=2, interval=1, 
 
 #' @export
 setMethod("seasonOptimCal", 
-          signature(env="Env", resolution="missing", nSteps="missing", interval="missing", criterion="missing"),
-          function(env){
-            seasonOptimCal(env, resolution=12, nSteps=2, interval=1, criterion="maxFirst")
-          }
-)
-
-#' @export  
-setMethod("seasonOptimCal", 
-          signature(env="Env", resolution="numeric", nSteps="numeric", interval="numeric", criterion="character"),
-          function(env, resolution, nSteps, interval, criterion){
+          signature(env="Env", resolution="ANY", nSteps="ANY", interval="ANY", criterion="ANY"),
+          function(env, resolution=12, nSteps=2, interval=1, criterion="maxFirst"){
             pattern<- seasonalPattern(env=env, resolution=resolution, cicles=1)
             n<- ncol(pattern) # resolution
             # Extend patterns 2 cicles to displace the event dates and find the best mean
             pattern<- matrix(rep(pattern,2), ncol=n * 2)
             
             # event calendar. SeasonAmplitude ensures that nrow(e) = nrow(env)
-            e<- data.frame(nSteps, interval, seasonLength=nSteps * interval, season=env$seasonAmplitude, stringsAsFactors=FALSE)
+            e<- data.frame(nSteps, interval), season=env$seasonAmplitude, stringsAsFactors=FALSE))
+            e$seasonLength<- e$nSteps * e$interval
+
             ## Maximize pattern on events
             if (criterion[1] == "maxFirst"){
               firstDate<- apply(pattern, 1, which.max)
               dates<- list()
               for (i in 1:nrow(e)){
-                if (n < e$nSteps[i] * e$interval[i]){
+                if (n < e$seasonLength[i]){
                   warning("Time steps don't fit in one cicle because number of steps (",
                           e$nSteps[i], ") and the interval (", e$interval[i], ") spans more than the resolution (", resolution, ") of one cicle.")
                   dates[[i]]<- NA
                 }else{
-                  dates[[i]]<- seq(firstDate[i], firstDate[i] + e$nSteps[i] * e$interval[i], length=e$nSteps[i])
+                  dates[[i]]<- seq(firstDate[i], firstDate[i] + e$seasonLength[i], length=e$nSteps[i])
                 }
               }
             }else if (criterion[1] == "maxMean"){

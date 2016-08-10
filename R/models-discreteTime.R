@@ -1,5 +1,6 @@
 ## return object of class c("discretePopSim", "data.frame") with replicates on rows and time in columns
 #' @name discretePopSim
+#' @importFrom stats rbinom rbeta
 #' @exportClass discretePopSim
 setOldClass("discretePopSim")
 
@@ -44,7 +45,7 @@ setMethod("discretePopSim_dispatch",  # function dispatcher
           }
 )
 
-#' Disctrete time and population models
+#' Discrete time and population models
 #'
 #' @rdname discretePopSim
 #' @param broods 
@@ -370,7 +371,7 @@ mSurvBV.tvarseason<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0
       jEnv<- rbeta(replicates, shape1=betaPars$shape1, shape2=betaPars$shape2)
     }
     if (varBreedFail > 0){
-      breedFailEnv<- rbeta(replicates, shape1=breedFailLH$shape1, shape2=breedFailLH$shape2)
+      breedFailEnv<- rbeta(replicates, shape1=breedFailEnv$shape1, shape2=breedFailEnv$shape2)
     }
     
     #Seasonality no var

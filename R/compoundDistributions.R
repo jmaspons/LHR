@@ -13,13 +13,15 @@ NULL
 ## Binomial distribution ----
 #' @rdname numericDistri
 #'
-#' @param ... 
+#' @inheritParams distriBinom
+#' @param size 
+#' @param prob 
+#' @param logP 
 #'
 #' @return
+#' @importFrom stats dbinom dnbinom qbinom qnbinom
 #' @export
-#'
-#' @examples
-distriBinom<- function(size, prob, ...){
+distriBinom<- function(size, prob, logP=FALSE){
   UseMethod("distriBinom")
 }
 
@@ -60,16 +62,19 @@ distriBinom.numericDistri<- function(size, prob, logP=FALSE){
   return (res)
 }
 
+
 ## Beta binomial distribution ----
 #' @rdname numericDistri
 #'
-#' @param ... 
+#' @inheritParams distriBinom
+#' @param shape1 
+#' @param shape2 
 #'
 #' @return
 #' @export
 #'
 #' @examples
-distriBetaBinom<- function(size, shape1, shape2, ...){
+distriBetaBinom<- function(size, shape1, shape2, logP=FALSE){
   UseMethod("distriBetaBinom")
 }
 
@@ -114,14 +119,16 @@ distriBetaBinom.numericDistri<- function(size, shape1, shape2, logP=FALSE){
 
 ## Negative binomial distribution ----
 #' @rdname numericDistri
-#'
-#' @param ... 
-#'
+#' 
+#' @inheritParams distriBinom
+#' @param mu 
+#' @param maxPomitted
+#' @param maxX 
 #' @return
 #' @export
 #'
 #' @examples
-distriNegBinom<- function(size, ...){
+distriNegBinom<- function(size, prob, mu, logP=FALSE, maxPomitted=0.01, maxX){
   UseMethod("distriNegBinom")
 }
 
@@ -187,15 +194,19 @@ logP<- function(distri, logP=TRUE){
 
 
 ## Generic methods for numericDistri class ----
+
+#' @export
+print<- function(x, ...) UseMethod("print")
+
 #' @export
 print.numericDistri<- function(x, ...){
   cat("\t", class(x)[1], "distribution\n")
   cat("Probability omitted: ", attributes(x)$p.omitted, "\n")
   if (attributes(x)$logP) cat("p in Log probability scale\n")
   cat("Parameters:\n")
-  str(attributes(x)$parameters)
+  utils::str(attributes(x)$parameters)
   cat("\n")
-  print(head(data.frame(x), n=15), ...)
+  print(utils::head(data.frame(x), n=15), ...)
   if (nrow(x) > 15) cat("\t ...\t", nrow(x) - 15, "rows omited.\n")
 }
 
@@ -205,7 +216,7 @@ summary.numericDistri<- function(object, ...){
   cat("\t", class(object)[1], "distribution\n")
   cat("Probability omitted: ", attributes(object)$p.omitted, "\nParameters:\n")
   if (attributes(object)$logP) cat("p in Log probability scale\n")
-  str(attributes(object)$parameters)
+  utils::str(attributes(object)$parameters)
   cat("\n")
   res<- sdistri(object)
   print(res)
@@ -220,35 +231,35 @@ plot.numericDistri<- function(x, y, cum=FALSE, ...){
     distri$p<- distri$cump
   }
   type<- ifelse(cum, "s", "p")
-  plot.default(distri, type=type, ...)
+  graphics::plot.default(distri, type=type, ...)
 }
 
 
 ## Stats ----
 #' @rdname numericDistri
 #' @export
-mean.numericDistri<- function(x){
+mean.numericDistri<- function(x, ...){
   if(attributes(x)$logP){
       x$p<- exp(x$p)
   }
   
-  res<- weighted.mean(x$x, x$p)
+  res<- stats::weighted.mean(x$x, x$p, ...)
 
   return (res)
 }
 
 
 #' @export
-var.default<- var
-
-#' @export
 var<- function(x, ...){
   UseMethod("var")
 }
 
+#' @export
+var.default<- function(x, ...) stats::var(x, ...)
+
 #' @rdname numericDistri
 #' @export
-var.numericDistri<- function(x){
+var.numericDistri<- function(x, ...){
   distri<- logP(x, logP=FALSE)
   sum(distri$p * (distri$x - mean(distri))^2)
 }
@@ -270,17 +281,18 @@ sdistri.numericDistri<- function(distri){
   return (data.frame(Gmean=GmeanD, mean=meanD, var=varD))
 }
 
-#' @export
-cumsum.default<- cumsum
 
 #' @export
 cumsum<- function(x, ...){
   UseMethod("cumsum")
 }
 
+#' @export
+cumsum.default<- function(x, ...) base::cumsum(x)
+
 #' @rdname numericDistri
 #' @export
-cumsum.numericDistri<- function(x){
+cumsum.numericDistri<- function(x, ...){
   if(attributes(x)$logP){
     p<- exp(x$p)
     x$cump<- cumsum(p)
@@ -292,7 +304,8 @@ cumsum.numericDistri<- function(x){
 }
 
 
-# random deviates from a numericDistribution
+#' Random deviates from a numericDistribution
+#' 
 #' @export
 rdistri<- function(n, distri){
   UseMethod("rdistri", distri)

@@ -1,15 +1,18 @@
 ## IMPLEMENTED IN C: USE exploreCohortModel() INSTEAD
 # simulation<- data.frame(n0, survA, var.survA, broods, B, survJ, var.survJ, meanSeason, amplSeason, breedInterval, alignCriterion=c("bestFirst", "bestMean"))
-runCohortModel<- function(simulation, maxPomitted=0.05, verbose=FALSE){
-  ans<- data.frame(G=numeric(nrow(simulation), mean=numeric(nrow(simulation)), var=numeric(nrow(simulation))), Preplacement=numeric(nrow(simulation)), error=logical(nrow(simulation)))
+runCohortModel<- function(simulation, maxPomitted=0.05, verbose=TRUE){
+  ans<- data.frame(G=numeric(nrow(simulation)), mean=numeric(nrow(simulation)), var=numeric(nrow(simulation)),
+                   Preplacement=numeric(nrow(simulation)), error=logical(nrow(simulation)))
   surv<- unique(simulation[,1:3]) # reuse survival distribution for all the simulations with the same parameters  (n0, survA, var.survA)
   
   reg<- which(simulation$n0 == surv$n0[1] & simulation$survA == surv$survA[1] & simulation$var.survA == surv$var.survA[1])
   cat(1, "/", nrow(surv), "set of survival parameters. n0=", surv$n0[1], "\tsA=", surv$survA[1], "\tvar.sA", surv$var.survA[1], "\t|", length(reg), "sets of fertility parameters\n")
   for (i in 1:nrow(surv)){
     reg<- which(simulation$n0 == surv$n0[i] & simulation$survA == surv$survA[i] & simulation$var.survA == surv$var.survA[i])
-#     if (i %% 25 == 0 || verbose) 
-      {cat(i, "/", nrow(surv), "surv parameters. n0=", surv$n0[i], "\tsA=", surv$survA[i], "\tvar.sA", surv$var.survA[i], "\t|", length(reg), "sets of fertility parameters\n")}
+    
+    if (i %% 25 == 0 || verbose){
+      cat(i, "/", nrow(surv), "surv parameters. n0=", surv$n0[i], "\tsA=", surv$survA[i], "\tvar.sA", surv$var.survA[i], "\t|", length(reg), "sets of fertility parameters\n")
+    }
     
     if (surv$var.survA[i] == 0){
       years<- survdist(n0=surv$n0[i], survA=surv$survA[i], maxPomitted=maxPomitted)

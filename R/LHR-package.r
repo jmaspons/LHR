@@ -29,5 +29,5 @@
 NULL
 
 
-#' @importFrom methods setClass setGeneric setMethod setRefClass setOldClass
+#' @importFrom methods new setClass setGeneric setMethod setRefClass setOldClass show S3Part
 NULL

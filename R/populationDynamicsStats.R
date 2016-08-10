@@ -2,23 +2,23 @@
 # pop<- mSurvBV.t(broods=2, b=2, breedFail=.5, j=.5, a=.7, N0=20, replicates=100, tf=10)
 #' @rdname discretePopSim
 #'
-#' @param pop 
+#' @param object 
 #' @param dt 
 #'
 #' @return
 #' @export
 #'
 #' @examples
-summary.discretePopSim<- function(pop, dt=1){
-  R<- unlist(r(pop, dt=dt)) # intrinsic growth rate
-  L<- unlist(lambda(pop, dt=dt)) # lambda
+summary.discretePopSim<- function(object, dt=1){
+  R<- unlist(r(object, dt=dt)) # intrinsic growth rate
+  L<- unlist(lambda(object, dt=dt)) # lambda
   meanR<- mean(R, na.rm=TRUE)
   varR<- var(R, na.rm=TRUE)
   meanL<- mean(L, na.rm=TRUE)
   varL<- var(L, na.rm=TRUE)
   GR<- G(meanR, varR)
   GL<- G(meanL, varL)
-  trends<- trendsProp(pop)
+  trends<- trendsProp(object)
   res<- data.frame(trends, GR, meanR, varR, GL, meanL, varL)
   return(res)
 }

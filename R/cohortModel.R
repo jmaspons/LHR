@@ -1,9 +1,9 @@
 ## COHORT DEMOGRAPHIC MODEL
 ############################
-cohortModel<- function(n0, survA, varSurvA, limit, broods, B, survJ, varSurvJ, season){
+cohortModel<- function(n0, survA, var.survA, limit, broods, B, survJ, var.survJ, season){
 #   TODO check inputs
   if (length(season) != broods) stop()
-  .External("cohortModel", as.integer(n0), as.numeric(survA), as.numeric(var.survA), as.numeric(limit), as.integer(broods), as.integer(B), as.numeric(survJ), as.numeric(var.survJ), as.numeric(seasonAmpl), as.numeric(breedInterval))
+  .External("cohortModel", as.integer(n0), as.numeric(survA), as.numeric(var.survA), as.numeric(limit), as.integer(broods), as.integer(B), as.numeric(survJ), as.numeric(var.survJ), as.numeric(season))
 }
 
 exploreCohortModel<- function(simulation){
@@ -73,7 +73,7 @@ fertdist<- function(years, broods=1, clutch, survJ, B, var.survJ, seasonalPatter
       size<- i * clutch
 
       if (missing(seasonalPattern)){
-	      seasonalPattern<- par.seasonality(broods=broods, breedInterval=breedInterval, mean=meanSeason, ampl=amplSeason, criterion=alignCriterion)
+	      seasonalPattern<- par.seasonality(broods=broods, breedInterval=breedInterval, mean=meanSeason, amplitude=amplSeason, criterion=alignCriterion)
       }
       
       prob<- matrix(0, nrow=max(size) + 1, ncol=broods, dimnames=list(0:max(size), NULL))

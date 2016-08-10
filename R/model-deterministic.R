@@ -175,7 +175,7 @@ cole<- function(x, fecundity, ageFirstBreeding, lifespan){
 #' @references Cole 1954. The population consequences of life history phenomena. The Quarterly Review of Biology 29 (2) pp: 103-137 
 #' @export
 Rmax<- function(fecundity, ageFirstBreeding, lifespan){ # values in years
-  return (uniroot(cole, c(0.01,30), fecundity=fecundity, ageFirstBreeding=ageFirstBreeding, lifespan=lifespan)$root)
+  return (stats::uniroot(cole, c(0.01,30), fecundity=fecundity, ageFirstBreeding=ageFirstBreeding, lifespan=lifespan)$root)
 }
 
 

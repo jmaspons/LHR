@@ -58,7 +58,7 @@ getParams.LH_Beh<- function(strategy=c("slow", "fast", "freqRepro"), diffHab2, s
   names(params)<- strategy
   
   if (!missing(diffHab2)){
-    params<- lapply(params, function(x) getParams2diff1(x, diffHab2))
+    params<- lapply(params, function(x) setParams2diff1(x, diffHab2))
   }else{
     params<- lapply(params, function(x) setScenario(x, scenario))
     names(params)<- paste(names(params), scenario, sep="_")
@@ -156,8 +156,8 @@ plotSim<- function(sim, groups=c("habitat", "age", "habitat*age", "all")[1], ...
   tmp<- sim
   switch(groups,
          all={
-           color<- rainbow(length(grep("N1", colnames(sim))), start=0, end=1/7)
-           color<- c(color, rev(rainbow(length(grep("N2", colnames(sim))), start=2/6, end=4/7)))
+           color<- grDevices::rainbow(length(grep("N1", colnames(sim))), start=0, end=1/7)
+           color<- c(color, rev(grDevices::rainbow(length(grep("N2", colnames(sim))), start=2/6, end=4/7)))
            ylab<- "N by state"
          },
          habitat={
@@ -167,8 +167,8 @@ plotSim<- function(sim, groups=c("habitat", "age", "habitat*age", "all")[1], ...
             sim[,2]<-  apply(tmp[,2:5], 1, sum)
             sim[,3]<-  apply(tmp[,6:9], 1, sum)
             
-            color<- rainbow(length(grep("1", colnames(sim))), start=0, end=1/7)
-            color<- c(color, rev(rainbow(length(grep("2", colnames(sim))), start=2/6, end=4/7)))
+            color<- grDevices::rainbow(length(grep("1", colnames(sim))), start=0, end=1/7)
+            color<- c(color, rev(grDevices::rainbow(length(grep("2", colnames(sim))), start=2/6, end=4/7)))
             ylab<- "N by Habitat"
          },
          age={
@@ -178,7 +178,7 @@ plotSim<- function(sim, groups=c("habitat", "age", "habitat*age", "all")[1], ...
             sim[,2]<- apply(tmp[,c(2:4, 6:8)], 1, sum)
             sim[,3]<- apply(tmp[,c(5,9)], 1, sum)
             
-            color<- rainbow(2, start=0, end=4/6)
+            color<- grDevices::rainbow(2, start=0, end=4/6)
             ylab<- "N by Age"
          },
          `habitat*age`={
@@ -190,13 +190,13 @@ plotSim<- function(sim, groups=c("habitat", "age", "habitat*age", "all")[1], ...
             sim[,4]<-  apply(tmp[,6:8], 1, sum)
             sim[,5]<-  tmp[,9]
             
-            color<- rainbow(length(grep("1", colnames(sim))), start=0, end=1/8)
-            color<- c(color, rev(rainbow(length(grep("2", colnames(sim))), start=2/6, end=4/7)))
+            color<- grDevices::rainbow(length(grep("1", colnames(sim))), start=0, end=1/8)
+            color<- c(color, rev(grDevices::rainbow(length(grep("2", colnames(sim))), start=2/6, end=4/7)))
             ylab<- "N by Habitat and Age"
          }
   )
   
-  matplot(sim[, 1], sim[,2:ncol(sim)], pch=19, cex=0.1, col=color, bty="n", xlab="Time", ylab=ylab, ...)
-  legend("topright", legend = colnames(sim)[-1], bty = "y", pch = 19, col=color)
+  graphics::matplot(sim[, 1], sim[,2:ncol(sim)], pch=19, cex=0.1, col=color, bty="n", xlab="Time", ylab=ylab, ...)
+  graphics::legend("topright", legend = colnames(sim)[-1], bty = "y", pch = 19, col=color)
 }
 
