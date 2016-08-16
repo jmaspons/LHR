@@ -127,7 +127,7 @@ run.discretePopSim<- function(model, cl=parallel::makeCluster(cores, type="FORK"
   scenario<- split(scenario, as.numeric(rownames(scenario)))
   pars<- model@sim@params
 
-  # clusterExport(cl=cl, "pars")
+  parallel::clusterExport(cl=cl, "pars", envir=environment())
   parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
   parallel::clusterEvalQ(cl, library(LHR))
   sim<- parallel::parLapply(cl=cl, scenario, runScenario.discretePopSim, pars=pars)
@@ -224,9 +224,9 @@ run.numericDistri<- function(model, cl=parallel::makeCluster(cores, type="FORK")
   scenario<- split(scenario, rownames(scenario))
   pars<- model@sim@params
 
-  # clusterExport(cl=cl, "pars")
+  parallel::clusterExport(cl=cl, "pars", envir=environment())
   parallel::clusterEvalQ(cl, library(LHR))
-  sim<- parallel::parLapply(cl=cl, scenario, runScenario.numericDistri, pars=pars)
+  sim<- parallel::parLapply(cl=cl, X=scenario, fun=LHR:::runScenario.numericDistri, pars=pars)
   
 #   sim<- lapply(scenario, runScenario.numericDistri, pars=pars)
 #   
