@@ -24,7 +24,7 @@ Gmean<- function(gr){
 #' Geometric mean approximation from mean and variance
 #'
 #' @return a numeric vector with the geometric mean.
-#' @references Stearns, S. C. (2000). Daniel Bernoulli (1738): evolution and economics under risk. Journal of Biosciences, 25(3), 221–228
+#' @references Stearns, S. C. (2000). Daniel Bernoulli (1738): evolution and economics under risk. Journal of Biosciences, 25(3), 221–228.
 #' 
 #' @export
 G<- function(...){

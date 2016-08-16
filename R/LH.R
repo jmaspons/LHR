@@ -7,12 +7,8 @@
 # fecundity = b  * broods: number of offspring per year
 # fecundity * j: net fecundity
 
-#' Life histories class
-#' 
-#' @name LH
-#'
-#' @export
-setClass("LH", contains="data.frame")
+#' @include aaa-classes.R
+NULL
 
 ## Constructors ----
 #' @rdname LH

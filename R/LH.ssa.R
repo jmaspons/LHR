@@ -1,10 +1,5 @@
-#' LH.ssa
-#' 
-#' @name LH.ssa
-#'
-#' @include LH.R
-#' @export
-setClass("LH.ssa", contains="LH")
+#' @include aaa-classes.R
+NULL
 
 ## Constructors ----
 #' @rdname LH.ssa

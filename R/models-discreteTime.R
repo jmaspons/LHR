@@ -1,8 +1,12 @@
-## return object of class c("discretePopSim", "data.frame") with replicates on rows and time in columns
+#' Discrete Time Simulation
+#' 
+#' \code{discretePopSim} class represent the result of discrete time simulations with
+#' replicates on rows and time on columns. The class inherits from \code{data.frame}.
+#' 
 #' @name discretePopSim
 #' @importFrom stats rbinom rbeta
 #' @exportClass discretePopSim
-setOldClass("discretePopSim")
+NULL
 
 # When the population gets extinct it fills results with NAs.
 extinctNA<- function(pop){
@@ -62,7 +66,7 @@ setMethod("discretePopSim_dispatch",  # function dispatcher
 #' @param tf 
 #' @param maxN 
 #'
-#' @return
+#' @return a \code{discretePopSim} object.
 #' @export
 #'
 #' @examples

@@ -1,10 +1,5 @@
-#' Model.ssa
-#' 
-#' @name Model.ssa
-#'
-#' @include Model.R
-#' @export
-setClass("Model.ssa", contains="Model")
+#' @include aaa-classes.R
+NULL
 
 ## Model.ssa ----
 #' @rdname Model.ssa
@@ -48,8 +43,8 @@ run.ssa<- function(model, cl=parallel::makeCluster(cores, type="FORK"), cores=pa
   #   mc.preschedule=TRUE
   
   res<- exploreSSA(x0L=x0L, params=params, transitionMat=transitionMat, rateFunc=rateFunc, 
-                   tf=tf, replicates=replicates, discretePop=discretePop, finalPop=finalPop, cl=cl, ...)
-  res<- new("Sim.ssa", res$stats, Ntf=res$Ntf, params=model@sim@params, raw=unclass(res))
+                   maxTf=tf, replicates=replicates, discretePop=discretePop, finalPop=finalPop, cl=cl, ...)
+  res<- new("Sim.ssa", res$stats, Ntf=res$Ntf, params=model@sim@params, raw=res)
   return (res)
 }
 

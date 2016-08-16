@@ -1,15 +1,5 @@
-## Simulation Class
-# setClass("Sim", slots=list(discreteTime="discretePopSim"), contains="data.frame")
-#' Simulation class
-#' 
-#' @name Sim
-#'
-#' @slot params list. 
-#' @slot raw list. 
-#'
-#' @export
-setClass("Sim", slots=list(params="list", raw="list"), 
-         contains="data.frame")
+#' @include aaa-classes.R
+NULL
 
 ## Constructor ----
 #' @rdname Sim
@@ -29,28 +19,23 @@ setMethod("Sim",
 )
 
 setMethod("Sim",
-          signature(params="data.frame"),
+          signature(params="Model"),
           function(params){
-            if (inherits(params, "Model")){
-              par<- params@sim@params
-              switch(class(params@sim))
-              sim<- Sim.numericDistri_complete(N0=par$N0, envVar=par$envVar, sexRatio=par$sexRatio, matingSystem=par$matingSystem, tf=par$tf, raw=par$raw)
-            }
-            return (sim)
+            # par<- params@sim@params
+            ## TODO: call Sim following the Sim class of the model
+            # switch(class(params@sim), 
+            #        Sim.discretePopSim=,
+            #        Sim.numericDistri=,
+            #        Sim.ssa=)
+            # sim<- Sim.numericDistri_complete(N0=par$N0, envVar=par$envVar, sexRatio=par$sexRatio, matingSystem=par$matingSystem, tf=par$tf, raw=par$raw)
+
+            return (params@sim)
           }
 )
 
 ## Subclasses
 ## Sim.discretePopSim Class ----
-#' Discrete Simulation Class
-#' 
-#' @name Sim.discretePopSim
-#'
-#' @slot Ntf data.frame. 
-#'
-#' @seealso \code{\link{Sim}}
-#' @export
-setClass("Sim.discretePopSim", slots=list(Ntf="data.frame"), contains="Sim")
+
 ## TODO: don't export Sim.discretePopSim_complete
 setGeneric("Sim.discretePopSim_complete", function(N0, envVar, sexRatio, matingSystem, tf, replicates, raw, Ntf) standardGeneric("Sim.discretePopSim_complete"))
 setMethod("Sim.discretePopSim_complete",
@@ -89,15 +74,6 @@ setMethod("Sim.discretePopSim",
 
 ## Sim.numericDistri Class ----
 #TODO: sexRatio
-#' Numeric Distribution Simulation Class
-#' 
-#' @name Sim.numericDistri
-#'
-#' @slot Ntf data.frame. 
-#'
-#' @seealso \code{\link{Sim}}
-#' @export
-setClass("Sim.numericDistri", contains="Sim")
 ## TODO: don't export Sim.numericDistri_complete
 setGeneric("Sim.numericDistri_complete", function(N0, envVar, sexRatio, matingSystem, tf, raw) standardGeneric("Sim.numericDistri_complete"))
 setMethod("Sim.numericDistri_complete",
@@ -133,16 +109,7 @@ setMethod("Sim.numericDistri",
 
 
 ## Sim.ssa Class ----
-# setOldClass("ssa")
-#' SSA Simulation Class
-#' 
-#' @name Sim.ssa
-#'
-#' @slot Ntf data.frame. 
-#'
-#' @seealso \code{\link{Sim}}
-#' @export
-setClass("Sim.ssa", slots=list(Ntf="data.frame", deterministic="data.frame"), contains="Sim") #slots=list(result="ssa"), needs S3 class prototype
+
 # TODO: don't export Sim.ssa_complete
 setGeneric("Sim.ssa_complete", function(N0, transitionMat, rateFunc, tf, replicates, raw, Ntf, stats) standardGeneric("Sim.ssa_complete"))
 setMethod("Sim.ssa_complete",

@@ -28,7 +28,7 @@
 #' @param AFR 
 #'
 #' @exportClass leslieMatrix
-setOldClass("leslieMatrix")
+NULL
 
 #' @rdname lefkovitch
 #' @export

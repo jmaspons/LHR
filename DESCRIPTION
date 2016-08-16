@@ -20,14 +20,15 @@ Suggests:
 Packaged: 2013-01-07 11:06:19 UTC; joan
 RoxygenNote: 5.0.1
 Collate:
+    'aaa-classes.R'
     'Environment.R'
     'Gmean.R'
     'LH.R'
     'LH.ssa.R'
     'LHR-package.r'
-    'Simulation.R'
     'Model.R'
     'Model.ssa.R'
+    'Simulation.R'
     'autocorrEnvironment.R'
     'betabinomial.R'
     'betanegativebinomial.R'

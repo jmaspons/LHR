@@ -5,7 +5,6 @@
 #' 
 #' @name numericDistri
 #' @exportClass numericDistri
-setOldClass("numericDistri")
 NULL
 
 ## TODO: call distriBeta* or distri* according to p parameter (p = c(shape1, shape2) | p)

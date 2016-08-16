@@ -1,13 +1,6 @@
-## Temporal variability class
+#' @include aaa-classes.R
+NULL
 
-#' Environment class
-#' 
-#' @name Env
-#' @slot seasonRange data.frame. 
-#'
-#' @examples Env()
-#' @export
-setClass("Env", slots=list(seasonRange="data.frame"), contains="data.frame")
 
 ## Constructor ----
 
@@ -63,7 +56,7 @@ setMethod("Env",
 setMethod("Env",
           signature(mean="data.frame", var="missing", seasonAmplitude="missing", seasonRange="missing", breedFail="missing"),
           function(mean){
-            if (inherits(mean, "Model")) mean<- S3Part(mean)
+            if (inherits(mean, "Model")) mean<- S3Part(mean) ## TODO: check if a Model object inheriting data.frame goes here
             x<- unique(mean[,c("mean", "var", "seasonAmplitude", "breedFail")])
             env<- Env(mean=x$mean, var=x$var, seasonAmplitude=x$seasonAmplitude, breedFail=x$breedFail)
             return (env)
@@ -73,7 +66,7 @@ setMethod("Env",
 ## Seasonal pattern ----
 #' @rdname Env 
 #'
-#' @param env 
+#' @param env a \code{data.frame} of and \code{\link{Env}} object.
 #' @param resolution 
 #' @param cicles
 #' 
@@ -84,7 +77,7 @@ setGeneric("seasonalPattern", function(env, resolution=12, cicles=1) standardGen
 
 
 setMethod("seasonalPattern", 
-          signature(env="Env", resolution="ANY", cicles="ANY"),
+          signature(env="data.frame", resolution="ANY", cicles="ANY"),
           function(env, resolution=12, cicles=1){ 
             timeSteps<- seq(0, 2*pi*cicles - 2*pi/resolution, by=2*pi/resolution)
             pat<- matrix(ncol=length(timeSteps), nrow=nrow(env), dimnames=list(NULL, t=1:length(timeSteps)))
@@ -95,21 +88,27 @@ setMethod("seasonalPattern",
           }
 )
 
+setMethod("seasonalPattern", 
+          signature(env="Env", resolution="ANY", cicles="ANY"),
+          function(env, resolution=12, cicles=1){ 
+            callGeneric(env=S3Part(env), resolution, cicles)
+          }
+)
+
 # Align a number of events separed by an interval to maximize a seasonal pattern of Env
 #' @rdname Env
 #'
-#' @param env 
-#' @param resolution 
-#' @param nSteps 
+#' @param env a \code{data.frame} or and \code{\link{Env}} object.
+#' @param resolution the number of divisions of the sinusoidal pattern representing one year.
+#' @param nSteps a vector with the number of events for each environent
 #' @param interval 
 #' @param criterion 
 #'
 #' @export
 setGeneric("seasonOptimCal", function(env, resolution=12, nSteps=2, interval=1, criterion="maxFirst") standardGeneric("seasonOptimCal"))
 
-#' @export
 setMethod("seasonOptimCal", 
-          signature(env="Env", resolution="ANY", nSteps="ANY", interval="ANY", criterion="ANY"),
+          signature(env="data.frame", resolution="ANY", nSteps="ANY", interval="ANY", criterion="ANY"),
           function(env, resolution=12, nSteps=2, interval=1, criterion="maxFirst"){
             pattern<- seasonalPattern(env=env, resolution=resolution, cicles=1)
             n<- ncol(pattern) # resolution
@@ -117,7 +116,7 @@ setMethod("seasonOptimCal",
             pattern<- matrix(rep(pattern,2), ncol=n * 2)
             
             # event calendar. SeasonAmplitude ensures that nrow(e) = nrow(env)
-            e<- data.frame(nSteps, interval), season=env$seasonAmplitude, stringsAsFactors=FALSE))
+            e<- data.frame(nSteps, interval, season=env$seasonAmplitude)
             e$seasonLength<- e$nSteps * e$interval
 
             ## Maximize pattern on events
@@ -163,12 +162,13 @@ setMethod("seasonOptimCal",
           }
 )
 
-# setMethod("seasonOptimCal", 
-#           signature(env="data.frame", resolution="missing", nSteps="missing", interval="missing", criterion="missing"),
-#           function(env){
-#             seasonOptimCal(Env(env), resolution=env$resolution, nSteps=env$nSteps, interval=env$interval, criterion=env$criterion)
-#           }
-# )
+setMethod("seasonOptimCal", 
+          signature(env="Env", resolution="ANY", nSteps="ANY", interval="ANY", criterion="ANY"),
+          function(env, resolution=12, nSteps=2, interval=1, criterion="maxFirst"){
+            callGeneric(env=S3Part(env), resolution, nSteps, interval, criterion)
+          }
+)
+
 
 # Seasonality auxiliary functions ----
 # resolution: time steps in one cicle (e.g. 12 for months, 365 for days)

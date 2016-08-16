@@ -1,13 +1,13 @@
-#' LHR.
+#' LHR
 #'
 #' Implements three different types of stochastic demographic models to explore the influence
 #'  of different mechanisms on the population dynamics.
-#'  
 #' \enumerate{
 #'   \item Discrete time random simulations whith diferent underlaying probabilities distributions.
 #'   \item Compound probability distribution of N_t+1 for a given N calculated numerically following the desired stochastic structure.
 #'   \item IBM implemented using the stochastic simulation algorithm or Gillespie algorithm from the \link[adaptivetau]{adaptivetau} package.
 #' }
+#' 
 #' @name LHR
 #' @details 
 #' The discrete random simulations and the compound probability distributions are two different approaches to explore the same underlaying model (Melbourne and Hastings 2008). The implemented underlaying structures combines individual mortality for juveniles and adults, complete failure of the reproductive attempt (e.g. nest predation) and stochasticity in the sex ratio.
@@ -29,5 +29,5 @@
 NULL
 
 
-#' @importFrom methods new setClass setGeneric setMethod setRefClass setOldClass show S3Part
+#' @importFrom methods callGeneric new setClass setGeneric setMethod setRefClass setOldClass show S3Part
 NULL

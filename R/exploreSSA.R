@@ -1,6 +1,8 @@
-
+#' Class ssa
+#' 
+#' @name ssa
 #' @exportClass ssa
-setOldClass("ssa")
+NULL
 
 ## Explore the deterministic part of the model ----
 # For inspiration chapter 3: Tuljapurkar, Shripad, and Hal Caswell, eds. Structured-population models in marine, terrestrial, and freshwater systems. Vol. 18. Springer Science & Business Media, 2012.
@@ -51,21 +53,24 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, maxTf=10, replicates
 
   resStats<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=12,
                                   dimnames=list(scenario=paste0(rep(rownames(params), each=length(x0L)), "_N", rep(sapply(x0L, sum), times=nrow(params))),
-                                                                stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))))
-
+                                                stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))))
+  if (discretePop) resPop<- list()
+  if (finalPop){
+    Ntf<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=replicates, dimnames=list(scenario=dimnames(resStats)[[1]], Nf=NULL)))
+  }
+  
   k<- 1
   for (i in 1:nrow(params)){
-    cat(i, "/", nrow(params), rownames(params)[i], "\n")
+    message(i, "/", nrow(params), "\t", rownames(params)[i], "\n")
     transitions<- transitionMat(params[i,])
     
     if (discretePop) resPop[[i]]<- list()
-#     if (finalPop) Ntf[[i]]<- as.data.frame(matrix(nrow=length(x0L), ncol=replicates, dimnames=list(N0=sapply(x0L, sum), Nf=NULL)))
 
     for (j in seq_along(x0L)){
       N0<- x0L[[j]]
       pars<- params[i,]
 
-      parallel::clusterExport(cl=cl, c("N0", "transitions", "rateFunc", "pars", "maxTf", "dtDiscretize", "burnin"))
+      parallel::clusterExport(cl=cl, c("N0", "transitions", "rateFunc", "pars", "maxTf", "dtDiscretize", "burnin"), envir=environment())
       parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
       parallel::clusterEvalQ(cl, library(LHR))
       
@@ -93,9 +98,10 @@ if(paste0(rownames(params)[i], "_N", sum(x0L[[j]])) != rownames(resStats)[k]) st
 
       if (discretePop) resPop[[i]][[j]]<- pop
       if (finalPop){
-        pop<- pop[,ncol(pop)]
-        pop[is.na(pop)]<- 0
-        Ntf[k,]<- c(rownames(params)[i], N0=sum(x0L[[j]]), sort(pop))
+        popTf<- pop[,ncol(pop)]
+        popTf[is.na(popTf)]<- 0
+
+        Ntf[k,]<- sort(popTf)
       }
       k<- k +1
     }# End N0 loop
@@ -106,16 +112,17 @@ if(paste0(rownames(params)[i], "_N", sum(x0L[[j]])) != rownames(resStats)[k]) st
 #   names(resStats)<- rownames(params)
 
   res<- list(stats=resStats)
+  res<- c(res, list(params=params))
+  res<- c(res, list(simParams=list(x0L=x0L, tf=maxTf, replicates=replicates, burnin=burnin, dtDiscretize=dtDiscretize)))
+
   if (discretePop){
     names(resPop)<- rownames(params)
     res<- c(res, list(pop=resPop))
   }
   if (finalPop){
-    Ntf[,-1]<- apply(Ntf[,2:ncol(Ntf)], 2, as.numeric)
     res<- c(res, list(Ntf=Ntf))
   }
-  res<- c(res, list(params=params))
-  res<- c(res, list(simParams=list(x0L=x0L, tf=maxTf, replicates=replicates, burnin=burnin, dtDiscretize=dtDiscretize)))
+  
   class(res)<- "ssa"
   return (res)
 }
@@ -125,7 +132,7 @@ exploreSSA.deterministic<- function(x0=rep(1, nrow(transitionMat())), params, tr
                                     cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores(), ...){
   params<- split(params, rownames(params))
 
-  parallel::clusterExport(cl=cl, c("x0", "transitionMat", "rateFunc", "maxTf", "normalize"))
+  parallel::clusterExport(cl=cl, c("x0", "transitionMat", "rateFunc", "maxTf", "normalize"), envir=environment())
   parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
   parallel::clusterEvalQ(cl, library(LHR))
   
@@ -142,8 +149,16 @@ exploreSSA.deterministic<- function(x0=rep(1, nrow(transitionMat())), params, tr
 }
 
 
-## Discretize the result of a ssa simulations from adaptivetau ----
-# sim: matrix(ncol=1:tf, nrow=nStates, dimnames=list(time=NULL, state=c("time", states))) from ssa (e.g. models-IBM-ssa_LH_behavior.R)
+#' Discretize the result of a ssa simulations from adaptivetau
+#' @param sim matrix(ncol=1:tf, nrow=nStates, dimnames=list(time=NULL, state=c("time", states))) from ssa (e.g. models-IBM-ssa_LH_behavior.R)
+#' @param dt 
+#' @param burnin 
+#' @param keepStates 
+#'
+#' @return a \code{\link{discretePopSim}} object.
+#' @export
+#'
+#' @examples
 discretizePopSim<- function(sim, dt=NULL, burnin=-1, keepStates=FALSE){
   extinctionTime<- sim[match(TRUE, rowSums(sim[,-1]) == 0), "time"]
   sim<- sim[sim[,"time"] > burnin,]

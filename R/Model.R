@@ -1,13 +1,5 @@
-#' Environment class with temporal variability
-#'
-#' @name Model
-#' 
-#' @slot sim Sim. 
-#' @slot params list. 
-#'
-#' @export
-#' @include LH.R Environment.R Simulation.R
-setClass("Model", slots=list(sim="Sim", params="list"), contains="data.frame")
+#' @include aaa-classes.R
+NULL
 
 ## Constructor ----
 # TODO: don't export Model_complete
@@ -17,7 +9,7 @@ setMethod("Model_complete",
           function(lh, env, sim){
             lhEnv<- combineLH_Env(lh=lh, env=env)
             scenario<- lhEnv$scenario
-            parameters<- list(seasonBroodEnv=lhEnv$seasonBroodEnv, breedFail=lhEnv$breedFail)
+            parameters<- list(seasonBroodEnv=lhEnv$seasonBroodEnv) #, breedFail=lhEnv$breedFail)
             
             model<- new("Model", 
                         scenario,
@@ -54,14 +46,15 @@ setMethod("Model",
 #'
 #' @param lh 
 #' @param env 
-#' @param resolution 
-#' @param interval 
+#' @param resolution the number of divisions of the sinusoidal pattern representing one year. Used in \code{\link{seasonOptimCal}}.
+#' @param interval a vector with the number of events for each LH strategy.
 #' @param criterion 
 #'
-#' @return
+#' @return the nSteps values separed by interval units of a sinusoidal pattern optimizing 
+#' according to different criterion (maxMean, maxFirst)
+#' seasonEvents<- function(env)
+#' @examples combineLH_Env()
 #' @export
-#'
-#' @examples
 setGeneric("combineLH_Env", function(lh=LH(), env=Env(), resolution=12, interval=2, criterion=c("maxFirst", "maxMean")[1]) standardGeneric("combineLH_Env"))
 
 # return a sinusoidal pattern
@@ -75,7 +68,8 @@ setMethod("combineLH_Env",
 setMethod("combineLH_Env", 
           signature(lh="LH", env="Env", resolution="ANY", interval="ANY", criterion="ANY"),
           function(lh=LH(), env=Env(), resolution=12, interval=1, criterion="maxFirst"){
-            scenario<- merge(S3Part(lh), S3Part(env))
+            tmpLH<- data.frame(S3Part(lh), interval)
+            scenario<- merge(tmpLH, S3Part(env))
             
             ## Brood failure (e.g. nest predation)
             # breedFail is a proportion of juvenile mortality correlated at the brood level
@@ -85,16 +79,12 @@ setMethod("combineLH_Env",
             scenario$jbr<- scenario$breedFail * (scenario$j-1) + 1
 
             ## Seasonality
-            seasonBroods<- data.frame(unique(scenario[,c("mean", "seasonAmplitude", "broods")]), var=0, breedFail=0) # var necessary for Env(seasonBroods)
-            seasonVar<- seasonOptimCal(env=Env(seasonBroods), resolution=resolution, nSteps=seasonBroods$broods, interval=interval, criterion=criterion)
+            seasonBroods<- data.frame(scenario[,c("mean", "seasonAmplitude", "broods", "interval")], var=0, breedFail=0) # var necessary for Env(seasonBroods)
+            seasonVar<- seasonOptimCal(env=seasonBroods, resolution=resolution, nSteps=seasonBroods$broods, interval=seasonBroods$interval, criterion=criterion)
             
             return (list(scenario=scenario, seasonBroodEnv=list(parsBroodEnv=seasonBroods, broodEnv=seasonVar))) #, breedFail=breedFail))
           }
 )
-
-# returns the nSteps values separed by interval units of a sinusoidal pattern optimizing 
-# according to different criterion (maxMean, maxFirst)
-# seasonEvents<- function(env)
 
 
 ## Simulate ----
@@ -155,7 +145,7 @@ run.discretePopSim<- function(model, cl=parallel::makeCluster(cores, type="FORK"
   res<- as.data.frame(res)
 
   simRes<- new("Sim.discretePopSim", res, params=pars)
-  # S3Part(model@sim)<- res
+
   if (pars$raw){
     rawSim<- lapply(sim, function(x) x$raw)
     simRes@raw<- rawSim
@@ -319,6 +309,7 @@ runScenario.numericDistri<- function(scenario, pars){
 #'
 #' @param model 
 #' @param type 
+#' @details TODO: type="Ntf" doesn't work for Model.ssa. Check it and standardize model@sim@Ntf
 #'
 #' @return a data frame with the aggregated results and parameters of a simulation.
 #' @examples result(run(Model()))
