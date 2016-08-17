@@ -11,6 +11,6 @@ setGeneric("LH.ssa", function(pars) standardGeneric("LH.ssa"))
 setMethod("LH.ssa",
           signature(pars="data.frame"),
           function (pars){
-            new("LH.ssa")
+            new("LH.ssa", pars)
           }
 )

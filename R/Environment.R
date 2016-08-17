@@ -14,10 +14,10 @@ NULL
 #'
 #' @return a Env class object
 #' @export
-setGeneric("Env", function(mean=1, var=0, seasonAmplitude=0, seasonRange, breedFail=0) standardGeneric("Env"))
+setGeneric("Env", function(pars, mean=1, var=0, seasonAmplitude=0, seasonRange, breedFail=0) standardGeneric("Env"))
 
 setMethod("Env",
-          signature(mean="ANY", var="ANY", seasonAmplitude="ANY", seasonRange="missing", breedFail="ANY"),
+          signature(pars="missing", mean="ANY", var="ANY", seasonAmplitude="ANY", seasonRange="missing", breedFail="ANY"),
           function(mean=1, var=0, seasonAmplitude=0, breedFail=0){
             params<- data.frame(mean=mean, var=var, seasonAmplitude=seasonAmplitude, breedFail=breedFail)#, fbeta(mean=mean, var=var))
 #             params[params$var == 0, c("shape1", "shape2")]<- NA
@@ -30,7 +30,7 @@ setMethod("Env",
 )
 
 setMethod("Env",
-          signature(mean="missing", var="missing", seasonAmplitude="missing", seasonRange="missing", breedFail="missing"),
+          signature(pars="missing", mean="missing", var="missing", seasonAmplitude="missing", seasonRange="missing", breedFail="missing"),
           function(){
             season<- data.frame(mean=c(1,.5), seasonAmplitude=c(0,1))
             comb<- expand.grid(list(var=c(0, 0.1), breedFail=c(0, 0.5, 1)))
@@ -41,7 +41,7 @@ setMethod("Env",
 )
 
 setMethod("Env",
-          signature(mean="missing", var="ANY", seasonAmplitude="missing", seasonRange="matrix", breedFail="ANY"),
+          signature(pars="missing", mean="missing", var="ANY", seasonAmplitude="missing", seasonRange="matrix", breedFail="ANY"),
           function(var=0, seasonRange, breedFail=0){
             mat<- matrix(seasonRange, ncol=2)
             seasonPars<- seasonPars(mat)
@@ -54,10 +54,10 @@ setMethod("Env",
 )  
 
 setMethod("Env",
-          signature(mean="data.frame", var="missing", seasonAmplitude="missing", seasonRange="missing", breedFail="missing"),
-          function(mean){
-            if (inherits(mean, "Model")) mean<- S3Part(mean) ## TODO: check if a Model object inheriting data.frame goes here
-            x<- unique(mean[,c("mean", "var", "seasonAmplitude", "breedFail")])
+          signature(pars="data.frame", mean="ANY", var="ANY", seasonAmplitude="ANY", seasonRange="ANY", breedFail="ANY"),
+          function(pars){
+            if (inherits(pars, "Model")) pars<- S3Part(pars) ## TODO: check if a Model object inheriting data.frame goes here
+            x<- unique(pars[,c("mean", "var", "seasonAmplitude", "breedFail")])
             env<- Env(mean=x$mean, var=x$var, seasonAmplitude=x$seasonAmplitude, breedFail=x$breedFail)
             return (env)
           }
@@ -211,7 +211,9 @@ setMethod("show", signature(object="Env"),
 )
 
 # Only allowed to subset by rows but $ and [[i]] works for columns ## TODO needs a method Env(data.frame)
-# `[.Env`<- function(x, ...){
-#   Env(S3Part(x)[...])
-# }
+#' @rdname Env
+#' @export
+`[.Env`<- function(x, ...){
+  Env(pars=data.frame(x)[...])
+}
 

@@ -2,22 +2,6 @@
 NULL
 
 ## Constructor ----
-# TODO: don't export Model_complete
-setGeneric("Model_complete", function(lh=LH(), env=Env(), sim=Sim()) standardGeneric("Model_complete"))
-setMethod("Model_complete",
-          signature(lh="LH", env="Env", sim="Sim"),
-          function(lh, env, sim){
-            lhEnv<- combineLH_Env(lh=lh, env=env)
-            scenario<- lhEnv$scenario
-            parameters<- list(seasonBroodEnv=lhEnv$seasonBroodEnv) #, breedFail=lhEnv$breedFail)
-            
-            model<- new("Model", 
-                        scenario,
-                        sim=sim,
-                        params=parameters)
-            return (model)
-          }
-)
 
 #' Model constructor
 #'
@@ -35,7 +19,12 @@ setGeneric("Model", function(lh=LH(), env=Env(), sim=Sim()) standardGeneric("Mod
 setMethod("Model",
           signature(lh="ANY", env="ANY", sim="ANY"),
           function(lh=LH(), env=Env(), sim=Sim()){
-            model<- Model_complete(lh, env, sim)
+            lhEnv<- combineLH_Env(lh=lh, env=env)
+            scenario<- lhEnv$scenario
+            parameters<- list(seasonBroodEnv=lhEnv$seasonBroodEnv) #, breedFail=lhEnv$breedFail)
+            
+            model<- new("Model", scenario, sim=sim, params=parameters)
+
             return (model)
           }
 )
@@ -281,6 +270,14 @@ runScenario.numericDistri<- function(scenario, pars){
     distri<- with(scenario, tDistri_dispatch(broods=broods, b=b, j=jindSeason, a=a, breedFail=1 - jbrSeason,
                                                  varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
                                                  sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, tf=pars$tf))
+    if (is.null(distri)){
+      res[n,c("scenario", "N0")]<- c(as.numeric(rownames(scenario)), N0)
+      if (pars$raw){
+        rawSim[[n]]<- NA
+        names(rawSim)[n]<- N0
+      }
+      next
+    }
     
     ## TODO: pop<- list(popF, popM)
     distri<- logP(distri, logP=FALSE)
@@ -370,9 +367,11 @@ setMethod("show", signature(object="Model"),
 )
 
 # Only allowed to subset by rows but $ and [[i]] works for columns
+#' @rdname Model
 #' @export
 `[.Model`<- function(x, ...){
-  Model(S3Part(x)[...])
+  xSel<- data.frame(x)[...]
+  Model(lh=LH(xSel), env=Env(xSel), sim=Sim(x))
 }
 
 

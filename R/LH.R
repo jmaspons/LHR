@@ -53,7 +53,7 @@ setMethod("LH",
           function(){
             pars<- sampleLH()
             rownames(pars)<- NULL
-            LH(pars)
+            LH(pars=pars)
           }
 )
 
@@ -62,7 +62,7 @@ setMethod("LH",
                     a="numeric", j="numeric", s="ANY", AFR="numeric"),
           function(lambda, fecundity, broods, b,   a, s=a, j, AFR=1){
             pars<- data.frame(lambda, fecundity, broods, b, a, s, j, AFR)
-            strategy<- LH(pars)
+            strategy<- LH(pars=pars)
             return (strategy)
           }
 )
@@ -73,7 +73,7 @@ setMethod("LH",
           function(fecundity, broods, b,   a, s=a, j, AFR=1){
             pars<- sampleLH(broods=broods, b=b, j=j, a=a, AFR=AFR, free="lambda", 
                             maxFecundity=9999, higherJuvMortality=FALSE, census="pre-breeding")
-            strategy<- LH(pars)
+            strategy<- LH(pars=pars)
             return (strategy)
           }          
 )
@@ -84,7 +84,7 @@ setMethod("LH",
           function(lambda, fecundity, broods, b,   a, s=a, AFR=1){
             pars<- sampleLH(lambda="numeric", broods=broods, b=b, a=a, AFR=AFR, free="j", 
                             maxFecundity=9999, higherJuvMortality=FALSE, census="pre-breeding")
-            strategy<- LH(pars)
+            strategy<- LH(pars=pars)
             return (strategy)
           }          
 )
@@ -95,7 +95,7 @@ setMethod("LH",
           function(lambda, fecundity, broods, b, j, AFR=1){
             pars<- sampleLH(lambda="numeric", broods=broods, b=b, j=j, AFR=AFR, free="a", 
                             maxFecundity=9999, higherJuvMortality=FALSE, census="pre-breeding")
-            strategy<- LH(pars)
+            strategy<- LH(pars=pars)
             return (strategy)
           }          
 )
@@ -117,9 +117,10 @@ setMethod("show", signature(object="LH"),
 )
 
 # Only allowed to subset by rows but $ and [[i]] works for columns
+#' @rdname LH
 #' @export
 `[.LH`<- function(x, ...){
-            LH(S3Part(x)[...])
+            LH(pars=data.frame(x)[...])
 }
 
 ## Sample LH ----

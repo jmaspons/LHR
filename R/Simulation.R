@@ -9,43 +9,37 @@ NULL
 #' @return a \code{Sim} object.
 #' @examples Sim()
 #' @export
-setGeneric("Sim", function(params) standardGeneric("Sim"))
+setGeneric("Sim", function(params, type="discretePopSim") standardGeneric("Sim"))
 
 setMethod("Sim",
-          signature(params="missing"),
-          function(){
+          signature(params="missing", type="ANY"),
+          function(params, type="discretePopSim"){
+            sim<- switch(type,
+                         discretePopSim=Sim.discretePopSim(),
+                         numericDistri=Sim.numericDistri(),
+                         ABM=Sim.ABM(),
+                         ssa=Sim.ssa())
             Sim.discretePopSim()
           }
 )
 
 setMethod("Sim",
-          signature(params="Model"),
+          signature(params="Model", type="missing"),
           function(params){
-            # par<- params@sim@params
-            ## TODO: call Sim following the Sim class of the model
-            # switch(class(params@sim), 
-            #        Sim.discretePopSim=,
-            #        Sim.numericDistri=,
-            #        Sim.ssa=)
-            # sim<- Sim.numericDistri_complete(N0=par$N0, envVar=par$envVar, sexRatio=par$sexRatio, matingSystem=par$matingSystem, tf=par$tf, raw=par$raw)
+            simPars<- params@sim@params
 
-            return (params@sim)
+            sim<- switch(class(params@sim),
+                   Sim.discretePopSim=Sim.discretePopSim(params=simPars),
+                   Sim.numericDistri=Sim.numericDistri(params=simPars),
+                   Sim.ABM=Sim.ABM(params=simPars),
+                   Sim.ssa=Sim.ssa(params=simPars))
+
+            return (sim)
           }
 )
 
 ## Subclasses
 ## Sim.discretePopSim Class ----
-
-## TODO: don't export Sim.discretePopSim_complete
-setGeneric("Sim.discretePopSim_complete", function(N0, envVar, sexRatio, matingSystem, tf, replicates, raw, Ntf) standardGeneric("Sim.discretePopSim_complete"))
-setMethod("Sim.discretePopSim_complete",
-          signature(N0="numeric", envVar="list", sexRatio="numeric", matingSystem="character", tf="numeric", replicates="numeric", raw="logical", Ntf="logical"),
-          function(N0, envVar, sexRatio, matingSystem, tf, replicates, raw, Ntf){
-            params<- list(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf)
-            sim<- new("Sim.discretePopSim", params=params)
-            return (sim)
-          }
-)
 
 #' @rdname Sim.discretePopSim
 #'
@@ -62,11 +56,23 @@ setMethod("Sim.discretePopSim_complete",
 #' @examples Sim.discretePopSim()
 #' 
 #' @export
-setGeneric("Sim.discretePopSim", function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=10, replicates=15, raw=TRUE, Ntf=TRUE) standardGeneric("Sim.discretePopSim"))
+setGeneric("Sim.discretePopSim", function(params, N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=10, replicates=15, raw=TRUE, Ntf=TRUE) standardGeneric("Sim.discretePopSim"))
+
 setMethod("Sim.discretePopSim",
-          signature(N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY"),
+          signature(params="list", N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY"),
+          function(params){
+            sim<- new("Sim.discretePopSim", params=params)
+
+            return (sim)
+          }
+)
+
+setMethod("Sim.discretePopSim",
+          signature(params="missing", N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY"),
           function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=10, replicates=15, raw=TRUE, Ntf=TRUE){
-            sim<- Sim.discretePopSim_complete(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf)
+            params<- list(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf)
+            sim<- Sim.discretePopSim(params=params)
+            
             return (sim)
           }
 )
@@ -74,16 +80,6 @@ setMethod("Sim.discretePopSim",
 
 ## Sim.numericDistri Class ----
 #TODO: sexRatio
-## TODO: don't export Sim.numericDistri_complete
-setGeneric("Sim.numericDistri_complete", function(N0, envVar, sexRatio, matingSystem, tf, raw) standardGeneric("Sim.numericDistri_complete"))
-setMethod("Sim.numericDistri_complete",
-          signature(N0="numeric", envVar="list", sexRatio="numeric", matingSystem="character", tf="numeric", raw="logical"),
-          function(N0, envVar, sexRatio, matingSystem, tf, raw){
-            params<- list(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, tf=tf, raw=raw)
-            sim<- new("Sim.numericDistri", params=params)
-            return (sim)
-          }
-)
 
 #' @rdname Sim.numericDistri
 #'
@@ -97,29 +93,36 @@ setMethod("Sim.numericDistri_complete",
 #' @return a \code{Sim.numericDistri} object.
 #' @examples Sim.numericDistri()
 #' @export
-setGeneric("Sim.numericDistri", function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=1, raw=TRUE) standardGeneric("Sim.numericDistri"))
-setMethod("Sim.numericDistri",
-          signature(N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", tf="ANY", raw="ANY"),
-          function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=1, raw=TRUE){
-            sim<- Sim.numericDistri_complete(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, tf=tf, raw=raw)
+setGeneric("Sim.numericDistri", function(params, N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=1, raw=TRUE) standardGeneric("Sim.numericDistri"))
 
+setMethod("Sim.numericDistri",
+          signature(params="list", N0="missing", envVar="missing", sexRatio="missing", matingSystem="missing", tf="missing", raw="missing"),
+          function(params){
+            sim<- new("Sim.numericDistri", params=params)
+            
+            return (sim)
+          }
+)
+
+setMethod("Sim.numericDistri",
+          signature(params="missing", N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", tf="ANY", raw="ANY"),
+          function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=1, raw=TRUE){
+            params<- list(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, tf=tf, raw=raw)
+            sim<- Sim.numericDistri(params=params)
+            
+            return (sim)
+          }
+)
+
+
+
+            params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf, stats=stats)
             return (sim)
           }
 )
 
 
 ## Sim.ssa Class ----
-
-# TODO: don't export Sim.ssa_complete
-setGeneric("Sim.ssa_complete", function(N0, transitionMat, rateFunc, tf, replicates, raw, Ntf, stats) standardGeneric("Sim.ssa_complete"))
-setMethod("Sim.ssa_complete",
-          signature(N0="list", transitionMat="function", rateFunc="function", tf="numeric", replicates="numeric", raw="logical", Ntf="logical", stats="logical"),
-          function(N0, transitionMat, rateFunc, tf, replicates, raw, Ntf, stats){
-            params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf, stats=stats)
-            sim<- new("Sim.ssa", params=params)
-            return (sim)
-          }
-)
 
 #' @rdname Sim.ssa
 #'
@@ -136,20 +139,29 @@ setMethod("Sim.ssa_complete",
 #' @examples Sim.ssa()
 #' 
 #' @export
-setGeneric("Sim.ssa", function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, 
+setGeneric("Sim.ssa", function(params, N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, 
                                tf=10, replicates=15, raw=TRUE, Ntf=TRUE, stats=TRUE) standardGeneric("Sim.ssa"))
 setMethod("Sim.ssa",
-          signature(N0="ANY", transitionMat="ANY", rateFunc="ANY", tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY", stats="ANY"),
+          signature(params="missing", N0="ANY", transitionMat="ANY", rateFunc="ANY", tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY", stats="ANY"),
           function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, tf=10, replicates=15, raw=TRUE, Ntf=TRUE, stats=TRUE){
             if (missing(N0)){
               N0<- c(N1s=0, N1b=1, N1bF=0, N1j=0, N2s=0, N2b=1, N2bF=0, N2j=0)
               N0<- lapply(2^(0:5), function(x) N0 * x)
             }
-            sim<- Sim.ssa_complete(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf, stats=stats)
+            params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf, stats=stats)
+            sim<- Sim.ssa(params=params)
+            
             return (sim)
           }
 )
 
+setMethod("Sim.ssa",
+          signature(params="list", N0="ANY", transitionMat="ANY", rateFunc="ANY", tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY", stats="ANY"),
+          function(params){
+            sim<- new("Sim.ssa", params=params)
+            return (sim)
+          }
+)
 
 
 ## Generic ----
@@ -183,7 +195,9 @@ setMethod("show", signature(object="Sim.ssa"),
 )
 
 # Only allowed to subset by rows but $ and [[i]] works for columns
-#' @export
+## Not useful
+# @rdname Sim
+# @export
 `[.Sim`<- function(x, ...){
   Sim(S3Part(x)[...])
 }
