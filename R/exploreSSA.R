@@ -46,7 +46,9 @@ ssa.deterministic<- function(init.values=rep(1, nrow(transitions)), transitions,
 
 ## Explore SSA ----
 exploreSSA<- function(x0L, params, transitionMat, rateFunc, maxTf=10, replicates=100,
-                      discretePop=FALSE, finalPop=TRUE, burnin=-1, dtDiscretize=NULL, cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores(), ...){
+                      discretePop=FALSE, finalPop=TRUE, burnin=-1, dtDiscretize=NULL, 
+                      cl=parallel::detectCores(),
+                      verbose=FALSE, ...){
   if (is.numeric(x0L)){
     x0L<- list(x0L)
   }
@@ -59,9 +61,16 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, maxTf=10, replicates
     Ntf<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=replicates, dimnames=list(scenario=dimnames(resStats)[[1]], Nf=NULL)))
   }
   
+  if (is.numeric(cl)){
+    numericCL<- TRUE
+    cl<- parallel::makeCluster(cl)
+  } else {
+    numericCL<- FALSE
+  }
+  
   k<- 1
   for (i in 1:nrow(params)){
-    message(i, "/", nrow(params), "\t", rownames(params)[i], "\n")
+    message(i, "/", nrow(params), "\t", rownames(params)[i])
     transitions<- transitionMat(params[i,])
     
     if (discretePop) resPop[[i]]<- list()
@@ -94,7 +103,7 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, maxTf=10, replicates
 if(paste0(rownames(params)[i], "_N", sum(x0L[[j]])) != rownames(resStats)[k]) stop("Incorrect rownames")
       resStats[k,]<- tmp
 
-      print(tmp, row.names=FALSE)
+      if (verbose) print(tmp, row.names=FALSE)
 
       if (discretePop) resPop[[i]][[j]]<- pop
       if (finalPop){
@@ -123,14 +132,23 @@ if(paste0(rownames(params)[i], "_N", sum(x0L[[j]])) != rownames(resStats)[k]) st
     res<- c(res, list(Ntf=Ntf))
   }
   
+  if (numericCL) parallel::stopCluster(cl)
+  
   class(res)<- "ssa"
   return (res)
 }
 
 
 exploreSSA.deterministic<- function(x0=rep(1, nrow(transitionMat())), params, transitionMat, rateFunc, maxTf=500, normalize=TRUE,
-                                    cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores(), ...){
+                                    cl=parallel::detectCores(), ...){
   params<- split(params, rownames(params))
+  
+  if (is.numeric(cl)){
+    numericCL<- TRUE
+    cl<- parallel::makeCluster(cl)
+  } else {
+    numericCL<- FALSE
+  }
 
   parallel::clusterExport(cl=cl, c("x0", "transitionMat", "rateFunc", "maxTf", "normalize"), envir=environment())
   parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
@@ -144,6 +162,8 @@ exploreSSA.deterministic<- function(x0=rep(1, nrow(transitionMat())), params, tr
   })
   
   res<- as.data.frame(do.call("rbind", res))
+  
+  if (numericCL) parallel::stopCluster(cl)
   
   return (res)
 }

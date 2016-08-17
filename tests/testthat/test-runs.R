@@ -10,7 +10,7 @@ test_that("discrete time models works", {
   lh<- lh[lh$lambda == 1,]
   model<- Model(lh=lh, env=Env(), sim=sim)
   
-  res<- run(model, cores=parallel::detectCores())
+  res<- run(model)
   expect_is(res, "Model")
   tmp<- lapply(unlist(res@sim@raw, recursive=FALSE), expect_is, class="discretePopSim")
   
@@ -28,7 +28,7 @@ test_that("compound distribution works", {
   
   model<- Model(lh=lh, env=env, sim=sim)
   
-  res<- run(model, cores=parallel::detectCores())
+  res<- run(model)
   expect_is(res, "Model")
   tmp<- lapply(unlist(res@sim@raw, recursive=FALSE), expect_is, class="numericDistri")
   
@@ -50,12 +50,11 @@ test_that("IBM LH-behavior works", {
   
   transitionMat=LHR:::transitionMat.LH_Beh; rateFunc=LHR:::rateFunc.LH_Beh
   replicates<- 100
-  cores<- parallel::detectCores()
-  
+    
   sim<- Sim.ssa(N0=x0L, transitionMat=transitionMat, rateFunc=rateFunc, 
                 tf=tf, replicates=replicates, raw=FALSE, Ntf=TRUE, stats=TRUE)
   model<- Model.ssa(pars=params, sim=sim)
-  system.time(res<- run(model, cores=cores, dt=0.5))
+  system.time(res<- run(model, dt=0.5))
   
   expect_is(resD<- result(res), "data.frame")
   # plot(resD[,-1])

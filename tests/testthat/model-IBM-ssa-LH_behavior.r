@@ -30,8 +30,6 @@ dtDiscretize<- 1
 replicates<- 1000
 discretePop=FALSE; finalPop=TRUE
 burnin<- -1
-cores<- 4
-mc.preschedule<- TRUE
 
 # For x0L<- lapply(1:6, function(x) x0 * x) and dtDiscretize<- 1, replicates<- 10000
 

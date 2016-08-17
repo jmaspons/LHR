@@ -28,7 +28,7 @@ setMethod("Model.ssa",
 )
 
 ## Called from run(Model.ssa)
-run.ssa<- function(model, cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores(), ...){
+run.ssa<- function(model, cl=parallel::detectCores(), ...){
   x0L<- model@sim@params$N0
   params<- S3Part(model)
   transitionMat<- model@sim@params$transitionMat
@@ -39,22 +39,41 @@ run.ssa<- function(model, cl=parallel::makeCluster(cores, type="FORK"), cores=pa
   finalPop<- model@sim@params$Ntf
   #   burnin=-1
   #   dtDiscretize=NULL
-  #   cores=1
-  #   mc.preschedule=TRUE
+  #   cl=1
+  
+  if (is.numeric(cl)){
+    numericCL<- TRUE
+    cl<- parallel::makeCluster(cl)
+  } else {
+    numericCL<- FALSE
+  }
   
   res<- exploreSSA(x0L=x0L, params=params, transitionMat=transitionMat, rateFunc=rateFunc, 
                    maxTf=tf, replicates=replicates, discretePop=discretePop, finalPop=finalPop, cl=cl, ...)
   res<- new("Sim.ssa", res$stats, Ntf=res$Ntf, params=model@sim@params, raw=res)
+  
+  if (numericCL) parallel::stopCluster(cl)
+  
   return (res)
 }
 
-run.ssa.deterministic<- function(model, cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores(), ...){
+run.ssa.deterministic<- function(model, cl=parallel::detectCores(), ...){
   x0L<- model@sim@params$N0
   params<- S3Part(model)
+  
+  if (is.numeric(cl)){
+    numericCL<- TRUE
+    cl<- parallel::makeCluster(cl)
+  } else {
+    numericCL<- FALSE
+  }
 
   res<- exploreSSA.deterministic(params=params, transitionMat=model@sim@params$transitionMat, rateFunc=model@sim@params$rateFunc, cl=cl, ...)
   ## TODO: return the Model adding this result to model@sim@deterministic
   res<- new("Sim.ssa", res$stats, params=model@sim@params, raw=unclass(res))
+  
+  if (numericCL) parallel::stopCluster(cl)
+  
   return (res)
 }
 

@@ -24,10 +24,10 @@ matplot(x = sim0[,1], y=sim0[,2:3])
 
 replicates<- 1000
 burnin=-1; dtDiscretize=NULL
-cores=4; discretePop=FALSE; finalPop=TRUE; mc.preschedule=TRUE
+discretePop=FALSE; finalPop=TRUE;
 
 res<- exploreSSA(x0L=x0L, params=params, transitionMat=transitionMat.LH, rateFunc=rateFunc.LH, tf=tf, replicates=replicates,
-                 discretePop=discretePop, finalPop=finalPop, burnin=burnin, cores=cores, mc.preschedule=mc.preschedule)
+                 discretePop=discretePop, finalPop=finalPop, burnin=burnin)
 x<- merge(res$params, res$stats, by.x="row.names", by.y="params")
 
 plot(x[,c(2:6,9,12,16:17)])

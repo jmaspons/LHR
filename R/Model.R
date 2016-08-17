@@ -83,39 +83,54 @@ setMethod("combineLH_Env",
 #'
 #' @param model 
 #' @param cl 
-#' @param cores 
 #' @param ... 
 #'
 #' @return a \code{Model} object with the result of the simulation.
 #' @examples run(Model())
 #' 
 #' @export
-setGeneric("run", function(model, cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores(), ...) standardGeneric("run"))
+setGeneric("run", function(model, cl=parallel::detectCores(), ...) standardGeneric("run"))
 
 # Create a Sim object with the results
 setMethod("run", 
-          signature(model="Model", cl="ANY", cores="ANY"),
-          function(model, cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores(), ...){
+          signature(model="Model", cl="ANY"),
+          function(model, cl=parallel::detectCores(), ...){
+            if (is.numeric(cl)){
+              numericCL<- TRUE
+              cl<- parallel::makeCluster(cl)
+            } else {
+              numericCL<- FALSE
+            }
+            
             simRes<- switch(class(model@sim),
-                               Sim.discretePopSim=run.discretePopSim(model, cl=cl, cores=cores),
-                               Sim.numericDistri=run.numericDistri(model, cl=cl, cores=cores),
+                               Sim.discretePopSim=run.discretePopSim(model, cl=cl),
+                               Sim.numericDistri=run.numericDistri(model, cl=cl),
                                Sim.ssa=run.ssa(model, ...))
 # print(str(simRes))
             modelRes<- new("Model", 
                         S3Part(model),
                         sim=simRes,
                         params=model@params)
-            # modelRes@sim<- simRes
+            
+            if (numericCL) parallel::stopCluster(cl)
+            
             return(modelRes)
           }
           
 )
 
-run.discretePopSim<- function(model, cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores()){
+run.discretePopSim<- function(model, cl=parallel::detectCores()){
   scenario<- S3Part(model)
   scenario<- split(scenario, as.numeric(rownames(scenario)))
   pars<- model@sim@params
 
+  if (is.numeric(cl)){
+    numericCL<- TRUE
+    cl<- parallel::makeCluster(cl)
+  } else {
+    numericCL<- FALSE
+  }
+  
   parallel::clusterExport(cl=cl, "pars", envir=environment())
   parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
   parallel::clusterEvalQ(cl, library(LHR))
@@ -148,8 +163,7 @@ run.discretePopSim<- function(model, cl=parallel::makeCluster(cores, type="FORK"
     simRes@Ntf<- Ntf
   }
   
-  ##TODO: improve cl API and stop cluster only when created inside the function 
-#   parallel::stopCluster(cl=cl)
+  if (numericCL) parallel::stopCluster(cl)
   
   return(simRes)
 }
@@ -208,10 +222,17 @@ runScenario.discretePopSim<- function (scenario, pars){
 
 
 
-run.numericDistri<- function(model, cl=parallel::makeCluster(cores, type="FORK"), cores=parallel::detectCores()){
+run.numericDistri<- function(model, cl=parallel::detectCores()){
   scenario<- S3Part(model)
   scenario<- split(scenario, rownames(scenario))
   pars<- model@sim@params
+  
+  if (is.numeric(cl)){
+    numericCL<- TRUE
+    cl<- parallel::makeCluster(cl)
+  } else {
+    numericCL<- FALSE
+  }
 
   parallel::clusterExport(cl=cl, "pars", envir=environment())
   parallel::clusterEvalQ(cl, library(LHR))
@@ -237,8 +258,8 @@ run.numericDistri<- function(model, cl=parallel::makeCluster(cores, type="FORK")
     simRes@raw<- rawSim
   }
   
-  ##TODO: improve cl API and stop cluster only when created inside the function 
-#   parallel::stopCluster(cl=cl)
+  if (numericCL) parallel::stopCluster(cl)
+  
   return(simRes)
 }
 
