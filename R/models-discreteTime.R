@@ -20,6 +20,8 @@ extinctNA<- function(pop){
 }
 
 ## S4 model dispatcher ----
+#' @rdname discretePopSim
+#' @export
 setGeneric("discretePopSim_dispatch", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0,
                                       sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], 
                                       N0, replicates, tf, maxN=100000) standardGeneric("discretePopSim_dispatch"))
@@ -166,8 +168,7 @@ mFit.t<- function(fecundity, j, a, N0, replicates, tf, maxN=100000){
   }
   pop<- pop[order(pop[,tf+1]),]
   pop<- extinctNA(pop)
-  pop<- as.data.frame(pop)
-  class(pop)<- c("discretePopSim", "data.frame")
+  class(pop)<- c("discretePopSim")
   
   return(pop)
 }
@@ -188,8 +189,7 @@ mSurvBV.t<- function(broods, b, j, a, breedFail, N0, replicates, tf, maxN=100000
   }
   pop<- pop[order(pop[,tf+1]),]
   pop<- extinctNA(pop)
-  pop<- as.data.frame(pop)
-  class(pop)<- c("discretePopSim", "data.frame")
+  class(pop)<- c("discretePopSim")
 
   return(pop)
 }
@@ -288,8 +288,7 @@ mFit.tvar<- function(fecundity, j, a, varJ, N0, replicates, tf, maxN=100000){
   }
   pop<- pop[order(pop[,tf+1]),]
   pop<- extinctNA(pop)
-  pop<- as.data.frame(pop)
-  class(pop)<- c("discretePopSim", "data.frame")
+  class(pop)<- c("discretePopSim")
   
   return(pop)
 }
@@ -324,8 +323,7 @@ mSurvBV.tvar<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, N0, 
   }
   pop<- pop[order(pop[,tf+1]),]
   pop<- extinctNA(pop)
-  pop<- as.data.frame(pop)
-  class(pop)<- c("discretePopSim", "data.frame")
+  class(pop)<- c("discretePopSim")
   
   return(pop)
 }
@@ -351,8 +349,7 @@ mSurvBV.tseason<- function(broods, b, j, a, breedFail, N0, replicates, tf, maxN=
   
   pop<- pop[order(pop[,tf+1]),]
   pop<- extinctNA(pop)
-  pop<- as.data.frame(pop)
-  class(pop)<- c("discretePopSim", "data.frame")
+  class(pop)<- c("discretePopSim")
   
   return(pop)
 }
@@ -405,8 +402,7 @@ mSurvBV.tvarseason<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0
   }
   pop<- pop[order(pop[,tf+1]),]
   pop<- extinctNA(pop)
-  pop<- as.data.frame(pop)
-  class(pop)<- c("discretePopSim", "data.frame")
+  class(pop)<- c("discretePopSim")
   
   return(pop)
 }
@@ -518,8 +514,7 @@ mSurvBVSex.tseason<- function(broods, b, j, a, breedFail, N0, replicates, tf, ma
   
   pop<- pop[order(pop[,tf+1]),]
   pop<- extinctNA(pop)
-  pop<- as.data.frame(pop)
-  class(pop)<- c("discretePopSim", "data.frame")
+  class(pop)<- c("discretePopSim")
   
   return(pop)
 }

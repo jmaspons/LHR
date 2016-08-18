@@ -10,8 +10,8 @@
 #'
 #' @examples
 summary.discretePopSim<- function(object, dt=1){
-  R<- unlist(r(object, dt=dt)) # intrinsic growth rate
-  L<- unlist(lambda(object, dt=dt)) # lambda
+  R<- as.numeric(r(object, dt=dt)) # intrinsic growth rate
+  L<- as.numeric(lambda(object, dt=dt)) # lambda
   meanR<- mean(R, na.rm=TRUE)
   varR<- var(R, na.rm=TRUE)
   meanL<- mean(L, na.rm=TRUE)
@@ -23,6 +23,7 @@ summary.discretePopSim<- function(object, dt=1){
   return(res)
 }
 
+#' @export
 r<- function(...){
   UseMethod("r")  
 }
@@ -34,7 +35,7 @@ r.discretePopSim<- function(pop, dt=1){
   if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
   pop<- pop[, sampleT]
   dN<- t(diff(t(pop))) # dN =  N_t+1 - N_t
-  N0<- pop[-ncol(pop)]
+  N0<- pop[,-ncol(pop)]
   r<- (dN / dt) / N0
 #   names(r)<- colnames(dN) # otherwise it takes the names from N0 (0:(tf-1) instead of 1:tf as does lambda function
   return (r) # intrinsic grow rate (r = dN / dt / N)
@@ -42,6 +43,7 @@ r.discretePopSim<- function(pop, dt=1){
 
 # r.numericDistri on models-compoundDistributions.R
 
+#' @export
 lambda<- function(...){
   UseMethod("lambda")  
 }
@@ -51,7 +53,7 @@ lambda<- function(...){
 lambda.discretePopSim<- function(pop, dt=1){
   sampleT<- seq(1, ncol(pop), by=dt)
   if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
-  pop<- pop[, sampleT]
+  pop<- pop[,sampleT]
   lambda<- pop[,-1] / pop[,-ncol(pop)] # lambda = Nt+1 / Nt
   return (lambda)
 }
@@ -60,6 +62,7 @@ lambda.discretePopSim<- function(pop, dt=1){
 # lambda.numericDistri on models-compoundDistributions.R
 
 # Proportions for trends. Decrease includes extinct.
+#' @export
 trendsProp<- function(...){
   UseMethod("trendsProp")
 }
@@ -71,7 +74,7 @@ trendsProp.discretePopSim<- function(pop, dt=1){
   if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
   pop<- pop[, sampleT]
   dN<- t(diff(t(pop))) # dN =  N_t+1 - N_t
-  N0<- pop[-ncol(pop)]
+  N0<- pop[,-ncol(pop)]
   popF<- pop[,ncol(pop)] # final population
   popF[is.na(popF)]<- 0
   replicates<- nrow(pop)

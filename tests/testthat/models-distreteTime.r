@@ -10,14 +10,14 @@ breedFail<- .5
 sexRatio<- .5
 matingSystem<- "monogamy"
 
-mFit.t(fecundity, j, a, N0, replicates, tf)
-mSurvBV.t(broods, b, j, a, breedFail, N0, replicates, tf)
-mFitSex.t(fecundity, j, a, sexRatio, matingSystem, N0, replicates, tf)
-mSurvBVSex.t(broods, b, j, a, breedFail, sexRatio, matingSystem, N0, replicates, tf)
+LHR:::mFit.t(fecundity, j, a, N0, replicates, tf)
+LHR:::mSurvBV.t(broods, b, j, a, breedFail, N0, replicates, tf)
+LHR:::mFitSex.t(fecundity, j, a, sexRatio, matingSystem, N0, replicates, tf)
+LHR:::mSurvBVSex.t(broods, b, j, a, breedFail, sexRatio, matingSystem, N0, replicates, tf)
 
-discretePopSim(j=j, a=a, b=b, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
+discretePopSim(j=j, a=a, b=b, N0=N0, replicates=replicates, tf=tf, maxN=10000)
 
-mFit.t(LH, N0, replicates, tf)
-mSurvBV.t(LH, breedFail, N0, replicates, tf)
-mFitSex.t(LH, sexRatio, matingSystem, N0, replicates, tf)
-mSurvBVSex.t(LH, breedFail, sexRatio, matingSystem, N0, replicates, tf)
+# mFit.t(LH, N0, replicates, tf)
+# mSurvBV.t(LH, breedFail, N0, replicates, tf)
+# mFitSex.t(LH, sexRatio, matingSystem, N0, replicates, tf)
+# mSurvBVSex.t(LH, breedFail, sexRatio, matingSystem, N0, replicates, tf)

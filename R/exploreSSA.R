@@ -235,8 +235,7 @@ discretizePopSim<- function(sim, dt=NULL, burnin=-1, keepStates=FALSE){
     return (sim)
   }else{
     pop<- matrix(rowSums(sim[,-1]), nrow=1, dimnames=list(replicate=NULL, t=sim[,1]))
-    pop<- as.data.frame(pop)
-    class(pop)<- c("discretePopSim", "data.frame")
+    class(pop)<- c("discretePopSim")
     return(pop)
   }
 }

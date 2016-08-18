@@ -3,20 +3,33 @@
 # Habib, E. A. (2012). Geometric mean for negative and zero values. International Journal of Research and Reviews in Applied Sciences, 11, 419-432.
 #' Geometric mean
 #'
-#' @param gr 
+#' @param x 
+#' @param na.rm
 #'
 #' @return
+#' @examples 
+#' res<- run(Model(lh=LH()[LH()$lambda == 1,], env=Env()[Env()$var == 0,]))
+#' pop<- res@sim@raw[[1]][[1]]
+#' Gmean(pop)
+#' 
 #' @export
-#'
-#' @examples gr<- r(pop) | lambda(pop) # grow rate
-Gmean<- function(gr){
-  if (all(gr != 0)){
-    res<- prod(gr)^(1/length(gr)) # buffer overflow for large numbers
+Gmean<- function(x, na.rm=TRUE, ...) UseMethod("Gmean")
+
+#' @export
+Gmean.discretePopSim<- function(x, na.rm=TRUE, ...){
+  # NextMethod(object=lambda(x))
+  Gmean(lambda(x))
+}
+
+#' @export
+Gmean.matrix<- function(x, na.rm=TRUE, ...){
+  if (all(x != 0)){
+    res<- prod(x)^(1/length(x)) # buffer overflow for large numbers
     if (is.finite(res))  return (res)
-    res<- exp(mean(log(gr))) # NaN for negative numbers
+    res<- exp(mean(log(x))) # NaN for negative numbers
     if (!is.na(res)) return (res)
   }else{
-    return (G(mean(gr), var(as.numeric(gr))))
+    return (G(mean(x, na.rm=na.rm), var(as.numeric(x), na.rm=na.rm)))
   }
 }
 
@@ -45,13 +58,15 @@ G.numeric<- function(mu, sigma2){
 #' 
 #' @param pop a \code{\link{discretePopSim}} object.
 #' @param growRate a character string (\code{r} or \code{lambda}) indicating which growth rate to use.
-#' @examples G(discre)
+#' @examples
+#'  res<- run(Model(lh=LH()[LH()$lambda == 1,], env=Env()[Env()$var == 0,]))
+#'  G(res@sim@raw[[1]][[1]])
 #' @export
-G.discretePopSim<- function(pop, growRate=c("r", "lambda")[1], ...){
+G.discretePopSim<- function(pop, growRate=c("r", "lambda")[1], na.rm=TRUE){
   Gres<- switch(growRate,
-         r={rPop<- as.numeric(r(pop), ...); # avoid var() returns a var/cov matrix
-            G(mean(rPop), var(rPop))},
-         lambda={lambdaPop<- as.numeric(lambda(pop), ...);
-            GLambda<- G(mean(lambdaPop), var(lambdaPop))})
+         r={rPop<- as.numeric(as.matrix(r(pop))); # avoid var() returns a var/cov matrix
+            G(mean(rPop, na.rm=na.rm), var(rPop, na.rm=na.rm))},
+         lambda={lambdaPop<- as.numeric(as.matrix(lambda(pop)));
+            GLambda<- G(mean(lambdaPop, na.rm=na.rm), var(lambdaPop, na.rm=na.rm))})
   return (Gres)
 } 

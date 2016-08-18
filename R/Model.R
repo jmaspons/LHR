@@ -136,7 +136,7 @@ run.discretePopSim<- function(model, cl=parallel::detectCores()){
   parallel::clusterEvalQ(cl, library(LHR))
   sim<- parallel::parLapply(cl=cl, scenario, runScenario.discretePopSim, pars=pars)
 
-#   sim<- lapply(scenario, runScenario.discretePopSim, pars=pars)
+#   sim<- lapply(scenario, LHR:::runScenario.discretePopSim, pars=pars)
 #   
 #   sim<- list()
 #   for (i in seq_along(scenario)){
