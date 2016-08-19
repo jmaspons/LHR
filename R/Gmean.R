@@ -6,22 +6,20 @@
 #' @param x 
 #' @param na.rm
 #'
-#' @return
-#' @examples 
-#' res<- run(Model(lh=LH()[LH()$lambda == 1,], env=Env()[Env()$var == 0,]))
-#' pop<- res@sim@raw[[1]][[1]]
-#' Gmean(pop)
-#' 
+#' @return the geometric mean
 #' @export
 Gmean<- function(x, na.rm=TRUE, ...) UseMethod("Gmean")
 
+#' @rdname Gmean
+#' @examples
+#' pop<- discretePopSim(b=1, j=.5, a=.5)
+#' Gmean(pop)
 #' @export
 Gmean.discretePopSim<- function(x, na.rm=TRUE, ...){
   # NextMethod(object=lambda(x))
   Gmean(lambda(x))
 }
 
-#' @export
 Gmean.matrix<- function(x, na.rm=TRUE, ...){
   if (all(x != 0)){
     res<- prod(x)^(1/length(x)) # buffer overflow for large numbers
@@ -59,10 +57,11 @@ G.numeric<- function(mu, sigma2){
 #' @param pop a \code{\link{discretePopSim}} object.
 #' @param growRate a character string (\code{r} or \code{lambda}) indicating which growth rate to use.
 #' @examples
-#'  res<- run(Model(lh=LH()[LH()$lambda == 1,], env=Env()[Env()$var == 0,]))
-#'  G(res@sim@raw[[1]][[1]])
+#' pop<- discretePopSim(b=1, j=.5, a=.5)
+#' G(pop)
 #' @export
-G.discretePopSim<- function(pop, growRate=c("r", "lambda")[1], na.rm=TRUE){
+G.discretePopSim<- function(pop, growRate=c("lambda", "r"), na.rm=TRUE){
+  growRate<- match.arg(growRate)
   Gres<- switch(growRate,
          r={rPop<- as.numeric(as.matrix(r(pop))); # avoid var() returns a var/cov matrix
             G(mean(rPop, na.rm=na.rm), var(rPop, na.rm=na.rm))},

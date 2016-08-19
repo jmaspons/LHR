@@ -1,155 +1,3 @@
-#' Discrete Time Simulation
-#' 
-#' \code{discretePopSim} class represent the result of discrete time simulations with
-#' replicates on rows and time on columns. The class inherits from \code{data.frame}.
-#' 
-#' @name discretePopSim
-#' @importFrom stats rbinom rbeta
-#' @exportClass discretePopSim
-NULL
-
-# When the population gets extinct it fills results with NAs.
-extinctNA<- function(pop){
-  extT<- apply(pop, 1, function(x) match(0, x))
-  extT[extT == ncol(pop)]<- NA 
-  extPop<- which(!is.na(extT))
-  for (i in extPop){
-    pop[i,(extT[i]+1):ncol(pop)]<- NA
-  }
-  return(pop)
-}
-
-## S4 model dispatcher ----
-#' @rdname discretePopSim
-#' @export
-setGeneric("discretePopSim_dispatch", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0,
-                                      sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], 
-                                      N0, replicates, tf, maxN=100000) standardGeneric("discretePopSim_dispatch"))
-setMethod("discretePopSim_dispatch",  # function dispatcher
-          signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="numeric", varBreedFail="numeric",
-                    sexRatio="ANY", matingSystem="ANY", N0="numeric", replicates="numeric", tf="numeric", maxN="ANY"),
-          function(broods=1, b, j, a, breedFail, varJ=0, varBreedFail=0, sexRatio=.5, matingSystem="monogamy", N0, replicates, tf, maxN=100000){
-            cm<- paste0("discretePopSim(j=j, a=a, ")
-            if (any(breedFail != 0)){ # any for seasonal where j and breedFail can be a vector of broods length
-              cm<- paste0(cm, "b=b, broods=broods, breedFail=breedFail, ")
-            }else{
-			  cm<- paste0(cm, "b=b * broods, ")
-            }
-            if (!is.na(sexRatio)){
-              cm<- paste0(cm, "sexRatio=sexRatio, matingSystem=matingSystem, ")
-            }
-            if (varJ != 0 | varBreedFail !=0){
-              # Select one of the following options and think about correlation (same mean for juvenile survival and breeding fail?)
-              cm<- paste0(cm, "varJ=varJ, varBreedFail=varBreedFail, ")
-#               cm<- paste0(cm, "varJ=0, varBreedFail=varBreedFail, ")
-#               cm<- paste0(cm, "varJ=varJ, varBreedFail=varBreedFail,")
-            }
-
-            cm<- paste0(cm, "N0=N0, replicates=replicates, tf=tf, maxN=maxN)")
-# print(cm)
-            eval(expr=parse(text=cm))
-          }
-)
-
-#' Discrete time and population models
-#'
-#' @rdname discretePopSim
-#' @param broods 
-#' @param b 
-#' @param j 
-#' @param a 
-#' @param breedFail 
-#' @param varJ 
-#' @param varBreedFail 
-#' @param sexRatio 
-#' @param matingSystem 
-#' @param N0 
-#' @param replicates 
-#' @param tf 
-#' @param maxN 
-#'
-#' @return a \code{discretePopSim} object.
-#' @export
-#'
-#' @examples
-setGeneric("discretePopSim", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0, 
-                                               sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], 
-                                               N0, replicates, tf, maxN=100000) standardGeneric("discretePopSim"))
-## Stable environment
-setMethod("discretePopSim", 
-          signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="missing", varBreedFail="missing",
-                    sexRatio="missing", matingSystem="missing", N0="numeric", replicates="numeric", tf="numeric", maxN="numeric"),
-          function(b, j, a, N0, replicates, tf, maxN){ #mFit
-            mFit.t(fecundity=b, j=j, a=a, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
-          }
-)
-setMethod("discretePopSim", 
-          signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="missing", varBreedFail="missing",
-                    sexRatio="missing", matingSystem="missing", N0="numeric", replicates="numeric", tf="numeric", maxN="numeric"),
-          function(broods, b, j, a, breedFail, N0, replicates, tf, maxN){ #mSurvBV
-            if (length(j) > 1 | length(a) > 1){
-              mSurvBV.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
-            }else{
-              mSurvBV.t(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
-            }
-          }
-)
-setMethod("discretePopSim", 
-          signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="missing", varBreedFail="missing",
-                    sexRatio="numeric", matingSystem="character", N0="numeric", replicates="numeric", tf="numeric", maxN="numeric"),
-          function(b, j, a, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, replicates, tf, maxN){ #mFitSex
-            mFitSex.t(fecundity=b, j=j, a=a, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
-          }
-)
-setMethod("discretePopSim", 
-          signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="missing", varBreedFail="missing",
-                    sexRatio="numeric", matingSystem="character", N0="numeric", replicates="numeric", tf="numeric", maxN="numeric"),
-          function(broods, b, j, a, breedFail, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, replicates, tf, maxN){ #mSurvBVSex
-            if (length(j) > 1 | length(a) > 1){
-              mSurvBVSex.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
-            }else{
-              mSurvBVSex.t(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
-            }
-          }
-)
-# Stochastic environment
-# TODO: check environmental correlation between j and breedFail. Same mean value or independent?
-setMethod("discretePopSim", 
-          signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="numeric", varBreedFail="numeric",
-                    sexRatio="missing", matingSystem="missing", N0="numeric", replicates="numeric", tf="numeric", maxN="numeric"),
-          function(b, j, a, varJ, varBreedFail, N0, replicates, tf, maxN){ #mFit
-            mFit.tvar(fecundity=b, j=j, a=a, varJ=varJ, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
-          }
-)
-setMethod("discretePopSim", 
-          signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="numeric", varBreedFail="numeric",
-                    sexRatio="missing", matingSystem="missing", N0="numeric", replicates="numeric", tf="numeric", maxN="numeric"),
-          function(broods, b, j, a, breedFail, varJ, varBreedFail, N0, replicates, tf, maxN){ #mSurvBV
-            if (length(a) > 1 | length(j) > 1){
-              mSurvBV.tvarseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
-            }else{
-              mSurvBV.tvar(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
-            }
-          }
-)
-setMethod("discretePopSim", 
-          signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="numeric", varBreedFail="numeric",
-                    sexRatio="numeric", matingSystem="character", N0="numeric", replicates="numeric", tf="numeric", maxN="numeric"),
-          function(b, j, a, varJ, varBreedFail, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, replicates, tf, maxN){ #mFitSex
-            mFitSex.tvar(fecundity=b, j=j, a=a, varJ=varJ, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
-          }
-)
-setMethod("discretePopSim", 
-          signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="numeric", varBreedFail="numeric",
-                    sexRatio="numeric", matingSystem="character", N0="numeric", replicates="numeric", tf="numeric", maxN="numeric"),
-          function(broods, b, j, a, breedFail, varJ, varBreedFail, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, replicates, tf, maxN){ #mSurvBVSex
-            if (length(a) > 1 | length(j) > 1){
-              mSurvBVSex.tvarseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
-            }else{
-              mSurvBVSex.tvar(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
-            }
-          }
-)
 
 ##  CONSTANT AND STABLE ENVIRONMENT ----
 # Adult mortality + offspring mortality
@@ -166,9 +14,9 @@ mFit.t<- function(fecundity, j, a, N0, replicates, tf, maxN=100000){
     pop[,t+1]<- pop[,t+1] + rbinom(replicates, pop[,t], a)
     pop[which(pop[,t+1] > maxN),t+1]<- maxN
   }
-  pop<- pop[order(pop[,tf+1]),]
+  pop<- pop[order(pop[,ncol(pop)]),]
   pop<- extinctNA(pop)
-  class(pop)<- c("discretePopSim")
+  class(pop)<- c("discretePopSim", "matrix")
   
   return(pop)
 }
@@ -187,9 +35,9 @@ mSurvBV.t<- function(broods, b, j, a, breedFail, N0, replicates, tf, maxN=100000
     pop[,t+1]<- pop[,t+1] + rbinom(replicates, pop[,t], a)
     pop[which(pop[,t+1] > maxN),t+1]<- maxN
   }
-  pop<- pop[order(pop[,tf+1]),]
+  pop<- pop[order(pop[,ncol(pop)]),]
   pop<- extinctNA(pop)
-  class(pop)<- c("discretePopSim")
+  class(pop)<- c("discretePopSim", "matrix")
 
   return(pop)
 }
@@ -219,11 +67,13 @@ mFitSex.t<- function(fecundity, j, a, sexRatio=.5, matingSystem=c("monogamy", "p
     popF[which(popF[,t+1] > maxN),t+1]<- maxN
     popM[which(popM[,t+1] > maxN),t+1]<- maxN
   }
+  
+  popF<- popF[order(popF[,ncol(popF)]),]
+  popM<- popM[order(popM[,ncol(popM)]),]
   popF<- extinctNA(popF)
   popM<- extinctNA(popM)
-  popF<- as.data.frame(popF)
-  popM<- as.data.frame(popM)
-  class(popF)<- class(popM)<- c("discretePopSim", "data.frame")
+  class(popF)<- class(popM)<- c("discretePopSim", "matrix")
+  
   pops<- list(females=popF, males=popM)
 
   return(pops)
@@ -252,11 +102,13 @@ mSurvBVSex.t<- function(broods, b, j, a, breedFail, sexRatio=.5, matingSystem=c(
     popF[which(popF[,t+1] > maxN),t+1]<- maxN
     popM[which(popM[,t+1] > maxN),t+1]<- maxN
   }
+  
+  popF<- popF[order(popF[,ncol(popF)]),]
+  popM<- popM[order(popM[,ncol(popM)]),]
   popF<- extinctNA(popF)
   popM<- extinctNA(popM)
-  popF<- as.data.frame(popF)
-  popM<- as.data.frame(popM)
-  class(popF)<- class(popM)<- c("discretePopSim", "data.frame")
+  class(popF)<- class(popM)<- c("discretePopSim", "matrix")
+  
   pops<- list(females=popF, males=popM)
 
   return(pops)
@@ -286,9 +138,9 @@ mFit.tvar<- function(fecundity, j, a, varJ, N0, replicates, tf, maxN=100000){
     pop[,t+1]<- pop[,t+1] + rbinom(replicates, pop[,t], a)
     pop[which(pop[,t+1] > maxN),t+1]<- maxN
   }
-  pop<- pop[order(pop[,tf+1]),]
+  pop<- pop[order(pop[,ncol(pop)]),]
   pop<- extinctNA(pop)
-  class(pop)<- c("discretePopSim")
+  class(pop)<- c("discretePopSim", "matrix")
   
   return(pop)
 }
@@ -321,9 +173,9 @@ mSurvBV.tvar<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, N0, 
     pop[,t+1]<- pop[,t+1] + rbinom(replicates, pop[,t], a)
     pop[which(pop[,t+1] > maxN),t+1]<- maxN
   }
-  pop<- pop[order(pop[,tf+1]),]
+  pop<- pop[order(pop[,ncol(pop)]),]
   pop<- extinctNA(pop)
-  class(pop)<- c("discretePopSim")
+  class(pop)<- c("discretePopSim", "matrix")
   
   return(pop)
 }
@@ -347,9 +199,9 @@ mSurvBV.tseason<- function(broods, b, j, a, breedFail, N0, replicates, tf, maxN=
     pop[which(pop[,t+1] > maxN),t+1]<- maxN
   }
   
-  pop<- pop[order(pop[,tf+1]),]
+  pop<- pop[order(pop[,ncol(pop)]),]
   pop<- extinctNA(pop)
-  class(pop)<- c("discretePopSim")
+  class(pop)<- c("discretePopSim", "matrix")
   
   return(pop)
 }
@@ -400,9 +252,9 @@ mSurvBV.tvarseason<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0
     pop[,t+1]<- pop[,t+1] + rbinom(replicates, pop[,t], a)
     pop[which(pop[,t+1] > maxN),t+1]<- maxN
   }
-  pop<- pop[order(pop[,tf+1]),]
+  pop<- pop[order(pop[,ncol(pop)]),]
   pop<- extinctNA(pop)
-  class(pop)<- c("discretePopSim")
+  class(pop)<- c("discretePopSim", "matrix")
   
   return(pop)
 }
@@ -436,11 +288,13 @@ mFitSex.tvar<- function(fecundity, j, a, varJ=0, sexRatio=.5, matingSystem=c("mo
     popF[which(popF[,t+1] > maxN),t+1]<- maxN
     popM[which(popM[,t+1] > maxN),t+1]<- maxN
   }
+  
+  popF<- popF[order(popF[,ncol(popF)]),]
+  popM<- popM[order(popM[,ncol(popM)]),]
   popF<- extinctNA(popF)
   popM<- extinctNA(popM)
-  popF<- as.data.frame(popF)
-  popM<- as.data.frame(popM)
-  class(popF)<- class(popM)<- c("discretePopSim", "data.frame")
+  class(popF)<- class(popM)<- c("discretePopSim", "matrix")
+  
   pops<- list(females=popF, males=popM)
   
   return(pops)
@@ -482,11 +336,13 @@ mSurvBVSex.tvar<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, s
     popF[which(popF[,t+1] > maxN),t+1]<- maxN
     popM[which(popM[,t+1] > maxN),t+1]<- maxN
   }
+  
+  popF<- popF[order(popF[,ncol(popF)]),]
+  popM<- popM[order(popM[,ncol(popM)]),]
   popF<- extinctNA(popF)
   popM<- extinctNA(popM)
-  popF<- as.data.frame(popF)
-  popM<- as.data.frame(popM)
-  class(popF)<- class(popM)<- c("discretePopSim", "data.frame")
+  class(popF)<- class(popM)<- c("discretePopSim", "matrix")
+  
   pops<- list(females=popF, males=popM)
   
   return(pops)
@@ -512,9 +368,9 @@ mSurvBVSex.tseason<- function(broods, b, j, a, breedFail, N0, replicates, tf, ma
     pop[which(pop[,t+1] > maxN),t+1]<- maxN
   }
   
-  pop<- pop[order(pop[,tf+1]),]
+  pop<- pop[order(pop[,ncol(pop)]),]
   pop<- extinctNA(pop)
-  class(pop)<- c("discretePopSim")
+  class(pop)<- c("discretePopSim", "matrix")
   
   return(pop)
 }

@@ -89,6 +89,12 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, maxTf=10, replicates
         return (sim)
       })
 
+      # simL<- lapply(1:replicates, function(x){
+      #   sim<- adaptivetau::ssa.adaptivetau(init.values=N0, transitions=transitions, rateFunc=rateFunc, params=pars, tf=maxTf, ...)
+      #   sim<- discretizePopSim(sim, dt=dtDiscretize, burnin=burnin)
+      #   return (sim)
+      # })
+
       if (length(unique(sapply(simL, ncol))) > 1){warning("Discrete simulation results differs in time steps")} ## important when !is.null(dtDiscretize)
       pop<- do.call("rbind", simL) ## TODO: Check different times for extinctions for models-discreteTime.R
 
@@ -97,6 +103,8 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, maxTf=10, replicates
       # popDtF: dt= maxTf - 0
       popDtF<- pop[,c(1,ncol(pop))]
       popDtF[is.na(popDtF[,2]),2]<- 0
+      class(popDtF)<- "discretePopSim"
+      
       tmp<- data.frame(scenario=rownames(params)[i], N0=sum(x0L[[j]]), summary(popDtF), stringsAsFactors=FALSE) ## TODO check params column. It's always 1!!
 #       if (!is.null(dtDiscretize)) tmp<- rbind(tmp, summary(pop))
 #       names(tmp)<- gsub(".1", ".dt", names(tmp))
@@ -235,7 +243,10 @@ discretizePopSim<- function(sim, dt=NULL, burnin=-1, keepStates=FALSE){
     return (sim)
   }else{
     pop<- matrix(rowSums(sim[,-1]), nrow=1, dimnames=list(replicate=NULL, t=sim[,1]))
-    class(pop)<- c("discretePopSim")
+    
+    pop<- extinctNA(pop)
+    class(pop)<- c("discretePopSim", "matrix")
+
     return(pop)
   }
 }

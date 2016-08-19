@@ -1,16 +1,13 @@
 context("discretePopSim")
 
-test_that("discretePopSim generics works", {
+test_that("discretePopSim generics", {
   # pop<- with(scenario, discretePopSim_dispatch(broods=broods, b=b, j=jindSeason, a=a, breedFail=1 - jbrSeason,
   #                                              varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
   #                                              sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, replicates=pars$replicates, tf=pars$tf))
-  pop<- LHR:::discretePopSim_dispatch(broods=1, b=1, j=.5, a=.5, breedFail=0,
+  pop<- discretePopSim(broods=1, b=1, j=.5, a=.5, breedFail=0,
                                                varJ=0, varBreedFail=0,
                                                sexRatio=NA, matingSystem=NA, N0=2, replicates=15, tf=10)
-  # discretePopSim(broods = 1, b, j, a, breedFail = 0, varJ = 0,
-  #                varBreedFail = 0, sexRatio = 0.5, matingSystem = c("monogamy", "polygyny", "polyandry")[1],
-  #                N0, replicates, tf, maxN = 1e+05)
-  
+
   
   # env<- Env()
   # env<- env[env$var == 0 & env$breedFail == 0,]

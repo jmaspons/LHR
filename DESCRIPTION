@@ -41,6 +41,7 @@ Collate:
     'exploreStructures.R'
     'model-IBM-ssa_LH_behavior.R'
     'model-deterministic.R'
+    'model-discretePopSim.R'
     'model-ssa_LH.R'
     'models-compoundDistributions.R'
     'models-discreteTime.R'

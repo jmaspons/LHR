@@ -11,7 +11,7 @@ NULL
 #' @param sim 
 #'
 #' @return a \code{Model} object.
-#' @examples Model()
+#' @examples model<- Model()
 #' @export
 setGeneric("Model", function(lh=LH(), env=Env(), sim=Sim()) standardGeneric("Model"))
 
@@ -86,8 +86,7 @@ setMethod("combineLH_Env",
 #' @param ... 
 #'
 #' @return a \code{Model} object with the result of the simulation.
-#' @examples run(Model())
-#' 
+#' @examples res<- run(model)
 #' @export
 setGeneric("run", function(model, cl=parallel::detectCores(), ...) standardGeneric("run"))
 
@@ -106,7 +105,7 @@ setMethod("run",
                                Sim.discretePopSim=run.discretePopSim(model, cl=cl),
                                Sim.numericDistri=run.numericDistri(model, cl=cl),
                                Sim.ssa=run.ssa(model, ...))
-# print(str(simRes))
+
             modelRes<- new("Model", 
                         S3Part(model),
                         sim=simRes,
@@ -170,7 +169,7 @@ run.discretePopSim<- function(model, cl=parallel::detectCores()){
 
 
 runScenario.discretePopSim<- function (scenario, pars){
-  cat(rownames(scenario), "/", nrow(scenario), "\n")
+  message(rownames(scenario), "/", nrow(scenario), "\n")
   print(scenario, row.names=FALSE)
   
   res<- matrix(NA_real_, nrow=length(pars$N0), ncol=12, 
@@ -196,7 +195,8 @@ runScenario.discretePopSim<- function (scenario, pars){
   
   for (n in 1:length(pars$N0)){
     N0<- pars$N0[n]
-    pop<- with(scenario, discretePopSim_dispatch(broods=broods, b=b, j=jindSeason, a=a, breedFail=1 - jbrSeason,
+    
+    pop<- with(scenario, discretePopSim(broods=broods, b=b, j=jindSeason, a=a, breedFail=1 - jbrSeason,
                                                  varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
                                                  sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, replicates=pars$replicates, tf=pars$tf))
     ## TODO: pop<- list(popF, popM)
@@ -330,8 +330,7 @@ runScenario.numericDistri<- function(scenario, pars){
 #' @details TODO: type="Ntf" doesn't work for Model.ssa. Check it and standardize model@sim@Ntf
 #'
 #' @return a data frame with the aggregated results and parameters of a simulation.
-#' @examples result(run(Model()))
-#' 
+#' @examples result(res) 
 #' @export
 setGeneric("result", function(model, type="stats") standardGeneric("result"))
 
