@@ -6,29 +6,29 @@ setMethod("tDistri_dispatch",  # function dispatcher
           signature(broods="numeric", b="numeric", j="numeric", a="numeric", breedFail="numeric", varJ="numeric", varBreedFail="numeric",
                     sexRatio="ANY", matingSystem="ANY", N0="numeric", tf="numeric"),
           function(broods=1, b, j, a, breedFail, varJ=0, varBreedFail=0, sexRatio=.5, matingSystem="monogamy", N0, tf){
-            cm<- paste0("tDistri(j=j, a=a, ")
+            cmd<- paste0("tDistri(j=j, a=a, ")
             if (any(breedFail != 0)){ # ,  any for seasonal where j and breedFail can be a vector of broods length
-              cm<- paste0(cm, "b=b, broods=broods, breedFail=breedFail, ")
+              cmd<- paste0(cmd, "b=b, broods=broods, breedFail=breedFail, ")
             }else{
-              cm<- paste0(cm, "b=broods * b, ")
+              cmd<- paste0(cmd, "b=broods * b, ")
             }
             if (!is.na(sexRatio)){
-              cm<- paste0(cm, "sexRatio=sexRatio, matingSystem=matingSystem, ")
+              cmd<- paste0(cmd, "sexRatio=sexRatio, matingSystem=matingSystem, ")
             }
             if (varJ != 0 | varBreedFail !=0){
               # Select one of the following options and think about correlation (same mean for juvenile survival and breeding fail?)
-              cm<- paste0(cm, "varJ=varJ, varBreedFail=varBreedFail, ")
-              #               cm<- paste0(cm, "varJ=0, varBreedFail=varBreedFail, ")
-              #               cm<- paste0(cm, "varJ=varJ, varBreedFail=varBreedFail,")
+              cmd<- paste0(cmd, "varJ=varJ, varBreedFail=varBreedFail, ")
+              #               cmd<- paste0(cmd, "varJ=0, varBreedFail=varBreedFail, ")
+              #               cmd<- paste0(cmd, "varJ=varJ, varBreedFail=varBreedFail,")
             }
             if (tf == 1){
-              cm<- paste0(cm, "N0=N0)")
+              cmd<- paste0(cmd, "N0=N0)")
             }else{
-              cm<- paste0(cm, "N0=N0, tf=tf)")
+              cmd<- paste0(cmd, "N0=N0, tf=tf)")
             }
             
-print(cm)
-            eval(expr=parse(text=cm))
+print(cmd)
+            eval(expr=parse(text=cmd))
           }
 )
 
@@ -63,7 +63,7 @@ setMethod("tDistri",
           }
 )
 setMethod("tDistri",
-          signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="numeric", varBreedFail="ANY",
+          signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="numeric", varBreedFail="missing",
                     sexRatio="missing", matingSystem="missing", N0="numeric", tf="missing"),
           function(b, j, a, varJ, N0){ ## TODO: mFit-var
             mFit_var.distri(fecundity=b, j=j, a=a, varJ=varJ, N0=N0)
@@ -75,7 +75,7 @@ setMethod("tDistri",
                     sexRatio="missing", matingSystem="missing", N0="numeric", tf="missing"),
           function(broods, b, j, a, breedFail, N0){ #mSurvBV
             if (length(j) > 1 | length(a) > 1){
-              mSurvBV.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N0=N0)
+              mSurvBV.distri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N0=N0)
             }else{
 ## TODO: fix bug when breedFail == 1. result is filled with NA when called from run(model)
 # cat("mSurvBV.distri(broods=", broods, ", b=", b, ", j=", j, ", a=", a, ", breedFail=", breedFail, ", N0=", N0, ")\n")
@@ -91,6 +91,7 @@ setMethod("tDistri",
                     sexRatio="missing", matingSystem="missing", N0="numeric", tf="missing"),
           function(broods, b, j, a, breedFail, varJ=varJ, varBreedFail=varBreedFail, N0){ ##TODO: mSurvBV-var
             if (length(j) > 1 | length(a) > 1){
+              ## TODO: tDistri
               # mSurvBV_var.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N0=N0)
             }else{
               mSurvBV_var.distri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, N0=N0)
@@ -102,7 +103,7 @@ setMethod("tDistri",
           signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="missing", varBreedFail="missing",
                     sexRatio="numeric", matingSystem="character", N0="numeric", tf="missing"),
           function(b, j, a, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0){ #mFitSex
-            mFitSex.distri(fecundity=b, j=j, a=a, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0)
+            mFitSex.distri(fecundity=b, j=j, a=a, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0, Nm=N0)
           }
 )
 setMethod("tDistri",
@@ -110,7 +111,8 @@ setMethod("tDistri",
                     sexRatio="numeric", matingSystem="character", N0="numeric", tf="missing"),
           function(broods, b, j, a, breedFail, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0){ #mSurvBVSex
             if (length(j) > 1 | length(a) > 1){
-              mSurvBVSex.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0)
+              ## TODO: tDistri
+              # mSurvBVSex.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0)
             }else{
               mSurvBVSex.distri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0)
             }
@@ -130,7 +132,7 @@ setMethod("tDistri",
           }
 )
 setMethod("tDistri",
-          signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="numeric", varBreedFail="ANY",
+          signature(broods="missing", b="numeric", j="numeric", a="numeric", breedFail="missing", varJ="numeric", varBreedFail="missing",
                     sexRatio="missing", matingSystem="missing", N0="numeric", tf="numeric"),
           function(b, j, a, varJ, N0, tf){ ## TODO: mFit-var
             mFit_var.tdistri(fecundity=b, j=j, a=a, varJ=varJ, N0=N0, tf=tf)
@@ -142,7 +144,7 @@ setMethod("tDistri",
                     sexRatio="missing", matingSystem="missing", N0="numeric", tf="numeric"),
           function(broods, b, j, a, breedFail, N0, tf){ #mSurvBV
             if (length(j) > 1 | length(a) > 1){
-              mSurvBV.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N0=N0, tf=tf)
+              mSurvBV.tdistri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N0=N0, tf=tf)
             }else{
               ## TODO: fix bug when breedFail == 1. result is filled with NA when called from run(model)
               # cat("mSurvBV.tdistri(broods=", broods, ", b=", b, ", j=", j, ", a=", a, ", breedFail=", breedFail, ", N0=", N0, ")\n")
@@ -158,6 +160,7 @@ setMethod("tDistri",
                     sexRatio="missing", matingSystem="missing", N0="numeric", tf="numeric"),
           function(broods, b, j, a, breedFail, varJ=varJ, varBreedFail=varBreedFail, N0, tf){ ##TODO: mSurvBV-var
             if (length(j) > 1 | length(a) > 1){
+              ## TODO: tDistri
               # mSurvBV_var.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N0=N0, tf=tf)
             }else{
               mSurvBV_var.tdistri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, N0=N0, tf=tf)
@@ -177,7 +180,8 @@ setMethod("tDistri",
                     sexRatio="numeric", matingSystem="character", N0="numeric", tf="numeric"),
           function(broods, b, j, a, breedFail, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, tf){ #mSurvBVSex
             if (length(j) > 1 | length(a) > 1){
-              mSurvBVSex.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, tf=tf)
+              ## TODO: tDistri
+              # mSurvBVSex.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, tf=tf)
             }else{
               mSurvBVSex.tdistri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, tf=tf)
             }
