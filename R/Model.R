@@ -118,6 +118,7 @@ setMethod("run",
           
 )
 
+
 run.discretePopSim<- function(model, cl=parallel::detectCores()){
   scenario<- S3Part(model)
   scenario<- split(scenario, as.numeric(rownames(scenario)))
@@ -197,8 +198,21 @@ runScenario.discretePopSim<- function (scenario, pars){
     N0<- pars$N0[n]
     
     pop<- with(scenario, discretePopSim(broods=broods, b=b, j=jindSeason, a=a, breedFail=1 - jbrSeason,
-                                                 varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
-                                                 sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, replicates=pars$replicates, tf=pars$tf))
+               varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
+               sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, replicates=pars$replicates, tf=pars$tf))
+    
+    if (is.null(pop) | is.na(pop)){
+      res[n, c("scenario", "N0")]<- c(as.numeric(rownames(scenario)), N0)
+      if (pars$raw){
+        rawSim[[n]]<- NA
+        names(rawSim)[n]<- N0
+      }
+      if (pars$Ntf){
+        Ntf[n, c("scenario", "N0")]<- c(as.numeric(rownames(scenario)), N0)
+      }
+      next
+    }
+    
     ## TODO: pop<- list(popF, popM)
     res[n,]<- c(as.numeric(rownames(scenario)), N0, as.numeric(summary(pop)))
     
@@ -236,7 +250,7 @@ run.numericDistri<- function(model, cl=parallel::detectCores()){
 
   parallel::clusterExport(cl=cl, "pars", envir=environment())
   parallel::clusterEvalQ(cl, library(LHR))
-  sim<- parallel::parLapply(cl=cl, X=scenario, fun=LHR:::runScenario.numericDistri, pars=pars)
+  sim<- parallel::parLapply(cl=cl, X=scenario, fun=runScenario.numericDistri, pars=pars)
   
 #   sim<- lapply(scenario, runScenario.numericDistri, pars=pars)
 #   
@@ -252,7 +266,7 @@ run.numericDistri<- function(model, cl=parallel::detectCores()){
   res<- res[order(res$scenario, res$N0),]
   
   simRes<- new("Sim.discretePopSim", res, params=pars)
-  # S3Part(model@sim)<- res
+  
   if (pars$raw){
     rawSim<- lapply(sim, function(x) x$raw)
     simRes@raw<- rawSim
@@ -288,10 +302,10 @@ runScenario.numericDistri<- function(scenario, pars){
     ## TODO: check error when breedFail == 1:
     # only happens on run(model), not when calling mSurvBV.distri with the same parameters!!
     # maybe var collide with var()?? It seems is not the case...
-    distri<- with(scenario, tDistri_dispatch(broods=broods, b=b, j=jindSeason, a=a, breedFail=1 - jbrSeason,
+    distri<- with(scenario, tDistri(broods=broods, b=b, j=jindSeason, a=a, breedFail=1 - jbrSeason,
                                                  varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
                                                  sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, tf=pars$tf))
-    if (is.null(distri)){
+    if (is.null(distri) | is.na(distri)){
       res[n,c("scenario", "N0")]<- c(as.numeric(rownames(scenario)), N0)
       if (pars$raw){
         rawSim[[n]]<- NA
@@ -322,7 +336,7 @@ runScenario.numericDistri<- function(scenario, pars){
   return (res)
 }
 
-## Post process ----
+## Post process result ----
 #' @rdname Model
 #'
 #' @param model 

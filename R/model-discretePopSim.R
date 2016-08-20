@@ -83,6 +83,8 @@ setMethod("discretePopSim",
             if (length(j) > 1 | length(a) > 1) seasonalEnv<- TRUE # environmental seasonality
             if (!is.na(matingSystem)) sex<- TRUE                  # two sexes
 
+            out<- NA
+
             if (!broodMortality & !varEnv & !seasonalEnv & !sex){
               out<- mFit.t(fecundity=b, j=j, a=a, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
             }
@@ -90,10 +92,12 @@ setMethod("discretePopSim",
               out<- mFitSex.t(fecundity=b, j=j, a=a, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
             }
             if (!broodMortality & !varEnv & seasonalEnv  & !sex){
-              ## TODO: out<- mFit.tseason
+              ## TODO 
+              warning("## TODO: out<- mFit.tseason")
             }
             if (!broodMortality & !varEnv & seasonalEnv  &  sex){
-              ## TODO: out<- mFitSex.tseason
+              ## TODO 
+              warning("## TODO: out<- mFitSex.tseason")
             }
             if (!broodMortality & varEnv  & !seasonalEnv & !sex){
               out<- mFit.tvar(fecundity=b, j=j, a=a, varJ=varJ, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
@@ -102,10 +106,12 @@ setMethod("discretePopSim",
               out<- mFitSex.tvar(fecundity=b, j=j, a=a, varJ=varJ, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
             }
             if (!broodMortality & varEnv  & seasonalEnv  & !sex){
-              ## TODO: out<- mFit.tvarseason
+              ## TODO 
+              warning("## TODO: out<- mFit.tvarseason")
             }
             if (!broodMortality & varEnv  & seasonalEnv  &  sex){
-              ## TODO: out<- mFitSex.tvarseason
+              ## TODO 
+              warning("## TODO: out<- mFitSex.tvarseason")
             }
             
             if (broodMortality  & !varEnv & !seasonalEnv & !sex){

@@ -56,7 +56,7 @@ setMethod("Sim",
 #' @examples Sim.discretePopSim()
 #' 
 #' @export
-setGeneric("Sim.discretePopSim", function(params, N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=10, replicates=15, raw=TRUE, Ntf=TRUE) standardGeneric("Sim.discretePopSim"))
+setGeneric("Sim.discretePopSim", function(params, N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=0.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"), tf=10, replicates=15, raw=TRUE, Ntf=TRUE) standardGeneric("Sim.discretePopSim"))
 
 setMethod("Sim.discretePopSim",
           signature(params="list", N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY"),
@@ -69,7 +69,12 @@ setMethod("Sim.discretePopSim",
 
 setMethod("Sim.discretePopSim",
           signature(params="missing", N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY"),
-          function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=10, replicates=15, raw=TRUE, Ntf=TRUE){
+          function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=0.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"), tf=10, replicates=15, raw=TRUE, Ntf=TRUE){
+            
+            if (!all(is.na(matingSystem))){
+              matingSystem<- match.arg(matingSystem)
+            }
+            
             params<- list(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf)
             sim<- Sim.discretePopSim(params=params)
             
@@ -93,7 +98,7 @@ setMethod("Sim.discretePopSim",
 #' @return a \code{Sim.numericDistri} object.
 #' @examples Sim.numericDistri()
 #' @export
-setGeneric("Sim.numericDistri", function(params, N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=1, raw=TRUE) standardGeneric("Sim.numericDistri"))
+setGeneric("Sim.numericDistri", function(params, N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=0.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"), tf=1, raw=TRUE) standardGeneric("Sim.numericDistri"))
 
 setMethod("Sim.numericDistri",
           signature(params="list", N0="missing", envVar="missing", sexRatio="missing", matingSystem="missing", tf="missing", raw="missing"),
@@ -106,7 +111,12 @@ setMethod("Sim.numericDistri",
 
 setMethod("Sim.numericDistri",
           signature(params="missing", N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", tf="ANY", raw="ANY"),
-          function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=NA_real_, matingSystem=NA_character_, tf=1, raw=TRUE){
+          function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=0.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"), tf=1, raw=TRUE){
+            
+            if (!all(is.na(matingSystem))){
+              matingSystem<- match.arg(matingSystem)
+            }
+            
             params<- list(N0=N0, envVar=envVar, sexRatio=sexRatio, matingSystem=matingSystem, tf=tf, raw=raw)
             sim<- Sim.numericDistri(params=params)
             
