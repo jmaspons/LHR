@@ -1,62 +1,6 @@
 #' @include aaa-classes.R
 NULL
 
-## Model.ssa ----
-#' @rdname Model.ssa
-#'
-#' @param pars 
-#' @param sim 
-#'
-#' @return a \code{Model.ssa} object.
-#' @examples Model.ssa()
-#' 
-#' @export
-setGeneric("Model.ssa", function(pars=getParams.LH_Beh(), sim=Sim.ssa()) standardGeneric("Model.ssa"))
-
-setMethod("Model.ssa",
-          signature(pars="data.frame", sim="Sim.ssa"),
-          function (pars, sim){
-            new("Model.ssa", pars, sim=sim)
-          }
-)
-
-setMethod("Model.ssa",
-          signature(pars="ANY", sim="ANY"),
-          function (pars=getParams.LH_Beh(), sim=Sim.ssa()){
-            new("Model.ssa", pars, sim=sim)
-          }
-)
-
-## Called from run(Model.ssa)
-run.ssa<- function(model, cl=parallel::detectCores(), ...){
-  x0L<- model@sim@params$N0
-  params<- S3Part(model)
-  transitionMat<- model@sim@params$transitionMat
-  rateFunc<- model@sim@params$rateFunc
-  tf<- model@sim@params$tf
-  replicates<- model@sim@params$replicates
-  discretePop<- model@sim@params$raw
-  finalPop<- model@sim@params$Ntf
-  #   burnin=-1
-  #   dtDiscretize=NULL
-  #   cl=1
-  
-  if (is.numeric(cl)){
-    numericCL<- TRUE
-    cl<- parallel::makeCluster(cl)
-  } else {
-    numericCL<- FALSE
-  }
-  
-  res<- exploreSSA(x0L=x0L, params=params, transitionMat=transitionMat, rateFunc=rateFunc, 
-                   maxTf=tf, replicates=replicates, discretePop=discretePop, finalPop=finalPop, cl=cl, ...)
-  res<- new("Sim.ssa", res$stats, Ntf=res$Ntf, params=model@sim@params, raw=res)
-  
-  if (numericCL) parallel::stopCluster(cl)
-  
-  return (res)
-}
-
 run.ssa.deterministic<- function(model, cl=parallel::detectCores(), ...){
   x0L<- model@sim@params$N0
   params<- S3Part(model)

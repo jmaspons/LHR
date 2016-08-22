@@ -13,22 +13,69 @@ NULL
 #' @return a \code{Model} object.
 #' @examples model<- Model()
 #' @export
-setGeneric("Model", function(lh=LH(), env=Env(), sim=Sim()) standardGeneric("Model"))
+setGeneric("Model", function(lh=LH(), env=Env(), sim=Sim(), pars=getParams.LH_Beh()) standardGeneric("Model"))
 
-#' @export
 setMethod("Model",
-          signature(lh="ANY", env="ANY", sim="ANY"),
+          signature(lh="ANY", env="ANY", sim="ANY", pars="missing"),
           function(lh=LH(), env=Env(), sim=Sim()){
-            lhEnv<- combineLH_Env(lh=lh, env=env)
-            scenario<- lhEnv$scenario
-            parameters<- list(seasonBroodEnv=lhEnv$seasonBroodEnv) #, breedFail=lhEnv$breedFail)
+            if (inherits(sim, c("Sim.discretePopSim", "Sim.numericDistri"))){
+              lhEnv<- combineLH_Env(lh=lh, env=env)
+              scenario<- lhEnv$scenario
+              parameters<- list(seasonBroodEnv=lhEnv$seasonBroodEnv) #, breedFail=lhEnv$breedFail)
+              
+              model<- new("Model", scenario, sim=sim, params=parameters)
+            } else if (inherits(sim, "Sim.ssa")){
+              model<- Model.ssa(pars=getParams.LH_Beh(), sim=sim)
+            }
             
-            model<- new("Model", scenario, sim=sim, params=parameters)
-
             return (model)
           }
 )
 
+setMethod("Model",
+          signature(lh="missing", env="missing", sim="Sim.ssa", pars="ANY"),
+          function(sim=Sim.ssa(), pars=getParams.LH_Beh()){
+            model<- Model.ssa(pars=getParams.LH_Beh(), sim=sim)
+            
+            return (model)
+          }
+)
+
+setMethod("Model",
+          signature(lh="missing", env="missing", sim="Sim.ssa", pars="ANY"),
+          function(sim=Sim.ssa(), pars=getParams.LH_Beh()){
+            model<- Model.ssa(pars=getParams.LH_Beh(), sim=sim)
+            
+            return (model)
+          }
+)
+
+
+## Model.ssa ----
+#' @rdname Model.ssa
+#'
+#' @param pars 
+#' @param sim 
+#'
+#' @return a \code{Model.ssa} object.
+#' @examples Model.ssa()
+#' 
+#' @export
+setGeneric("Model.ssa", function(pars=getParams.LH_Beh(), sim=Sim.ssa()) standardGeneric("Model.ssa"))
+
+setMethod("Model.ssa",
+          signature(pars="data.frame", sim="Sim.ssa"),
+          function (pars, sim){
+            new("Model.ssa", pars, sim=sim)
+          }
+)
+
+setMethod("Model.ssa",
+          signature(pars="ANY", sim="ANY"),
+          function (pars=getParams.LH_Beh(), sim=Sim.ssa()){
+            new("Model.ssa", pars, sim=sim)
+          }
+)
 
 ## Combine LH and Environment ----
 #' Combine a LH and a Env object in a set of scenarios
@@ -335,6 +382,37 @@ runScenario.numericDistri<- function(scenario, pars){
   
   return (res)
 }
+
+
+run.ssa<- function(model, cl=parallel::detectCores(), ...){
+  x0L<- model@sim@params$N0
+  params<- S3Part(model)
+  transitionMat<- model@sim@params$transitionMat
+  rateFunc<- model@sim@params$rateFunc
+  tf<- model@sim@params$tf
+  replicates<- model@sim@params$replicates
+  discretePop<- model@sim@params$raw
+  finalPop<- model@sim@params$Ntf
+  #   burnin=-1
+  #   dtDiscretize=NULL
+  #   cl=1
+  
+  if (is.numeric(cl)){
+    numericCL<- TRUE
+    cl<- parallel::makeCluster(cl)
+  } else {
+    numericCL<- FALSE
+  }
+  
+  res<- exploreSSA(x0L=x0L, params=params, transitionMat=transitionMat, rateFunc=rateFunc, 
+                   maxTf=tf, replicates=replicates, discretePop=discretePop, finalPop=finalPop, cl=cl, ...)
+  res<- new("Sim.ssa", res$stats, Ntf=res$Ntf, params=model@sim@params, raw=res)
+  
+  if (numericCL) parallel::stopCluster(cl)
+  
+  return (res)
+}
+
 
 ## Post process result ----
 #' @rdname Model

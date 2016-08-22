@@ -1,23 +1,24 @@
-# Propensity functions for each transition ----
-rateFunc.LH_Beh<- compiler::cmpfun( # byte-compile the function
-  function(x, params, t){
-    with(params, {
-      return(c(repro1s=b * Pb1 * (1-PbF1) * x["N1s"], repro1sF=b * Pb1 * PbF1 * x["N1s"], 
-               repro1b=b * Pb1 * (1-PbF1) * x["N1b"], repro1bF=b * Pb1 * PbF1 * x["N1b"],
-               repro2s=b * Pb2 * (1-PbF2) * x["N2s"], repro2sF=b * Pb2 * PbF2 * x["N2s"], 
-               repro2b=b * Pb2 * (1-PbF2) * x["N2b"], repro2bF=b * Pb2 * PbF2 * x["N2b"],
-               skipR1=b * (1-Pb1) * x["N1b"], skipR1F=b * (1-Pb1) * x["N1bF"], skipR2=b * (1-Pb2) * x["N2b"], skipR2F=b * (1-Pb2) * x["N2bF"],
-               dead1s=d1 * (1 + (x["N1s"] + x["N1b"] + x["N1bF"]) / K) * x["N1s"], dead1b=db1 * (1  + (x["N1s"] + x["N1b"] + x["N1bF"]) / K) * x["N1b"],
-               dead1bF=db1 * (1 + (x["N1s"] + x["N1b"] + x["N1bF"]) / K) * x["N1bF"], dead1j=dj1 * (1  + (x["N1s"] + x["N1b"] + x["N1bF"] + x["N1j"]) / K) * x["N1j"],
-               dead2s=d2 * (1 + (x["N2s"] + x["N2b"] + x["N2bF"]) / K) * x["N2s"], dead2b=db2 * (1 + (x["N2s"] + x["N2b"] + x["N2bF"]) / K) * x["N2b"],
-               dead2bF=db2 * (1 + (x["N2s"] + x["N2b"] + x["N2bF"]) / K) * x["N2bF"], dead2j=dj2 * (1  + (x["N2s"] + x["N2b"] + x["N2bF"] + x["N2j"]) / K) * x["N2j"],
-               move12s=c1 * (1-P1s) * x["N1s"], move21s=c2 * P1s * x["N2s"], move12b=c1 * (1-P1b) * x["N1b"], move21b=c2 * P1b * x["N2b"],
-               move12bF=cF * (1-P1b) * x["N1bF"], move21bF=cF * P1b * x["N2bF"], move12j=c1 * (1-P1j) * x["N1j"], move21j=c2 * P1j * x["N2j"],
-               grow1=g1 * x["N1j"], grow2=g2 * x["N2j"])
-      )}
-    )
-  }
-)
+## Propensity functions for each transition ----
+rateFunc.LH_Beh<- function(x, params, t){
+  with(params, {
+    return(c(repro1s=b * Pb1 * (1-PbF1) * x["N1s"], repro1sF=b * Pb1 * PbF1 * x["N1s"], 
+             repro1b=b * Pb1 * (1-PbF1) * x["N1b"], repro1bF=b * Pb1 * PbF1 * x["N1b"],
+             repro2s=b * Pb2 * (1-PbF2) * x["N2s"], repro2sF=b * Pb2 * PbF2 * x["N2s"], 
+             repro2b=b * Pb2 * (1-PbF2) * x["N2b"], repro2bF=b * Pb2 * PbF2 * x["N2b"],
+             skipR1=b * (1-Pb1) * x["N1b"], skipR1F=b * (1-Pb1) * x["N1bF"], skipR2=b * (1-Pb2) * x["N2b"], skipR2F=b * (1-Pb2) * x["N2bF"],
+             dead1s=d1 * (1 + (x["N1s"] + x["N1b"] + x["N1bF"]) / K) * x["N1s"], dead1b=db1 * (1  + (x["N1s"] + x["N1b"] + x["N1bF"]) / K) * x["N1b"],
+             dead1bF=db1 * (1 + (x["N1s"] + x["N1b"] + x["N1bF"]) / K) * x["N1bF"], dead1j=dj1 * (1  + (x["N1s"] + x["N1b"] + x["N1bF"] + x["N1j"]) / K) * x["N1j"],
+             dead2s=d2 * (1 + (x["N2s"] + x["N2b"] + x["N2bF"]) / K) * x["N2s"], dead2b=db2 * (1 + (x["N2s"] + x["N2b"] + x["N2bF"]) / K) * x["N2b"],
+             dead2bF=db2 * (1 + (x["N2s"] + x["N2b"] + x["N2bF"]) / K) * x["N2bF"], dead2j=dj2 * (1  + (x["N2s"] + x["N2b"] + x["N2bF"] + x["N2j"]) / K) * x["N2j"],
+             move12s=c1 * (1-P1s) * x["N1s"], move21s=c2 * P1s * x["N2s"], move12b=c1 * (1-P1b) * x["N1b"], move21b=c2 * P1b * x["N2b"],
+             move12bF=cF * (1-P1b) * x["N1bF"], move21bF=cF * P1b * x["N2bF"], move12j=c1 * (1-P1j) * x["N1j"], move21j=c2 * P1j * x["N2j"],
+             grow1=g1 * x["N1j"], grow2=g2 * x["N2j"])
+    )}
+  )
+}
+
+rateFunc.LH_Beh<- compiler::cmpfun(rateFunc.LH_Beh) # byte-compile the function
+
 
 # State-change matrix for each transition ----
 ## Notes: individuals from NxbF move to N-xb. Individuals which failed on the last reproductive event have
