@@ -50,7 +50,7 @@ setMethod("tDistri",
                 out<- mFit.distri(fecundity=b, j=j, a=a, N0=N0)
               }
               if (!broodMortality & !varEnv & !seasonalEnv &  sex){
-                out<- mFitSex.distri(fecundity=b, j=j, a=a, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0)
+                out<- mFitSex.distri(fecundity=b, j=j, a=a, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0)
               }
               if (!broodMortality & !varEnv & seasonalEnv  & !sex){
                 ## TODO 
@@ -66,7 +66,7 @@ setMethod("tDistri",
               if (!broodMortality & varEnv  & !seasonalEnv &  sex){
                 ## TODO 
                 warning("## TODO: out<- mFitSex_var.distri")
-                # out<- mFitSex_var.distri(fecundity=b, j=j, a=a, varJ=varJ, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0)
+                # out<- mFitSex_var.distri(fecundity=b, j=j, a=a, varJ=varJ, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0)
               }
               if (!broodMortality & varEnv  & seasonalEnv  & !sex){
                 ## TODO 
@@ -81,7 +81,7 @@ setMethod("tDistri",
                 out<- mSurvBV.distri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, N0=N0)
               }
               if (broodMortality  & !varEnv & !seasonalEnv &  sex){
-                out<- mSurvBVSex.distri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0)
+                out<- mSurvBVSex.distri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0)
               }
               if (broodMortality  & !varEnv & seasonalEnv  & !sex){
                 # TODO: fix bug when breedFail == 1. result is filled with NA when called from run(model)
@@ -99,7 +99,7 @@ setMethod("tDistri",
               if (broodMortality  & !varEnv & seasonalEnv  &  sex){
                 ## TODO 
                 warning("## TODO: out<- mSurvBVSex_season.distri")
-                # out<- mSurvBVSex_season.distri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0)
+                # out<- mSurvBVSex_season.distri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0)
               }
               if (broodMortality  & varEnv  & !seasonalEnv & !sex){
                 out<- mSurvBV_var.distri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, N0=N0)
@@ -107,7 +107,7 @@ setMethod("tDistri",
               if (broodMortality  & varEnv  & !seasonalEnv &  sex){
                 ## TODO 
                 warning("## TODO: out<- mSurvBVSex_var.distri")
-                # out<- mSurvBVSex_var.distri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0)
+                # out<- mSurvBVSex_var.distri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0)
               }
               if (broodMortality  & varEnv  & seasonalEnv  & !sex){
                 ## TODO 
@@ -117,7 +117,7 @@ setMethod("tDistri",
               if (broodMortality  & varEnv  & seasonalEnv  &  sex){
                 ## TODO 
                 warning("## TODO: out<- mSurvBVSex_varseason.distri")
-                # out<- mSurvBVSex_varseason.distri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0)
+                # out<- mSurvBVSex_varseason.distri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0)
               }
               
             }else{ # tf > 1
@@ -128,7 +128,7 @@ setMethod("tDistri",
               if (!broodMortality & !varEnv & !seasonalEnv &  sex){
                 ## TODO 
                 warning("## TODO: out<- mFitSex.tdistri")
-                # out<- mFitSex.tdistri(fecundity=b, j=j, a=a, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, tf=tf)
+                # out<- mFitSex.tdistri(fecundity=b, j=j, a=a, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0, tf=tf)
               }
               if (!broodMortality & !varEnv & seasonalEnv  & !sex){
                 ## TODO 
@@ -146,7 +146,7 @@ setMethod("tDistri",
               if (!broodMortality & varEnv  & !seasonalEnv &  sex){
                 ## TODO 
                 warning("## TODO: out<- mFitSex_var.tdistri")
-                # out<- mFitSex_var.tdistri(fecundity=b, j=j, a=a, varJ=varJ, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, tf=tf)
+                # out<- mFitSex_var.tdistri(fecundity=b, j=j, a=a, varJ=varJ, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0, tf=tf)
               }
               if (!broodMortality & varEnv  & seasonalEnv  & !sex){
                 ## TODO 
@@ -163,7 +163,7 @@ setMethod("tDistri",
               if (broodMortality  & !varEnv & !seasonalEnv &  sex){
                 ## TODO 
                 warning("## TODO: out<- mSurvBVSex.tdistri")
-                # out<- mSurvBVSex.tdistri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, tf=tf)
+                # out<- mSurvBVSex.tdistri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0, tf=tf)
               }
               if (broodMortality  & !varEnv & seasonalEnv  & !sex){
                 # TODO: fix bug when breedFail == 1. result is filled with NA when called from run(model)
@@ -181,7 +181,7 @@ setMethod("tDistri",
               if (broodMortality  & !varEnv & seasonalEnv  &  sex){
                 ## TODO 
                 warning("## TODO: out<- mSurvBVSex_season.tdistri")
-                # out<- mSurvBVSex_season.tdistri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, tf=tf)
+                # out<- mSurvBVSex_season.tdistri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0, tf=tf)
               }
               if (broodMortality  & varEnv  & !seasonalEnv & !sex){
                 ## TODO 
@@ -191,7 +191,7 @@ setMethod("tDistri",
               if (broodMortality  & varEnv  & !seasonalEnv &  sex){
                 ## TODO 
                 warning("## TODO: out<- mSurvBVSex_var.tdistri")
-                # out<- mSurvBVSex_var.tdistri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, tf=tf)
+                # out<- mSurvBVSex_var.tdistri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0, tf=tf)
               }
               if (broodMortality  & varEnv  & seasonalEnv  & !sex){
                 ## TODO 
@@ -201,7 +201,7 @@ setMethod("tDistri",
               if (broodMortality  & varEnv  & seasonalEnv  &  sex){
                 ## TODO 
                 warning("## TODO: out<- mSurvBVSex_varseason.tdistri")
-                # out<- mSurvBVSex_varseason.tdistri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, tf=tf)
+                # out<- mSurvBVSex_varseason.tdistri(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0, tf=tf)
               }
             }            
             return (out)
@@ -286,7 +286,9 @@ mSurvBV_var.distri<- function(broods, b, j, a, breedFail, varJ, varBreedFail, N0
 
 # Adult mortality + offspring mortality + sex ratio
 # N_t+1 = B(n=B(n=N_t * fecundity, p=j), p=sexRatio) + B(n=N_t, p=a)
-mFitSex.distri<- function(fecundity, j, a, sexRatio=0.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], Nf, Nm=Nf, logP=FALSE){
+mFitSex.distri<- function(fecundity, j, a, sexRatio=0.5, matingSystem=c("monogamy", "polygyny", "polyandry"), Nf, Nm=Nf, logP=FALSE){
+  matingSystem<- match.arg(matingSystem)
+  
   ## Recruitment probability conditioned to the number of successful broods
   N<- switch(matingSystem, 
                   monogamy=min(Nf, Nm),
@@ -308,7 +310,8 @@ mFitSex.distri<- function(fecundity, j, a, sexRatio=0.5, matingSystem=c("monogam
 
 # Adult mortality + Brood mortality + offspring mortality + sex ratio
 # N_t+1 = B(n=B(n=B(n=N_t * broods, p=1-breedFail) * b, p=j), p=sexRatio) + B(n=N_t, p=a)
-mSurvBVSex.distri<- function(broods, b, j, a, breedFail, sexRatio=0.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], Nf, Nm, logP=FALSE){
+mSurvBVSex.distri<- function(broods, b, j, a, breedFail, sexRatio=0.5, matingSystem=c("monogamy", "polygyny", "polyandry"), Nf, Nm, logP=FALSE){
+  matingSystem<- match.arg(matingSystem)
 
 }
 

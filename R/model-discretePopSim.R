@@ -456,7 +456,9 @@ mFitSex.tvar<- function(fecundity, j, a, varJ=0, sexRatio=.5, matingSystem=c("mo
 # Adult mortality + Brood mortality + offspring mortality + sex ratio
 # N_t+1 = B(n=B(n=B(n=B(n=N_t, p=a) * broods, p=1-breedFail) * b, p=Beta(j, varJ), p=sexRatio)
 # Juveniles reach adult stage in one time step (age at first reproduction = 1)
-mSurvBVSex.tvar<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, replicates, tf, maxN=100000){
+mSurvBVSex.tvar<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry"), N0, replicates, tf, maxN=100000){
+  matingSystem<- match.arg(matingSystem)
+  
   popF<- popM<- matrix(NA, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
   popF[,1]<- popM[,1]<- N0
   if (varJ > 0) betaParsJ<- fbeta(mean=j, var=varJ)
@@ -505,7 +507,9 @@ mSurvBVSex.tvar<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, s
 # Adult mortality + Brood mortality + offspring mortality + sex ratio
 # N_t+1 = B(B(n=B(n=B(n=N_t, p=a) * broods, p=1-breedFail) * b, p=j), p=sexRatio)
 # Juveniles reach adult stage in one time step (age at first reproduction = 1)
-mSurvBVSex.tseason<- function(broods, b, j, a, breedFail, N0, replicates, tf, maxN=100000){
+mSurvBVSex.tseason<- function(broods, b, j, a, breedFail, N0, sexRatio=0.5, matingSystem=c("monogamy", "polygyny", "polyandry"), replicates, tf, maxN=100000){
+  matingSystem<- match.arg(matingSystem)
+  
   pop<- matrix(NA, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
   pop[,1]<- N0
   
@@ -531,7 +535,9 @@ mSurvBVSex.tseason<- function(broods, b, j, a, breedFail, N0, replicates, tf, ma
 # Adult mortality + Brood mortality + offspring mortality + sex ratio
 # N_t+1 = B(B(n=B(n=B(n=N_t, p=a) * broods, p=1-breedFail) * b, p=Beta(j, varJ)), p=sexRatio)
 # Juveniles reach adult stage in one time step (age at first reproduction = 1)
-mSurvBVSex.tvarseason<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, N0, replicates, tf, maxN=100000){
+mSurvBVSex.tvarseason<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, sexRatio=0.5, matingSystem=c("monogamy", "polygyny", "polyandry"), N0, replicates, tf, maxN=100000){
+  matingSystem<- match.arg(matingSystem)
+  
   ## TODO
   warning("Model not implemented: mSurvBVSex.tvarseason")
   return (NA)
