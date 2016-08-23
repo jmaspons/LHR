@@ -29,7 +29,7 @@ NULL
 #'  LH(sampleLH())
 #' 
 #' @export
-setGeneric("LH", function(pars, lambda, fecundity, broods, b, a, s=a, j, AFR) standardGeneric("LH"))
+setGeneric("LH", function(pars, lambda, fecundity, broods, b, a, j, s=a, AFR) standardGeneric("LH"))
 
 setMethod("LH",
           signature(pars="data.frame", lambda="missing", fecundity="missing", broods="missing", b="missing",
@@ -60,7 +60,7 @@ setMethod("LH",
 setMethod("LH",
           signature(pars="missing", lambda="numeric", fecundity="numeric", broods="numeric", b="numeric",
                     a="numeric", j="numeric", s="ANY", AFR="numeric"),
-          function(lambda, fecundity, broods, b,   a, s=a, j, AFR=1){
+          function(lambda, fecundity, broods, b,   a, j, s=a,  AFR=1){
             pars<- data.frame(lambda, fecundity, broods, b, a, s, j, AFR)
             strategy<- LH(pars=pars)
             return (strategy)
@@ -70,7 +70,7 @@ setMethod("LH",
 setMethod("LH",
           signature(pars="missing", lambda="missing", fecundity="numeric", broods="numeric", b="numeric",
                     a="numeric", j="numeric", s="ANY", AFR="numeric"),
-          function(fecundity, broods, b,   a, s=a, j, AFR=1){
+          function(fecundity, broods, b,   a, j, s=a, AFR=1){
             pars<- sampleLH(broods=broods, b=b, j=j, a=a, AFR=AFR, free="lambda", 
                             maxFecundity=9999, higherJuvMortality=FALSE, census="pre-breeding")
             strategy<- LH(pars=pars)

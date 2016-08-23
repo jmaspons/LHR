@@ -48,7 +48,7 @@ transitionMat.LH_Beh<- function(params=data.frame(clutch1=1, clutch2=1)){
 # returns a different strategies.and scenarios
 # diffHab2: named vector with the differences in the parameters at habitat 2 respect habitat 1
 # Warning: clutch have no effect on the simulation. It's necessary to modify the reaction channels (getReactionChannels(clutch1, clutch2))
-getParams.LH_Beh<- function(strategy=c("slow", "fast", "freqRepro"), diffHab2, scenario="identicalHab", behavior="neutral"){
+getParams.LH_Beh.ssa<- function(strategy=c("slow", "fast", "freqRepro"), diffHab2, scenario="identicalHab", behavior="neutral"){
   params<- lapply(strategy, function(x){
     tmp<- switch(x,
                  slow=c(clutch1=1, clutch2=1,   b=1, PbF1=.4, PbF2=.4,  d1=.1,db1=.25,dj1=.25,  d2=.1,db2=.25,dj2=.25, g1=1, g2=1, K=500),
@@ -59,39 +59,40 @@ getParams.LH_Beh<- function(strategy=c("slow", "fast", "freqRepro"), diffHab2, s
   names(params)<- strategy
   
   if (!missing(diffHab2)){
-    params<- lapply(params, function(x) setParams2diff1(x, diffHab2))
+    params<- lapply(params, function(x) setParams2diff1(x, diffHab2, type="multiplicative"))
   }else{
-    params<- lapply(params, function(x) setScenario(x, scenario))
+    params<- lapply(params, function(x) setScenario.ssa(x, scenario))
     names(params)<- paste(names(params), scenario, sep="_")
     params<- lapply(params, function(x) setBehavior(x, behavior))
     names(params)<- paste(names(params), behavior, sep="_")
   }
-  params<- data.frame(do.call("rbind", params))
+  params<- data.frame(do.call("rbind", params), stringsAsFactors=FALSE)
   
   return (params)
 }
 
-# Return new parames where parameters on habitat 2 are modified according to parameters from habitat 1 and a difference.
-# diff: named vector with the proportion of difference respect habitat 1.
-setParams2diff1<- function(params, diff=c(clutchDiff=0, PbDiff=0, PbFDiff=0, dDiff=0, dbDiff=0, djDiff=0, gDiff=0)){
-  selHab1<- sort(sapply(gsub("Diff$", "", names(diff)), function (x){
-    grep(paste0(x, "[1]{1}$"), names(params), value=TRUE)
-  }))
-  selHab2<- sort(sapply(gsub("Diff$", "", names(diff)), function (x){
-    grep(paste0(x, "[2]{1}$"), names(params), value=TRUE)
-  }))
-  diff<- diff[order(names(diff))]
-  for (i in 1:length(diff)){
-    params[selHab2[i]]<- params[selHab1[i]] * (1+diff[i])
-  }
-  
-  return (params)
-}
+# # Return new parames where parameters on habitat 2 are modified according to parameters from habitat 1 and a difference.
+# # diff: named vector with the proportion of difference respect habitat 1.
+# setParams2diff1<- function(params, diff=c(clutchDiff=0, PbDiff=0, PbFDiff=0, dDiff=0, dbDiff=0, djDiff=0, gDiff=0)){
+#   selHab1<- sort(sapply(gsub("Diff$", "", names(diff)), function (x){
+#     grep(paste0(x, "[1]{1}$"), names(params), value=TRUE)
+#   }))
+#   selHab2<- sort(sapply(gsub("Diff$", "", names(diff)), function (x){
+#     grep(paste0(x, "[2]{1}$"), names(params), value=TRUE)
+#   }))
+#   diff<- diff[order(names(diff))]
+#   for (i in 1:length(diff)){
+#     params[selHab2[i]]<- params[selHab1[i]] * (1+diff[i])
+#   }
+#   
+#   return (params)
+# }
+
 
 # params<- getParams()
 # setParams2diff1(params, diff=c(PbFDiff=.5, dDiff=-.3, gDiff=-.2))
 
-getScenario<- function(scenario){
+getScenario.ssa<- function(scenario){
   diff<- switch(scenario,
                 `identicalHab`=c(clutchDiff=0, PbFDiff=0, dDiff=0, dbDiff=0, djDiff=0, gDiff=0),
                 `mortalHab2`=c(clutchDiff=0, PbFDiff=0, dDiff=1, dbDiff=1, djDiff=1, gDiff=0),
@@ -100,51 +101,51 @@ getScenario<- function(scenario){
   return (diff)
 }
 
-setScenario<- function(params, scenario){
-  params<- setParams2diff1(params, getScenario(scenario))
-  
+setScenario.ssa<- function(params, scenario="identicalHabs"){
+  params<- setParams2diff1(params=params, diff=getScenario.ssa(scenario))
+
   return (params)
 }
 
-setBehavior<- function(params, behavior){
-  if (any(grepl("neutral", behavior))){
-    params[c("Pb1","Pb2",  "c1", "c2", "cF",  "P1s","P1b","P1j")]<- c(1,1, 1,1,1, .5,.5,.5)
-  }
-  
-  if (any(grepl("skip", behavior))){ ## Increase breeding costs or better habitat selection
-    params[c("Pb1", "Pb2")]<- c(1, .2)
-  }
-  
-  if (any(grepl("learnBreed", behavior))){
-    params[c("c1", "c2", "cF")]<- c(0, 0, 3)
-  }
-  
-  if (any(grepl("learnExploreBreed", behavior))){ # Avoid habitat 2 after exploring or breeding fail
-    params[c("c1", "c2", "cF")]<- c(1, 3, 3)
-  }
-  
-  if (any(grepl("preferHab1", behavior))){
-    params[c("P1s","P1b","P1j")]<- c(.8,.8,.8)
-  }
-  
-  if (any(grepl("preferHab2", behavior))){
-    params[c("P1s","P1b","P1j")]<- c(.2,.2,.2)
-  }
-  
-  if (any(grepl("static", behavior))){
-    params[c("c1", "c2", "cF")]<- c(0,0,0)
-  }
-  
-  return (params)
-}
+# setBehavior<- function(params, behavior){
+#   if (any(grepl("neutral", behavior))){
+#     params[c("Pb1","Pb2",  "c1", "c2", "cF",  "P1s","P1b","P1j")]<- c(1,1, 1,1,1, .5,.5,.5)
+#   }
+#   
+#   if (any(grepl("skip", behavior))){ ## Increase breeding costs or better habitat selection
+#     params[c("Pb1", "Pb2")]<- c(1, .2)
+#   }
+#   
+#   if (any(grepl("learnBreed", behavior))){
+#     params[c("c1", "c2", "cF")]<- c(0, 0, 3)
+#   }
+#   
+#   if (any(grepl("learnExploreBreed", behavior))){ # Avoid habitat 2 after exploring or breeding fail
+#     params[c("c1", "c2", "cF")]<- c(1, 3, 3)
+#   }
+#   
+#   if (any(grepl("preferHab1", behavior))){
+#     params[c("P1s","P1b","P1j")]<- c(.8,.8,.8)
+#   }
+#   
+#   if (any(grepl("preferHab2", behavior))){
+#     params[c("P1s","P1b","P1j")]<- c(.2,.2,.2)
+#   }
+#   
+#   if (any(grepl("static", behavior))){
+#     params[c("c1", "c2", "cF")]<- c(0,0,0)
+#   }
+#   
+#   return (params)
+# }
 
 getParamsCombination.LH_Beh<- function(strategies=c("slow", "fast", "freqRepro"), 
                                 scenarios=c("identicalHab", "mortalHab2", "nestPredHab2"), 
                                 behaviors=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2")){
-  comb<- expand.grid(list(strategy=strategies, scenario=scenarios, behavior=behaviors), stringsAsFactors=FALSE)
+  comb<- expand.grid(strategy=strategies, scenario=scenarios, behavior=behaviors, stringsAsFactors=FALSE)
   params<- data.frame()
   for (i in 1:nrow(comb)){
-    params<- rbind(params, getParams.LH_Beh(comb$strategy[i], scenario=comb$scenario[i], behavior=comb$behavior[i]))
+    params<- rbind(params, getParams.LH_Beh.ssa(strategy=comb$strategy[i], scenario=comb$scenario[i], behavior=comb$behavior[i]))
   }
   
   return (params)

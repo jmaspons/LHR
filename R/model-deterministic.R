@@ -26,8 +26,6 @@
 #' @param b 
 #' @param bj 
 #' @param AFR 
-#'
-#' @exportClass leslieMatrix
 NULL
 
 #' @rdname lefkovitch

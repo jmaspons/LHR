@@ -6,7 +6,6 @@
 #' 
 #' @name discretePopSim
 #' @importFrom stats rbinom rbeta
-#' @exportClass discretePopSim
 NULL
 
 # When the population gets extinct it fills results with NAs.

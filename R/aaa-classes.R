@@ -1,10 +1,21 @@
 # Include functions for prototypes
 # @include compoundDistributions.R
 
-setOldClass("leslieMatrix")
+#' @exportClass discretePopSim
+#' @exportClass discreteABMSim
+#' @exportClass exploreABMSim
+#' @exportClass numericDistri
+#' @exportClass ssa
+#' @exportClass leslieMatrix
+NULL
+
 setOldClass("discretePopSim")
+setOldClass("discreteABMSim")
+setOldClass("exploreABMSim")
 setOldClass("numericDistri")
 setOldClass("ssa")
+setOldClass("leslieMatrix")
+
 
 ## Life history classes ----
 
@@ -47,8 +58,8 @@ setClass("Sim", slots=list(params="list", raw="ANY"),
 #'
 #' @seealso \code{\link{Sim}}
 #' @export
-setClass("Sim.discretePopSim", slots=list(Ntf="data.frame"), contains="Sim")
-# TODO: , slots=list(raw="discretePopSim"), prototype=prototype(raw=discretePopSim())
+setClass("Sim.discretePopSim", slots=list(discretePopSim="ANY", Ntf="data.frame"), contains="Sim")
+# TODO: , slots=list(discretePopSim="discretePopSim"), prototype=prototype(discretePopSim=discretePopSim())
 
 
 
@@ -62,7 +73,16 @@ setClass("Sim.discretePopSim", slots=list(Ntf="data.frame"), contains="Sim")
 #' @seealso \code{\link{Sim}}
 #' @export
 setClass("Sim.numericDistri", contains="Sim")
-# TODO: , slots=list(raw="numericDistri"), prototype=prototype(raw=distriBinom(1, .5))
+
+#' Agent Based Model Simulation Class
+#' 
+#' @name Sim.ABM
+#'
+#' @slot Ntf data.frame. 
+#'
+#' @seealso \code{\link{Sim}}
+#' @export
+setClass("Sim.ABM", slots=list(deterministic="data.frame"), contains="Sim.discretePopSim")
 
 #' SSA Simulation Class
 #' 
@@ -72,8 +92,7 @@ setClass("Sim.numericDistri", contains="Sim")
 #'
 #' @seealso \code{\link{Sim}}
 #' @export
-setClass("Sim.ssa", slots=list(Ntf="data.frame", deterministic="data.frame"), contains="Sim")
-# TODO: , slots=list(raw="ssa"), prototype=prototype(raw=LHR:::exploreSSA())
+setClass("Sim.ssa", slots=list(deterministic="data.frame"), contains="Sim.discretePopSim")
 
 
 ## Environment class ----
@@ -100,6 +119,12 @@ setClass("Env", slots=list(seasonRange="data.frame"), contains="data.frame")
 #' @export
 setClass("Model", slots=list(sim="Sim", params="list"), contains="data.frame")
 
+#' Model.ABM
+#' 
+#' @name Model.ABM
+#'
+#' @export
+setClass("Model.ABM", contains="Model")
 
 #' Model.ssa
 #' 

@@ -1,19 +1,21 @@
-context("Simulation")
+context("Class Simulation")
 
 
-test_that("constructor works", {
+test_that("constructor", {
   expect_is(Sim(), "Sim")
   expect_is(Sim.discretePopSim(), "Sim")
   expect_is(Sim.discretePopSim(), "Sim.discretePopSim")
   expect_is(Sim.numericDistri(), "Sim")
   expect_is(Sim.numericDistri(), "Sim.numericDistri")
+  expect_is(Sim.ABM(), "Sim")
+  expect_is(Sim.ABM(), "Sim.ABM")
   expect_is(Sim.ssa(), "Sim")
   expect_is(Sim.ssa(), "Sim.ssa")
   
   expect_is(Sim(Model()), "Sim")
 })
 
-# test_that("subsetting works", {
+# test_that("subsetting", {
 #   obj<- Sim()
 #   expect_is(obj[c(1,4,8),], "Sim")
 #   expect_is(head(obj), "Sim")

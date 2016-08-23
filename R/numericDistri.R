@@ -4,7 +4,6 @@
 #' Numeric representation of discrete distributions
 #' 
 #' @name numericDistri
-#' @exportClass numericDistri
 NULL
 
 ## TODO: call distriBeta* or distri* according to p parameter (p = c(shape1, shape2) | p)

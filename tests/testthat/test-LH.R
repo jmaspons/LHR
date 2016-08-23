@@ -1,6 +1,6 @@
-context("LH")
+context("Class LH")
 
-test_that("constructor works", {
+test_that("constructor", {
   expect_is(LH(), "LH")
   expect_is(pars<- sampleLH(), "data.frame")
   expect_is(LH(pars), "LH")
@@ -10,7 +10,7 @@ test_that("constructor works", {
   expect_equivalent(LH(S3Part(obj)), obj)
 })
 
-test_that("subsetting works", {
+test_that("subsetting", {
   obj<- LH()
   expect_is(obj[c(1,4,8),], "LH")
   expect_is(head(obj), "LH")

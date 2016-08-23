@@ -1,8 +1,4 @@
-context("Run models")
-
-# lh<- LH()
-# env<- Env()
-# env<- Env(env[env$var == 0 & env$seasonAmplitude == 0,]) #stable environment
+context("Run discretePopSim models")
 
 test_that("discrete time models", {
   lh<- LH()
@@ -32,9 +28,16 @@ test_that("discrete models with 2 sexes", {
   
   res<- run(model)
   expect_is(res, "Model")
-  tmp<- lapply(unlist(res@sim@raw, recursive=FALSE), expect_is, class="discretePopSim")
+  
+  popList<- unlist(res@sim@raw, recursive=FALSE)
+  # Not implemented models return NA
+  popList<- popList[sapply(popList, function(x) !all(is.na(x)))]
+  
+  tmp<- lapply(popList, expect_is, class="discretePopSim")
 })
 
+
+context("Run numericDistri models")
 
 test_that("compound distribution", {
   sim<- Sim.numericDistri()
@@ -47,14 +50,17 @@ test_that("compound distribution", {
   
   res<- run(model)
   expect_is(res, "Model")
-  tmp<- lapply(unlist(res@sim@raw, recursive=FALSE), expect_is, class="numericDistri")
+  
+  distriList<- unlist(res@sim@raw, recursive=FALSE)
+  # Not implemented models return NA
+  distriList<- distriList[sapply(distriList, function(x) !all(is.na(x)))]
+  tmp<- lapply(distriList, expect_is, class="numericDistri")
   
   expect_is(result(res), "data.frame")
   # Not available for numericDistri expect_is(result(res, type="Ntf"), "data.frame")
   
   # TODO: fix wrong distributions!
-  sapply(res@sim@raw, function(x) expect_gt(abs(sum(x[[1]]$p)), 0.95))
-  sapply(res@sim@raw, function(x) expect_gt(abs(sum(x[[2]]$p)), 0.95))
+  tmp<- lapply(distriList, function(x) expect_gt(abs(sum(x$p)), 0.95))
 })
 
 test_that("compound distribution with environmental variation", {
@@ -68,31 +74,60 @@ test_that("compound distribution with environmental variation", {
   
   res<- run(model)
   expect_is(res, "Model")
-  tmp<- lapply(unlist(res@sim@raw, recursive=FALSE), expect_is, class="numericDistri")
+  distriList<- unlist(res@sim@raw, recursive=FALSE)
+  # Not implemented models return NA
+  distriList<- distriList[sapply(distriList, function(x) !all(is.na(x)))]
+  
+  tmp<- lapply(distriList, expect_is, class="numericDistri")
   
   expect_is(result(res), "data.frame")
   # Not available for numericDistri expect_is(result(res, type="Ntf"), "data.frame")
   
   # TODO: fix wrong distributions!
-  sapply(res@sim@raw, function(x) expect_gt(abs(sum(x[[1]]$p)), 0.95))
-  sapply(res@sim@raw, function(x) expect_gt(abs(sum(x[[2]]$p)), 0.95))
+  tmp<- sapply(distriList, function(x) expect_gt(abs(sum(x$p)), 0.95))
+})
+
+context("Run discreteABMSim models")
+
+test_that("ABM LH-behavior", { 
+  lh<- LH()
+  lh<- lh[lh$lambda == 1,]
+  env<- Env(seasonAmplitude=0, var=0)
+  sim<- Sim.ABM()
+  pars<- getParamsCombination.LH_Beh(lh=lh, env=env, habDiffScenario="nestPredHab2", behavior="learnExploreBreed")
+  model<- Model(sim=sim, pars=pars)
+  
+  ## TODO: make it work
+  # model<- Model(lh=lh, env=env, sim=sim)
+  # model<- model[model$habDiff == "nestPredHab2" & model$behavior == "learnExploreBreed", ]
+  
+  try(res<- run(model))
+  expect_is(res, "Model")
+  
+  #TODO:
+  popABML<- res@sim@raw
+  tmp<- lapply(popABML, expect_is, class="exploreABMSim")
+  
+  expect_is(result(res), "data.frame")
+  expect_is(result(res, type="Ntf"), "data.frame")
 })
 
 
+context("Run ssa models")
+
 test_that("IBM LH-behavior", {
-  tf <- 5 # Final time
-  replicates<- 100
+  tf <- 2 # Final time
+  replicates<- 10
   x0<- c(N1s=0, N1b=1, N1bF=0, N1j=0, N2s=0, N2b=1, N2bF=0, N2j=0)
   x0L<- lapply(c(2,10), function(x) x0 * x)
   
-  params<- LHR:::getParams.LH_Beh()
-  transitionMat<- LHR:::transitionMat.LH_Beh
-  rateFunc<- LHR:::rateFunc.LH_Beh
-  
+  params<- getParams.LH_Beh.ssa()
+  transitionMat<- transitionMat.LH_Beh
+  rateFunc<- rateFunc.LH_Beh
     
   sim<- Sim.ssa(N0=x0L, transitionMat=transitionMat, rateFunc=rateFunc, 
                 tf=tf, replicates=replicates, raw=FALSE, Ntf=TRUE, stats=TRUE)
-  model<- Model.ssa(pars=params, sim=sim)
+  model<- Model(pars=params, sim=sim)
 
   system.time(res<- run(model, dt=0.5))
   

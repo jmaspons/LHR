@@ -14,31 +14,27 @@ NULL
 #'
 #' @return a Env class object
 #' @export
-setGeneric("Env", function(pars, mean=1, var=0, seasonAmplitude=0, seasonRange, breedFail=0) standardGeneric("Env"))
+setGeneric("Env", function(pars, mean=c(1,.5), var=c(0, 0.1), seasonAmplitude=c(0,1), seasonRange, breedFail=c(0, 0.5, 1)) standardGeneric("Env"))
 
 setMethod("Env",
           signature(pars="missing", mean="ANY", var="ANY", seasonAmplitude="ANY", seasonRange="missing", breedFail="ANY"),
-          function(mean=1, var=0, seasonAmplitude=0, breedFail=0){
-            params<- data.frame(mean=mean, var=var, seasonAmplitude=seasonAmplitude, breedFail=breedFail)#, fbeta(mean=mean, var=var))
-#             params[params$var == 0, c("shape1", "shape2")]<- NA
-#             params<- params[!is.nan(params$shape1),] ## Remove combinations of mean and var out of the domain of the Beta distribution
-            env<- new("Env", 
-                      params,
-                      seasonRange=seasonRange(mean, seasonAmplitude))
-            return (env)
+          function(mean=c(1,.5), var=c(0, 0.1), seasonAmplitude=c(0,1), breedFail=c(0, 0.5, 1)){
+            season<- data.frame(mean, seasonAmplitude)
+            comb<- expand.grid(var=var, breedFail=breedFail)
+            comb<- merge(season, comb)
+            
+            ## Remove combinations of mean and var out of the domain of the Beta distribution
+            # betaPars<- fbeta(mean=comb$mean, var=comb$var)
+            # 
+            # if (any(!is.finite(betaPars$shape1) & comb$var != 0)){
+            #     comb<- comb[is.finite(betaPars$shape1) | comb$var == 0,]
+            #     warning("Some combinations of mean and var fall outside the parameter space of the beta distribution.")
+            # }
+             
+            new("Env", comb, seasonRange=seasonRange(mean, seasonAmplitude))
           }
 )
 
-setMethod("Env",
-          signature(pars="missing", mean="missing", var="missing", seasonAmplitude="missing", seasonRange="missing", breedFail="missing"),
-          function(){
-            season<- data.frame(mean=c(1,.5), seasonAmplitude=c(0,1))
-            comb<- expand.grid(list(var=c(0, 0.1), breedFail=c(0, 0.5, 1)))
-            comb<- merge(season, comb)
-            env<- with(comb, Env(mean=mean, var=var, seasonAmplitude=seasonAmplitude, breedFail=breedFail))
-            return (env)
-          }
-)
 
 setMethod("Env",
           signature(pars="missing", mean="missing", var="ANY", seasonAmplitude="missing", seasonRange="matrix", breedFail="ANY"),
@@ -56,10 +52,9 @@ setMethod("Env",
 setMethod("Env",
           signature(pars="data.frame", mean="ANY", var="ANY", seasonAmplitude="ANY", seasonRange="ANY", breedFail="ANY"),
           function(pars){
-            if (inherits(pars, "Model")) pars<- S3Part(pars) ## TODO: check if a Model object inheriting data.frame goes here
-            x<- unique(pars[,c("mean", "var", "seasonAmplitude", "breedFail")])
-            env<- Env(mean=x$mean, var=x$var, seasonAmplitude=x$seasonAmplitude, breedFail=x$breedFail)
-            return (env)
+            pars<- unique(pars[,c("mean", "seasonAmplitude", "var", "breedFail")])
+            
+            new("Env", pars, seasonRange=seasonRange(pars$mean, pars$seasonAmplitude))
           }
 )  
 

@@ -1,7 +1,7 @@
 #' @include aaa-classes.R
 NULL
 
-## Constructor ----
+## Model Constructor ----
 
 #' Model constructor
 #'
@@ -13,69 +13,50 @@ NULL
 #' @return a \code{Model} object.
 #' @examples model<- Model()
 #' @export
-setGeneric("Model", function(lh=LH(), env=Env(), sim=Sim(), pars=getParams.LH_Beh()) standardGeneric("Model"))
+setGeneric("Model", function(lh=LH(), env=Env(), sim=Sim(), pars) standardGeneric("Model"))
 
 setMethod("Model",
           signature(lh="ANY", env="ANY", sim="ANY", pars="missing"),
           function(lh=LH(), env=Env(), sim=Sim()){
-            if (inherits(sim, c("Sim.discretePopSim", "Sim.numericDistri"))){
+            if (inherits(sim, "Sim.ABM")){
+              pars<- getParamsCombination.LH_Beh(lh=lh, env=env)
+              model<- new("Model.ABM", pars, sim=sim)
+            }else if (inherits(sim, "Sim.ssa")){
+              pars<- getParams.LH_Beh.ssa()
+              model<- new("Model.ssa", pars, sim=sim)
+            } else if (inherits(sim, c("Sim.discretePopSim", "Sim.numericDistri"))){
+              ## WARNING: Sim.ABM and Sim.ssa inherits from Sim.discretePopSim. Exclude from here
               lhEnv<- combineLH_Env(lh=lh, env=env)
               scenario<- lhEnv$scenario
               parameters<- list(seasonBroodEnv=lhEnv$seasonBroodEnv) #, breedFail=lhEnv$breedFail)
               
               model<- new("Model", scenario, sim=sim, params=parameters)
-            } else if (inherits(sim, "Sim.ssa")){
-              model<- Model.ssa(pars=getParams.LH_Beh(), sim=sim)
+              
             }
             
             return (model)
           }
 )
 
+
 setMethod("Model",
-          signature(lh="missing", env="missing", sim="Sim.ssa", pars="ANY"),
-          function(sim=Sim.ssa(), pars=getParams.LH_Beh()){
-            model<- Model.ssa(pars=getParams.LH_Beh(), sim=sim)
-            
+          signature(lh="missing", env="missing", sim="Sim.ABM", pars="data.frame"),
+          function(sim, pars){
+            # model<- Model.ABM(sim=sim, pars=pars)
+            model<- new("Model.ABM", pars, sim=sim)
             return (model)
           }
 )
 
 setMethod("Model",
-          signature(lh="missing", env="missing", sim="Sim.ssa", pars="ANY"),
-          function(sim=Sim.ssa(), pars=getParams.LH_Beh()){
-            model<- Model.ssa(pars=getParams.LH_Beh(), sim=sim)
-            
+          signature(lh="missing", env="missing", sim="Sim.ssa", pars="data.frame"),
+          function(sim, pars){
+            # model<- Model.ssa(sim=sim, pars=pars)
+            model<- new("Model.ssa", pars, sim=sim)
             return (model)
           }
 )
 
-
-## Model.ssa ----
-#' @rdname Model.ssa
-#'
-#' @param pars 
-#' @param sim 
-#'
-#' @return a \code{Model.ssa} object.
-#' @examples Model.ssa()
-#' 
-#' @export
-setGeneric("Model.ssa", function(pars=getParams.LH_Beh(), sim=Sim.ssa()) standardGeneric("Model.ssa"))
-
-setMethod("Model.ssa",
-          signature(pars="data.frame", sim="Sim.ssa"),
-          function (pars, sim){
-            new("Model.ssa", pars, sim=sim)
-          }
-)
-
-setMethod("Model.ssa",
-          signature(pars="ANY", sim="ANY"),
-          function (pars=getParams.LH_Beh(), sim=Sim.ssa()){
-            new("Model.ssa", pars, sim=sim)
-          }
-)
 
 ## Combine LH and Environment ----
 #' Combine a LH and a Env object in a set of scenarios
@@ -123,7 +104,7 @@ setMethod("combineLH_Env",
 )
 
 
-## Simulate ----
+## run(): Simulate models ----
 # cl=makeCluster(detectCores())
 # clF=makeCluster(detectCores(), type="FORK")
 #' @rdname Model
@@ -151,6 +132,7 @@ setMethod("run",
             simRes<- switch(class(model@sim),
                                Sim.discretePopSim=run.discretePopSim(model, cl=cl),
                                Sim.numericDistri=run.numericDistri(model, cl=cl),
+                               Sim.ABM=run.ABM(model, ...),
                                Sim.ssa=run.ssa(model, ...))
 
             modelRes<- new("Model", 
@@ -168,7 +150,7 @@ setMethod("run",
 
 run.discretePopSim<- function(model, cl=parallel::detectCores()){
   scenario<- S3Part(model)
-  scenario<- split(scenario, as.numeric(rownames(scenario)))
+  scenario<- split(scenario, rownames(scenario))
   pars<- model@sim@params
 
   if (is.numeric(cl)){
@@ -183,12 +165,12 @@ run.discretePopSim<- function(model, cl=parallel::detectCores()){
   parallel::clusterEvalQ(cl, library(LHR))
   sim<- parallel::parLapply(cl=cl, scenario, runScenario.discretePopSim, pars=pars)
 
-#   sim<- lapply(scenario, LHR:::runScenario.discretePopSim, pars=pars)
-#   
-#   sim<- list()
-#   for (i in seq_along(scenario)){
-#     sim[[i]]<- runScenario.discretePopSim(scenario=scenario[[i]], pars=pars)
-#   }
+  # sim<- lapply(scenario, LHR:::runScenario.discretePopSim, pars=pars)
+  # 
+  # sim<- list()
+  # for (i in seq_along(scenario)){
+  #   sim[[i]]<- runScenario.discretePopSim(scenario=scenario[[i]], pars=pars)
+  # }
   
   
   res<- lapply(sim, function(x) x$res)
@@ -248,7 +230,7 @@ runScenario.discretePopSim<- function (scenario, pars){
                varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
                sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, replicates=pars$replicates, tf=pars$tf))
     
-    if (is.null(pop) | is.na(pop)){
+    if (is.null(pop) | is.na(pop) | is.list(pop)){ ## TODO: pop<- list(popF, popM) when mating system != NA -> 2 sexes
       res[n, c("scenario", "N0")]<- c(as.numeric(rownames(scenario)), N0)
       if (pars$raw){
         rawSim[[n]]<- NA
@@ -260,7 +242,6 @@ runScenario.discretePopSim<- function (scenario, pars){
       next
     }
     
-    ## TODO: pop<- list(popF, popM)
     res[n,]<- c(as.numeric(rownames(scenario)), N0, as.numeric(summary(pop)))
     
     if (pars$raw){
@@ -384,6 +365,41 @@ runScenario.numericDistri<- function(scenario, pars){
 }
 
 
+run.ABM<- function(model, cl=parallel::detectCores(), ...){
+  x0L<- model@sim@params$N0
+  params<- S3Part(model)
+  transitionsFunc<- model@sim@params$transitionsFunc
+  tf<- model@sim@params$tf
+  replicates<- model@sim@params$replicates
+  raw<- model@sim@params$raw
+  discretePop<- model@sim@params$discretePopSim
+  finalPop<- model@sim@params$Ntf
+  #   burnin=-1
+  #   dtDiscretize=NULL
+  #   cl=1
+  
+  if (is.numeric(cl)){
+    numericCL<- TRUE
+    cl<- parallel::makeCluster(cl)
+  } else {
+    numericCL<- FALSE
+  }
+  
+  res<- exploreABM(x0L=x0L, params=params, transitionsFunc=transitionsFunc, 
+                   tf=tf, replicates=replicates, raw=raw, discretePop=discretePop, finalPop=finalPop, cl=cl, ...)
+  
+  out<- new("Sim.ABM", res$stats, params=model@sim@params)
+  
+  if (finalPop)    out@Ntf           <- res$Ntf
+  if (discretePop) out@discretePopSim<- res$pop
+  if (raw)         out@raw           <- res$discreABMSim
+  
+  if (numericCL) parallel::stopCluster(cl)
+  
+  return (out)
+}
+
+
 run.ssa<- function(model, cl=parallel::detectCores(), ...){
   x0L<- model@sim@params$N0
   params<- S3Part(model)
@@ -412,6 +428,8 @@ run.ssa<- function(model, cl=parallel::detectCores(), ...){
   
   return (res)
 }
+
+
 
 
 ## Post process result ----
@@ -466,7 +484,7 @@ setMethod("print", signature(x="Model"),
 #' @export
 setMethod("show", signature(object="Model"),
           function(object){
-            cat("Object of class \"Model\" with", nrow(object), "scenarios\n")
+            cat("Object of class ", class(object), " with", nrow(object), "scenarios\n")
             if (nrow(object@sim) == 0){
               print(S3Part(object)) # S3Part(x)[,1:12]
               cat("There are no results yet. Use run(model) to start the simulations.\n")

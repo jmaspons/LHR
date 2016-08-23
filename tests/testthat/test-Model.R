@@ -1,6 +1,6 @@
-context("Model")
+context("Class Model")
 
-test_that("combine LH and Env works", {
+test_that("combine LH and Env", {
   expect_is(combineLH_Env(lh=LH(), env=Env()), "list")
   
   obj<- combineLH_Env(lh=LH(), env=Env())
@@ -9,19 +9,29 @@ test_that("combine LH and Env works", {
   expect_equal(nrow(obj$seasonBroodEnv$parsBroodEnv), nrow(obj$scenario))
 })
 
-test_that("constructor works", {
+test_that("Model class constructors", {
+  lh<- LH()
+  env<- Env()
   expect_is(Model(), "Model")
-  expect_is(Model(lh=LH(), env=Env(), sim=Sim.discretePopSim()), "Model")
+  expect_is(Model(lh=lh, env=Env(), sim=Sim.discretePopSim()), "Model")
   expect_is(Model(sim=Sim.numericDistri()), "Model")
-  expect_is(Model(sim=Sim.ssa()), "Model")
 
+  ## No seasonality implemented
+  expect_is(Model(env=env[env$seasonAmplitude == 0,], sim=Sim.ABM()), "Model")
+  
   ## A data.frame can't define a model. A Sim object is necessary.
   # obj<- Model()
   # expect_is(Model(S3Part(obj)), "Model")
   # expect_equivalent(Model(S3Part(obj)), obj)
 })
 
-test_that("subsetting works", {
+
+test_that("Model subclasses constructors", {
+  expect_is(Model(sim=Sim.ssa()), "Model.ssa")
+  expect_is(Model(sim=Sim.ABM()), "Model.ABM")
+})
+
+test_that("subsetting", {
   obj<- Model()
   expect_is(obj[c(1,4,8),], "Model")
   expect_is(head(obj), "Model")

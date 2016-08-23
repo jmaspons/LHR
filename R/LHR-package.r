@@ -6,6 +6,7 @@
 #'   \item Discrete time random simulations whith diferent underlaying probabilities distributions.
 #'   \item Compound probability distribution of N_t+1 for a given N calculated numerically following the desired stochastic structure.
 #'   \item IBM implemented using the stochastic simulation algorithm or Gillespie algorithm from the \link[adaptivetau]{adaptivetau} package.
+#'   \item Discrete time IBM with different classes.
 #' }
 #' 
 #' @name LHR

@@ -1,7 +1,6 @@
 #' Class ssa
 #' 
 #' @name ssa
-#' @exportClass ssa
 NULL
 
 ## Explore the deterministic part of the model ----

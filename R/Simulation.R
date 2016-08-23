@@ -56,7 +56,9 @@ setMethod("Sim",
 #' @examples Sim.discretePopSim()
 #' 
 #' @export
-setGeneric("Sim.discretePopSim", function(params, N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=0.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"), tf=10, replicates=15, raw=TRUE, Ntf=TRUE) standardGeneric("Sim.discretePopSim"))
+setGeneric("Sim.discretePopSim", function(params, N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE),
+                                          sexRatio=0.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"),
+                                          tf=10, replicates=15, raw=TRUE, Ntf=TRUE) standardGeneric("Sim.discretePopSim"))
 
 setMethod("Sim.discretePopSim",
           signature(params="list", N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY"),
@@ -68,8 +70,10 @@ setMethod("Sim.discretePopSim",
 )
 
 setMethod("Sim.discretePopSim",
-          signature(params="missing", N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY"),
-          function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=0.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"), tf=10, replicates=15, raw=TRUE, Ntf=TRUE){
+          signature(params="missing", N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY",
+                    tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY"),
+          function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=0.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"),
+                   tf=10, replicates=15, raw=TRUE, Ntf=TRUE){
             
             if (!all(is.na(matingSystem))){
               matingSystem<- match.arg(matingSystem)
@@ -125,8 +129,44 @@ setMethod("Sim.numericDistri",
 )
 
 
+## Sim.ABM Class ----
 
-            params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf, stats=stats)
+#' @rdname Sim.ABM
+#'
+#' @param N0 
+#' @param transitionMat 
+#' @param rateFunc 
+#' @param tf 
+#' @param replicates 
+#' @param raw 
+#' @param Ntf 
+#' @param stats 
+#'
+#' @return a \code{Sim.ABM} object.
+#' @examples Sim.ABM()
+#' 
+#' @export
+setGeneric("Sim.ABM", function(params, N0, transitionsFunc=transitionABM.LH_Beh, 
+                               tf=10, replicates=15, raw=TRUE, discretePopSim=TRUE, Ntf=TRUE, stats=TRUE) standardGeneric("Sim.ABM"))
+setMethod("Sim.ABM",
+          signature(params="list", N0="ANY", transitionsFunc="ANY", tf="ANY", replicates="ANY", raw="ANY", discretePopSim="ANY", Ntf="ANY", stats="ANY"),
+          function(params){
+            sim<- new("Sim.ABM", params=params)
+            
+            return (sim)
+          }
+)
+
+setMethod("Sim.ABM",
+          signature(params="missing", N0="ANY", transitionsFunc="ANY", tf="ANY", replicates="ANY", raw="ANY", discretePopSim="ANY", Ntf="ANY", stats="ANY"),
+          function(N0, transitionsFunc=transitionABM.LH_Beh, tf=10, replicates=15, raw=TRUE, discretePopSim=TRUE, Ntf=TRUE, stats=TRUE){
+            if (missing(N0)){
+              N0<- c(N1s=0, N1b=1, N1bF=0, N1j=0, N2s=0, N2b=1, N2bF=0, N2j=0)
+              N0<- lapply(2^(0:5), function(x) N0 * x)
+            }
+            params<- list(N0=N0, transitionsFunc=transitionsFunc, tf=tf, replicates=replicates, raw=raw, discretePopSim=discretePopSim, Ntf=Ntf, stats=stats)
+            sim<- Sim.ABM(params=params)
+            
             return (sim)
           }
 )
@@ -185,27 +225,24 @@ setMethod("print", signature(x="Sim"),
 #' @export
 setMethod("show", signature(object="Sim"),
           function(object){
-            cat("Object of class \"Sim\" with", nrow(object), "simulations\n Parameters:\n")
-            print(object@params[1]) # vector with more than one value
-            print(data.frame(object@params[-1]), row.names=FALSE) # one value only
+            cat("Object of class", class(object), "with", nrow(object), "simulations\n Parameters:\n")
+            cat("N0:\n")
+            print(object@params$N0) # vector with more than one value
+            tmp<- switch (class(object),
+              Sim.ABM=print(data.frame(object@params[-c(1,2)]), row.names=FALSE), # one value only (1=N0, 2=transitionsFunc)
+              Sim.ssa=print(data.frame(object@params[-c(1:3)]), row.names=FALSE), # one value only (1=N0, 2=transitionMat, 3=rateFunc)
+              Sim=print(data.frame(object@params[-1]), row.names=FALSE) # one value only
+            )
+            
             cat("\n")
             print(S3Part(object))
+            
           }
 )
 
-#' @export
-setMethod("show", signature(object="Sim.ssa"),
-          function(object){
-            cat("Object of class \"Sim\" with", nrow(object), "simulations\n Parameters:\n")
-            print(object@params[1]) # vector with more than one value
-            print(data.frame(object@params[4:8]), row.names=FALSE) # one value only
-            cat("\n")
-            print(S3Part(object))
-          }
-)
 
 # Only allowed to subset by rows but $ and [[i]] works for columns
-## Not useful
+## Sim with results is ot useful without the complete Model. Use Model[] instead
 # @rdname Sim
 # @export
 `[.Sim`<- function(x, ...){

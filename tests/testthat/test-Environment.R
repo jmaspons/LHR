@@ -1,10 +1,10 @@
-context("Environment")
+context("Class Environment")
 
-test_that("constructor works", {
+test_that("constructor", {
   expect_is(Env(), "Env")
   expect_is(Env(mean=.5, var=.1), "Env")
   expect_is(Env(mean=.5, seasonAmplitude=.3), "Env")
-  # expect_is(Env(seasonRange=c(0,1)), "Env") ## ERROR
+  # expect_is(Env(seasonRange=matrix(...)), "Env") ## ERROR
   expect_is(Env(mean=.5, var=.1, seasonAmplitude=.3), "Env")
   expect_is(Env(mean=.5, var=1), "Env") # parameters out of the Beta distribution domain
   expect_error(Env(mean=.5, seasonRange=c(0,1)), "Env") # mean and range are redundant parameters on a sinusoidal function
@@ -14,7 +14,7 @@ test_that("constructor works", {
   expect_equivalent(Env(S3Part(obj)), obj)
 })
 
-test_that("subsetting works", {
+test_that("subsetting", {
   obj<- Env()
   expect_is(obj[c(1,4,8),], "Env")
   expect_is(head(obj), "Env")
@@ -24,7 +24,7 @@ test_that("subsetting works", {
   expect_is(obj[[2]], "numeric")
 })
 
-test_that("seasonal pattern works", {
+test_that("seasonal pattern", {
   env<- Env()
   expect_is(seasonalPattern(env), "matrix")
   expect_is(seasonalPattern(env, resolution=365), "matrix")

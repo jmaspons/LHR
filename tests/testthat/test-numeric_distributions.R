@@ -1,10 +1,10 @@
-context("Numeric distributions")
+context("Class Numeric distributions")
 
 ## Check c memory management
 # gctorture(on=TRUE)
 # gctorture(on=FALSE)
 
-test_that("constructor works", {
+test_that("constructor", {
   expect_is(distri<- distriBinom(2, .6), "numericDistri")
   expect_is(distriC<- distriBinom(distri, .3), "numericDistri")
   
