@@ -3,18 +3,15 @@
 # params<- slow=c(clutch1=1, clutch2=1,   b=1, PbF1=.4, PbF2=.4,  d1=.1,db1=.25,dj1=.25,  d2=.1,db2=.25,dj2=.25, g1=1, g2=1, K=500)
 # params<- c(params, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5) # add neutral behavior
 #' @importFrom stats rbinom 
-transitionABM.LH_Beh<- function(N=matrix(rep(5, 8), nrow=4, ncol=8, dimnames=list(replicates=NULL, state=c("N1s", "N1b", "N1bF", "N1j", "N2s", "N2b", "N2bF", "N2j"))),
+transitionABM.LH_Beh<- function(N=matrix(rep(5, 8), nrow=4, ncol=8, dimnames=list(replicates=NULL, state=c("N1s", "N1b", "N1bF", "N2s", "N2b", "N2bF"))),
                          params=list(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=.1,ab1=.25,j1=.25,  a2=.1,ab2=.25,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
                          t){
   N0<- N
   nRep<- nrow(N)
   
   ## Growth TODO: non adult survival for AFR > 1
-  N[,"N1b"]<- N[,"N1b"] + N[,"N1j"]
-  N[,"N2b"]<- N[,"N2b"] + N[,"N2j"]
-  
-  N[,"N1j"]<- 0
-  N[,"N2j"]<- 0
+
+  N1j<- N2j<- numeric(nRep) # Juveniles
   
   ## Breeding
   for (i in 1:params$broods){
@@ -37,13 +34,13 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 8), nrow=4, ncol=8, dimnames=lis
     N[,"N1bF"]<- breedingN1 - N[,"N1b"]
     N[,"N2bF"]<- breedingN2 - N[,"N2b"]
     
-    # Juvenile recruitment and mortality
-    N[,"N1j"]<-  N[,"N1j"] + with(params, rbinom(nRep, size=N[,"N1b"] * b1, prob=j1))
-    N[,"N2j"]<-  N[,"N2j"] + with(params, rbinom(nRep, size=N[,"N2b"] * b2, prob=j2))
+    ## Juvenile recruitment and mortality
+    N1j<- N1j + with(params, rbinom(nRep, size=N[,"N1b"] * b1, prob=j1))
+    N2j<- N2j + with(params, rbinom(nRep, size=N[,"N2b"] * b2, prob=j2))
     
     ## interbreed interval mortality
     
-    ## Habitat change
+    ## Movements  (juveniles don't change habitat)
     # habOLD_NEW
     hab2_1Nb<-  with(params, rbinom(nRep, size=N[,"N2b"], prob=c2 * P1b))
     hab1_2Nb<-  with(params, rbinom(nRep, size=N[,"N1b"], prob=c1 * (1 - P1b)))
@@ -51,21 +48,19 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 8), nrow=4, ncol=8, dimnames=lis
     hab1_2Ns<-  with(params, rbinom(nRep, size=N[,"N1s"], prob=c1 * (1 - P1b)))
     hab2_1NbF<-  with(params, rbinom(nRep, size=N[,"N2bF"], prob=cF * P1b))
     hab1_2NbF<-  with(params, rbinom(nRep, size=N[,"N1bF"], prob=cF * (1 - P1b)))
-    hab2_1Nj<-  with(params, rbinom(nRep, size=N[,"N2j"], prob=c2 * P1j))
-    hab1_2Nj<-  with(params, rbinom(nRep, size=N[,"N1j"], prob=c1 * (1 - P1j)))
+#     hab2_1Nj<-  with(params, rbinom(nRep, size=N2j, prob=c2 * P1j))
+#     hab1_2Nj<-  with(params, rbinom(nRep, size=N1j, prob=c1 * (1 - P1j)))
     
-
+    ## Apply movements
     N[,"N1b"]<-  N[,"N1b"]  + hab2_1Nb  - hab1_2Nb
     N[,"N2b"]<-  N[,"N2b"]  + hab1_2Nb  - hab2_1Nb
     N[,"N1s"]<-  N[,"N1s"]  + hab2_1Ns  - hab1_2Ns
     N[,"N2s"]<-  N[,"N2s"]  + hab1_2Ns  - hab2_1Ns
     N[,"N1bF"]<- N[,"N1bF"] + hab2_1NbF - hab1_2NbF
     N[,"N2bF"]<- N[,"N2bF"] + hab1_2NbF - hab2_1NbF
-    N[,"N1j"]<-  N[,"N1j"]  + hab2_1Nj  - hab1_2Nj
-    N[,"N2j"]<-  N[,"N2j"]  + hab1_2Nj  - hab2_1Nj
+#     N1j<-  N1j + hab2_1Nj  - hab1_2Nj
+#     N2j<-  N2j + hab1_2Nj  - hab2_1Nj
   }
-  
-  
   
   ## Survival
   # N[,"N1j"]<- # juvenile survival already calculated during recruitment.
@@ -79,7 +74,11 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 8), nrow=4, ncol=8, dimnames=lis
 
   N[,"N1s"]<-  with(params, rbinom(nRep, size=N[,"N1s"], prob=a1))
   N[,"N2s"]<-  with(params, rbinom(nRep, size=N[,"N2s"], prob=a2))
-
+  
+  ## Juveniles grow to Nxb classes
+  N[,"N1b"]<- N[,"N1b"] + N1j
+  N[,"N2b"]<- N[,"N2b"] + N2j
+  
   return(N)
 }
 

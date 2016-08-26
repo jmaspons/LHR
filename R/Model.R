@@ -363,7 +363,7 @@ runScenario.numericDistri<- function(scenario, pars){
 }
 
 
-run.ABM<- function(model, cl=parallel::detectCores(), ...){
+run.ABM<- function(model, cl=parallel::detectCores(), raw, ...){
   x0L<- model@sim@params$N0
   params<- S3Part(model)
   transitionsFunc<- model@sim@params$transitionsFunc
