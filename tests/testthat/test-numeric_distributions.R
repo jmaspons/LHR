@@ -1,4 +1,4 @@
-context("Class Numeric distributions")
+context("Class Numeric distributions (S3)")
 
 ## Check c memory management
 # gctorture(on=TRUE)

@@ -35,7 +35,6 @@ setMethod("LH",
           signature(pars="data.frame", lambda="missing", fecundity="missing", broods="missing", b="missing",
                     a="missing", j="missing", s="missing", AFR="missing"),
           function(pars){
-            if (inherits(pars, "Model")) pars<- S3Part(pars)
             # if not defined, subadult survival is equal to adult survival
             if (!"s" %in% names(pars)){
               pars$s<- pars$a

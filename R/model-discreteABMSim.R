@@ -7,34 +7,91 @@
 #' @name discreteABMSim
 NULL
 
+#' discreteABMSim
+#'
+#' @rdname discreteABMSim
+#' 
+#' @param N0 
+#' @param transitionsFunc 
+#' @param params 
+#' @param tf 
+#' @param replicates 
+#' @param maxN 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N1j=5, N2s=5, N2b=5, N2bF=5, N2j=5),
                           transitionsFunc=transitionABM.LH_Beh,
                           params=list(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=.1,ab1=.25,j1=.25,  a2=.1,ab2=.25,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
-                          tf=10, replicates=10, maxN=100000){
+                          tf=10, replicates=100, maxN=10000, raw=TRUE){
   stateName<- names(N0)
   nStates<- length(stateName)
   
-  popABM<- array(NA_real_, dim=c(replicates, nStates, tf+1), dimnames=list(replicate=NULL, state=stateName, t=0:tf))
-  popABM[,1:nStates,1]<- N0
-  
-  for (ti in 1:tf){
-    N<- popABM[,1:nStates,ti]
-    popABM[,1:nStates,ti+1]<- transitionsFunc(N=N, params=params)
-    # popABM[,which(popABM[,1:nStates,ti+1] > maxN),t+1]<- maxN # TODO
+  if (raw){
+    popABM<- array(NA_real_, dim=c(replicates, nStates, tf+1), dimnames=list(replicate=NULL, state=stateName, t=0:tf))
+    popABM[,,1]<- N0
+    
+    for (ti in 1:tf){
+      popABM[,,ti+1]<- transitionsFunc(N=popABM[,,ti], params=params)
+      popABM[,,ti+1]<- apply(popABM[,,ti+1], MARGIN=2, function(x) ifelse(x > maxN, maxN, x))
+      
+      # Stop if all replicates have a class that reach maxN
+      if (all(apply(popABM[,,ti+1], MARGIN=1, function(x) any(x == maxN)))){
+        popABM[,,tf+1]<- maxN
+        break
+      }# Stop if all replicates get extinct
+      if (all(apply(popABM[,,ti+1], MARGIN=1, function(x) all(x <= 0))) & ti < tf){
+        popABM[,,(ti+2):(tf+1)]<- 0
+        break
+      }
+    }
+  }else{
+    popABM<- array(NA_real_, dim=c(replicates, nStates, 2), dimnames=list(replicate=NULL, state=stateName, t=c(0, tf)))
+    popABM[,,1]<- N0
+    popABM[,,2]<- N0
+    
+    for (ti in 1:tf){
+      popABM[,,2]<- transitionsFunc(N=popABM[,,2], params=params)
+      popABM[,,2]<- apply(popABM[,,2], MARGIN=2, function(x) ifelse(x > maxN, maxN, x))
+      
+      # Stop if all replicates have a class that reach maxN
+      if (all(apply(popABM[,,2], MARGIN=1, function(x) any(x == maxN)))){
+        popABM[,,2]<- maxN
+        break
+      }# Stop if all replicates get extinct
+      if (all(apply(popABM[,,2], MARGIN=1, function(x) all(x <= 0)))){
+        break
+      }
+    }
   }
   
   pop<- discreteABMSim2discretePopSim(popABM)
   
-  popABM<- popABM[order(pop[,ncol(pop)]),,]
+  popABM<- popABM[order(pop[,ncol(pop)]),,, drop=FALSE]
   class(popABM)<- c("discreteABMSim", "array")
   
   return(popABM)
 }
 
 
-discreteABMSim2discretePopSim<- function(popABM){
-  pop<- apply(popABM, MARGIN="t", rowSums)
-  pop<- pop[order(pop[,ncol(pop)]),]
+#' Title
+#'
+#' @param popABM 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+discreteABMSim2discretePopSim<- function(popABM, omitJuv=FALSE){
+  if (omitJuv){
+    pop<- apply(popABM[, !grepl("j", colnames(popABM)),], MARGIN=3, rowSums)
+  }else{
+    pop<- apply(popABM, MARGIN=3, rowSums)
+  }
+  
+  pop<- pop[order(pop[,ncol(pop)]),, drop=FALSE]
   pop<- extinctNA(pop)
   class(pop)<- c("discretePopSim", "matrix")
 
@@ -43,8 +100,6 @@ discreteABMSim2discretePopSim<- function(popABM){
 
 
 
-
-## Explore ABM ----
 ## Call
 # res<- exploreABM(x0L=x0L, params=params, transitionsFunc=transitionsFunc, 
 #                  tf=tf, replicates=replicates, discretePop=discretePop, finalPop=finalPop, cl=cl, ...)
@@ -58,16 +113,20 @@ exploreABM<- function(x0L=c(N1s=5, N1b=5, N1bF=5, N1j=5, N2s=5, N2b=5, N2bF=5, N
     x0L<- list(x0L)
   }
   
-  # resStats<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=12,
-  #                                 dimnames=list(scenario=paste0(rep(rownames(params), each=length(x0L)), "_N", rep(sapply(x0L, sum), times=nrow(params))),
-  #                                               stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))))
-  resStats<- data.frame()
+  N0<- sapply(x0L, sum, na.rm=TRUE)
+  
+  resStats<- as.data.frame(matrix(nrow=length(N0) * nrow(params), ncol=12,
+                                  dimnames=list(scenario=paste0(rep(rownames(params), each=length(x0L)), "_N", rep(sapply(x0L, sum), times=nrow(params))),
+                                          stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))))
+  # resStats<- data.frame()
   
   if (raw) resABM<- list()
   if (discretePop) resPop<- list()
   if (finalPop){
-    # Ntf<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=replicates, dimnames=list(scenario=dimnames(resStats)[[1]], Nf=NULL)))
-    Ntf<- data.frame()
+    Ntf<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=replicates, dimnames=list(scenario=dimnames(resStats)[[1]], Nf=NULL)))
+    # Ntf<- data.frame()
+    N_ABMtf<- array(NA_real_, dim=c(replicates, length(x0L[[1]]), length(x0L) * nrow(params)),
+                    dimnames=list(replicates=NULL, state=names(x0L[[1]]), scenario=dimnames(resStats)[[1]]))
   }
   
   if (is.numeric(cl)){
@@ -80,12 +139,10 @@ exploreABM<- function(x0L=c(N1s=5, N1b=5, N1bF=5, N1j=5, N2s=5, N2b=5, N2bF=5, N
   k<- 1
   for (i in 1:nrow(params)){
     message(i, "/", nrow(params), "\t", rownames(params)[i])
-    # transitions<- transitionMat(params[i,]) -> transitionsFunc
+
     
     if (discretePop) resPop[[i]]<- list()
     
-# for (j in seq_along(x0L)){
-#   N0<- x0L[[j]]
     pars<- params[i,]
     
     parallel::clusterExport(cl=cl, c("discreteABMSim", "discreteABMSim2discretePopSim", "transitionsFunc", "pars", "replicates", "tf", "maxN", "raw"), envir=environment())
@@ -93,27 +150,17 @@ exploreABM<- function(x0L=c(N1s=5, N1b=5, N1bF=5, N1j=5, N2s=5, N2b=5, N2bF=5, N
     parallel::clusterEvalQ(cl, library(LHR))
 
     simL<- parallel::parLapply(cl=cl, x0L, function(x){
-      sim<- discreteABMSim(N0=x, transitionsFunc=transitionsFunc, params=pars, tf=tf, replicates=replicates, maxN=maxN)
+      sim<- discreteABMSim(N0=x, transitionsFunc=transitionsFunc, params=pars, tf=tf, replicates=replicates, maxN=maxN, raw=raw)
 
-      if (raw) return(sim)
-      else return (discreteABMSim2discretePopSim(sim))
+      return(sim)
     })
     
     # simL<- lapply(x0L, function(x){
-    #   sim<- discreteABMSim(N0=x, transitionsFunc=transitionsFunc, params=pars, tf=tf, replicates=replicates, maxN=maxN)
-    #   if (raw) return(sim)
-    #   else return (discreteABMSim2discretePopSim(sim))
+    #   discreteABMSim(N0=x, transitionsFunc=transitionsFunc, params=pars, tf=tf, replicates=replicates, maxN=maxN, raw=raw)
     # })
     
-    if (raw){
-      popL<- lapply(simL, discreteABMSim2discretePopSim)
-      resABM[[i]]<- simL
-    }else{
-      popL<- simL
-    }
-    
-    # if (length(unique(sapply(simL, ncol))) > 1){warning("Discrete simulation results differs in time steps")} ## important when !is.null(dtDiscretize)
-    # pop<- do.call("rbind", simL) ## TODO: Check different times for extinctions for models-discreteTime.R
+    names(simL)<- paste0("N", N0)
+    popL<- lapply(simL, discreteABMSim2discretePopSim)
     
     # Save discrete population stats
     # pop: dt= dtDiscretize
@@ -128,33 +175,47 @@ exploreABM<- function(x0L=c(N1s=5, N1b=5, N1bF=5, N1j=5, N2s=5, N2b=5, N2bF=5, N
     stats<- lapply(popDtFL, summary)
     stats<- do.call(rbind, stats)
     
-    N0<- sapply(x0L, sum, na.rm=TRUE)
     
     tmp<- data.frame(scenario=rownames(params)[i], N0=N0, stats, stringsAsFactors=FALSE) ## TODO check params column. It's always 1!!
     if (verbose) print(tmp, row.names=FALSE)
     #       if (!is.null(dtDiscretize)) tmp<- rbind(tmp, summary(pop))
     #       names(tmp)<- gsub(".1", ".dt", names(tmp))
     # if(paste0(rownames(params)[i], "_N", N0) != rownames(resStats)[k]) stop("Incorrect rownames")
-    resStats<- rbind(resStats, tmp)
+    resStats[k:(k + nrow(tmp) - 1),]<- tmp
     
-
+    if (raw){
+      resABM[[i]]<- simL
+    }
     
-    if (discretePop) resPop[[i]]<- popL
     if (finalPop){
+      # discreteABMSim
+      popABMTfL<- lapply(simL, function(x){
+        x<- x[,,dim(x)[3]]
+      })
+
+      for (n in seq_along(N0)){
+        N_ABMtf[,,k+n-1]<- popABMTfL[[n]]
+      }
+      
+      # discretePopSim
       popTfL<- lapply(popL, function(pop){
-        pop[,ncol(pop)]
+        pop<- pop[,ncol(pop)]
         pop[is.na(pop)]<- 0
         sort(pop)
       })
-      Ntf<- rbind(Ntf, do.call(rbind, popTfL))
+      
+      popTfL<- do.call(rbind, popTfL)
+      
+      Ntf[k:(k + nrow(popTfL) - 1),]<- popTfL
     }
-    k<- k +1
-# }# End N0 loop
     
-    if (discretePop) names(resPop[[i]])<- paste0("N", N0)
+    if (discretePop){
+      resPop[[i]]<- popL
+    }
+
+    k<- k + length(N0)
   }# End parameters loop
   
-  #   names(resStats)<- rownames(params)
   
   res<- list(stats=resStats)
   res<- c(res, list(params=params))
@@ -169,6 +230,7 @@ exploreABM<- function(x0L=c(N1s=5, N1b=5, N1bF=5, N1j=5, N2s=5, N2b=5, N2bF=5, N
   }
   if (finalPop){
     res<- c(res, list(Ntf=Ntf))
+    res<- c(res, list(N_ABMtf=N_ABMtf))
   }
   
   if (numericCL) parallel::stopCluster(cl)

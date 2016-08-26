@@ -164,12 +164,12 @@ setBehavior<- function(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.
   }
   
   if ("learnBreed" %in% behavior){
-    params[c("c1", "c2", "cF")]<- c(0, 0, 3)
+    params[c("c1", "c2", "cF")]<- c(0, 0, .8)
   }
   
   # Avoid habitat 2 after exploring or breeding fail (1 timestep memory only)
   if ("learnExploreBreed" %in% behavior){
-    params[c("c1", "c2", "cF")]<- c(1, 3, 3)
+    params[c("c1", "c2", "cF")]<- c(0, .8, .8)
   }
   
   if ("static" %in% behavior){

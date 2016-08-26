@@ -84,7 +84,7 @@ setMethod("combineLH_Env",
 
 setMethod("combineLH_Env", 
           signature(lh="LH", env="Env", resolution="ANY", interval="ANY", criterion="ANY"),
-          function(lh=LH(), env=Env(), resolution=12, interval=1, criterion="maxFirst"){
+          function(lh=LH(), env=Env(), resolution=12, interval=2, criterion="maxFirst"){
             tmpLH<- data.frame(S3Part(lh), interval)
             scenario<- merge(tmpLH, S3Part(env))
             
@@ -105,8 +105,7 @@ setMethod("combineLH_Env",
 
 
 ## run(): Simulate models ----
-# cl=makeCluster(detectCores())
-# clF=makeCluster(detectCores(), type="FORK")
+
 #' @rdname Model
 #'
 #' @param model 
@@ -118,7 +117,6 @@ setMethod("combineLH_Env",
 #' @export
 setGeneric("run", function(model, cl=parallel::detectCores(), ...) standardGeneric("run"))
 
-# Create a Sim object with the results
 setMethod("run", 
           signature(model="Model", cl="ANY"),
           function(model, cl=parallel::detectCores(), ...){
@@ -132,8 +130,8 @@ setMethod("run",
             simRes<- switch(class(model@sim),
                                Sim.discretePopSim=run.discretePopSim(model, cl=cl),
                                Sim.numericDistri=run.numericDistri(model, cl=cl),
-                               Sim.ABM=run.ABM(model, ...),
-                               Sim.ssa=run.ssa(model, ...))
+                               Sim.ABM=run.ABM(model, cl=cl, ...),
+                               Sim.ssa=run.ssa(model, cl=cl, ...))
 
             modelRes<- new("Model", 
                         S3Part(model),
@@ -422,6 +420,7 @@ run.ssa<- function(model, cl=parallel::detectCores(), ...){
   
   res<- exploreSSA(x0L=x0L, params=params, transitionMat=transitionMat, rateFunc=rateFunc, 
                    maxTf=tf, replicates=replicates, discretePop=discretePop, finalPop=finalPop, cl=cl, ...)
+
   res<- new("Sim.ssa", res$stats, Ntf=res$Ntf, params=model@sim@params, raw=res)
   
   if (numericCL) parallel::stopCluster(cl)

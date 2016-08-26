@@ -247,6 +247,7 @@ mean.numericDistri<- function(x, ...){
 }
 
 
+# @exportMethod var
 #' @export
 var<- function(x, ...){
   UseMethod("var")
@@ -280,6 +281,7 @@ sdistri.numericDistri<- function(distri){
 }
 
 
+# @exportMethod cumsum
 #' @export
 cumsum<- function(x, ...){
   UseMethod("cumsum")

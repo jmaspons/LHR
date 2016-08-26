@@ -1,5 +1,3 @@
-# Include functions for prototypes
-# @include compoundDistributions.R
 
 #' @exportClass discretePopSim
 #' @exportClass discreteABMSim
@@ -37,7 +35,6 @@ setClass("LH.ssa", contains="LH")
 
 ## Simulation classes ----
 
-# setClass("Sim", slots=list(discreteTime="discretePopSim"), contains="data.frame")
 #' Simulation class
 #' 
 #' @name Sim
