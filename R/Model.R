@@ -96,7 +96,7 @@ setMethod("combineLH_Env",
             scenario$jbr<- scenario$breedFail * (scenario$j-1) + 1
 
             ## Seasonality
-            seasonBroods<- data.frame(scenario[,c("mean", "seasonAmplitude", "broods", "interval")], var=0, breedFail=0) # var necessary for Env(seasonBroods)
+            seasonBroods<- data.frame(scenario[,c("seasonMean", "seasonAmplitude", "broods", "interval")], var=0, breedFail=0) # var necessary for Env(seasonBroods)
             seasonVar<- seasonOptimCal(env=seasonBroods, resolution=resolution, nSteps=seasonBroods$broods, interval=seasonBroods$interval, criterion=criterion)
             
             return (list(scenario=scenario, seasonBroodEnv=list(parsBroodEnv=seasonBroods, broodEnv=seasonVar))) #, breedFail=breedFail))

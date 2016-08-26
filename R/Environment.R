@@ -6,57 +6,63 @@ NULL
 
 #' @rdname Env
 #'
-#' @param mean 
-#' @param var 
+#' @param pars 
+#' @param seasonMean 
 #' @param seasonAmplitude 
 #' @param seasonRange 
+#' @param var 
 #' @param breedFail 
 #'
 #' @return a Env class object
 #' @export
-setGeneric("Env", function(pars, mean=c(1,.5), var=c(0, 0.1), seasonAmplitude=c(0,1), seasonRange, breedFail=c(0, 0.5, 1)) standardGeneric("Env"))
+setGeneric("Env", function(pars, seasonMean, seasonAmplitude=c(0,1), seasonRange, var=c(0, 0.1), breedFail=c(0, 0.5, 1)) standardGeneric("Env"))
 
 setMethod("Env",
-          signature(pars="missing", mean="ANY", var="ANY", seasonAmplitude="ANY", seasonRange="missing", breedFail="ANY"),
-          function(mean=c(1,.5), var=c(0, 0.1), seasonAmplitude=c(0,1), breedFail=c(0, 0.5, 1)){
-            season<- data.frame(mean, seasonAmplitude)
+          signature(pars="missing", seasonMean="missing", seasonAmplitude="ANY", seasonRange="missing", var="ANY", breedFail="ANY"),
+          function(seasonAmplitude=c(0,1), var=c(0, 0.1), breedFail=c(0, 0.5, 1)){
+            season<- getSeasonalParams(seasonAmplitude=seasonAmplitude, envMax=1)
+            
+            ## If seasonAmplitude == 0 there is no seasonality and the environment is constant (P_I(env) = P_i * env$seasonalMean)
+            # season$seasonalMean[season$seasonAmplitude == 0]<- 1
+            # season<- unique(season)
+            
             comb<- expand.grid(var=var, breedFail=breedFail)
             comb<- merge(season, comb)
             
+            comb<- unique(comb)
+            
             ## Remove combinations of mean and var out of the domain of the Beta distribution
-            # betaPars<- fbeta(mean=comb$mean, var=comb$var)
+            # betaPars<- fbeta(mean=comb$seasonalMean, var=comb$var)
             # 
             # if (any(!is.finite(betaPars$shape1) & comb$var != 0)){
             #     comb<- comb[is.finite(betaPars$shape1) | comb$var == 0,]
             #     warning("Some combinations of mean and var fall outside the parameter space of the beta distribution.")
             # }
              
-            new("Env", comb, seasonRange=seasonRange(mean, seasonAmplitude))
+            new("Env", comb, seasonRange=getSeasonalRange(seasonMean=comb$seasonMean, seasonAmplitude=comb$seasonAmplitude))
           }
 )
 
-
 setMethod("Env",
-          signature(pars="missing", mean="missing", var="ANY", seasonAmplitude="missing", seasonRange="matrix", breedFail="ANY"),
-          function(var=0, seasonRange, breedFail=0){
+          signature(pars="missing", seasonMean="missing", seasonAmplitude="missing", seasonRange="matrix", var="ANY", breedFail="ANY"),
+          function(seasonRange, var=0, breedFail=0){
             mat<- matrix(seasonRange, ncol=2)
-            seasonPars<- seasonPars(mat)
-            seasonMean<- seasonPars$seasonMean
-            seasonAmplitude<- seasonPars$seasonAmplitude
+            seasonPars<- getSeasonalParams(seasonRange=mat)
             
-            env<- Env(mean=seasonMean, var=var, seasonAmplitude=seasonAmplitude, breedFail=breedFail)
+            env<- Env(var=var, seasonAmplitude=seasonPars$seasonAmplitude, breedFail=breedFail)
             return (env)
           }
 )  
 
 setMethod("Env",
-          signature(pars="data.frame", mean="ANY", var="ANY", seasonAmplitude="ANY", seasonRange="ANY", breedFail="ANY"),
+          signature(pars="data.frame", seasonMean="ANY", seasonAmplitude="ANY", seasonRange="ANY", var="ANY", breedFail="ANY"),
           function(pars){
-            pars<- unique(pars[,c("mean", "seasonAmplitude", "var", "breedFail")])
+            pars<- unique(pars[,c("seasonMean", "seasonAmplitude", "var", "breedFail")])
             
-            new("Env", pars, seasonRange=seasonRange(pars$mean, pars$seasonAmplitude))
+            new("Env", pars, seasonRange=getSeasonalRange(seasonMean=pars$seasonMean, seasonAmplitude=pars$seasonAmplitude))
           }
 )  
+
 
 ## Seasonal pattern ----
 #' @rdname Env 
@@ -75,10 +81,11 @@ setMethod("seasonalPattern",
           signature(env="data.frame", resolution="ANY", cicles="ANY"),
           function(env, resolution=12, cicles=1){ 
             timeSteps<- seq(0, 2*pi*cicles - 2*pi/resolution, by=2*pi/resolution)
-            pat<- matrix(ncol=length(timeSteps), nrow=nrow(env), dimnames=list(NULL, t=1:length(timeSteps)))
-            for (i in 1:nrow(env)){
-              pat[i,]<- sin(timeSteps) * env$seasonAmplitude[i]/2 + env$mean[i]
-            }
+            timeSteps<- sin(timeSteps)
+            
+            pat<- t(apply(env, 1, function(x) timeSteps * x["seasonAmplitude"] / 2 + x["seasonMean"]))
+            dimnames(pat)<- list(NULL, t=1:length(timeSteps))
+            
             return (pat)
           }
 )
@@ -86,7 +93,7 @@ setMethod("seasonalPattern",
 setMethod("seasonalPattern", 
           signature(env="Env", resolution="ANY", cicles="ANY"),
           function(env, resolution=12, cicles=1){ 
-            callGeneric(env=S3Part(env), resolution, cicles)
+            callGeneric(env=data.frame(env), resolution, cicles)
           }
 )
 
@@ -160,7 +167,7 @@ setMethod("seasonOptimCal",
 setMethod("seasonOptimCal", 
           signature(env="Env", resolution="ANY", nSteps="ANY", interval="ANY", criterion="ANY"),
           function(env, resolution=12, nSteps=2, interval=1, criterion="maxFirst"){
-            callGeneric(env=S3Part(env), resolution, nSteps, interval, criterion)
+            callGeneric(env=data.frame(env), resolution, nSteps, interval, criterion)
           }
 )
 
@@ -168,19 +175,25 @@ setMethod("seasonOptimCal",
 # Seasonality auxiliary functions ----
 # resolution: time steps in one cicle (e.g. 12 for months, 365 for days)
 #' @export
-seasonPars<- function(seasonRange){
-  seasonMean<- apply(seasonRange, 1, function(x) (min(x) + max(x))/2)
-  seasonAmplitude<- apply(seasonRange, 1, function (x) max(x) - min(x))
+getSeasonalParams<- function(seasonAmplitude, seasonRange, envMax=1){
+  if (!missing(seasonAmplitude)){
+    seasonMean<- (seasonAmplitude + envMax) / 2
+  }else if (!missing(seasonRange)){
+    seasonMean<- apply(seasonRange, 1, function(x) (min(x) + max(x))/2)
+    seasonAmplitude<- apply(seasonRange, 1, function (x) max(x) - min(x))
+  }
   
   return (data.frame(seasonMean, seasonAmplitude))
 }
 
 #' @export
-seasonRange<- function(seasonMean, seasonAmplitude){
-  seasonPars<- data.frame(seasonMean, seasonAmplitude)
-  seasonRange<- with(seasonPars,  data.frame(min=seasonMean - seasonAmplitude/2, max=seasonMean + seasonAmplitude/2))
+getSeasonalRange<- function(seasonMean, seasonAmplitude){
+  seasonParams<- data.frame(seasonMean, seasonAmplitude)
+  seasonRange<- with(seasonParams,  data.frame(min=seasonMean - seasonAmplitude / 2, max=seasonMean + seasonAmplitude / 2))
+  
   return (seasonRange)
 }
+
 
 ## Stochasticity
 # beta distributded value

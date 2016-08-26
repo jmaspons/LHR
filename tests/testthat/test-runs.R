@@ -101,7 +101,7 @@ test_that("ABM LH-behavior", {
   # model<- Model(lh=lh, env=env, sim=sim)
   # model<- model[model$habDiff == "nestPredHab2" & model$behavior == "learnExploreBreed", ]
   
-  try(res<- run(model))
+  res<- run(model)
   expect_is(res, "Model")
   
   #TODO:

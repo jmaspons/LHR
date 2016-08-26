@@ -28,7 +28,7 @@ test_that("Model class constructors", {
 
 test_that("Model subclasses constructors", {
   expect_is(Model(sim=Sim.ssa()), "Model.ssa")
-  expect_is(Model(sim=Sim.ABM()), "Model.ABM")
+  expect_is(Model(sim=Sim.ABM(), env=Env(seasonAmplitude=0)), "Model.ABM")
 })
 
 test_that("subsetting", {

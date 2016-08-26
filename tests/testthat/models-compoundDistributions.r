@@ -1,4 +1,4 @@
-env<- Env(mean=1, var=0, seasonAmplitude=0, breedFail=c(0, .5, .75, 1))
+env<- Env(var=0, seasonAmplitude=0, breedFail=c(0, .5, .75, 1))
 sim<- Sim.numericDistri(raw = FALSE) # warning
 sim<- Sim.numericDistri(raw = TRUE) # TODO FIXME: error on raw
 lh<- LH()
