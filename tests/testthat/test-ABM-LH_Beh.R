@@ -31,6 +31,6 @@ test_that("sample parameter space", {
 })
 
 test_that("exploreABM", {
-  matrix(rep(5, 8), nrow=4, ncol=8, dimnames=list(replicates=NULL, state=c("N1s", "N1b", "N1bF", "N1j", "N2s", "N2b", "N2bF", "N2j")))
+  matrix(rep(5, 8), nrow=4, ncol=8, dimnames=list(replicates=NULL, state=c("N1s", "N1b", "N1bF", "N2s", "N2b", "N2bF")))
   obj<- exploreABM()
 })
