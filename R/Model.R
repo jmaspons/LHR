@@ -13,16 +13,16 @@ NULL
 #' @return a \code{Model} object.
 #' @examples model<- Model()
 #' @export
-setGeneric("Model", function(lh=LH(), env=Env(), sim=Sim(), pars) standardGeneric("Model"))
+setGeneric("Model", function(lh=LH(), env=Env(), sim=Sim(), pars, ...) standardGeneric("Model"))
 
 setMethod("Model",
           signature(lh="ANY", env="ANY", sim="ANY", pars="missing"),
-          function(lh=LH(), env=Env(), sim=Sim()){
+          function(lh=LH(), env=Env(), sim=Sim(), ...){
             if (inherits(sim, "Sim.ABM")){
-              pars<- getParamsCombination.LH_Beh(lh=lh, env=env)
+              pars<- getParamsCombination.LH_Beh(lh=lh, env=env, ...)
               model<- new("Model.ABM", pars, sim=sim)
             }else if (inherits(sim, "Sim.ssa")){
-              pars<- getParams.LH_Beh.ssa()
+              pars<- getParamsCombination.LH_Beh.ssa(...)
               model<- new("Model.ssa", pars, sim=sim)
             } else if (inherits(sim, c("Sim.discretePopSim", "Sim.numericDistri"))){
               ## WARNING: Sim.ABM and Sim.ssa inherits from Sim.discretePopSim. Exclude from here
@@ -42,18 +42,14 @@ setMethod("Model",
 setMethod("Model",
           signature(lh="missing", env="missing", sim="Sim.ABM", pars="data.frame"),
           function(sim, pars){
-            # model<- Model.ABM(sim=sim, pars=pars)
-            model<- new("Model.ABM", pars, sim=sim)
-            return (model)
+            new("Model.ABM", pars, sim=sim)
           }
 )
 
 setMethod("Model",
           signature(lh="missing", env="missing", sim="Sim.ssa", pars="data.frame"),
           function(sim, pars){
-            # model<- Model.ssa(sim=sim, pars=pars)
-            model<- new("Model.ssa", pars, sim=sim)
-            return (model)
+            new("Model.ssa", pars, sim=sim)
           }
 )
 
@@ -74,16 +70,8 @@ setMethod("Model",
 #' @export
 setGeneric("combineLH_Env", function(lh=LH(), env=Env(), resolution=12, interval=2, criterion=c("maxFirst", "maxMean")[1]) standardGeneric("combineLH_Env"))
 
-# return a sinusoidal pattern
 setMethod("combineLH_Env", 
-          signature(lh="missing", env="missing", resolution="missing", interval="missing", criterion="missing"),
-          function(lh=LH(), env=Env()){
-            combineLH_Env(lh, env)
-          }
-)
-
-setMethod("combineLH_Env", 
-          signature(lh="LH", env="Env", resolution="ANY", interval="ANY", criterion="ANY"),
+          signature(lh="ANY", env="ANY", resolution="ANY", interval="ANY", criterion="ANY"),
           function(lh=LH(), env=Env(), resolution=12, interval=2, criterion="maxFirst"){
             tmpLH<- data.frame(S3Part(lh), interval)
             scenario<- merge(tmpLH, S3Part(env))

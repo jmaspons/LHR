@@ -7,7 +7,6 @@ NULL
 #' @rdname Env
 #'
 #' @param pars 
-#' @param seasonMean 
 #' @param seasonAmplitude 
 #' @param seasonRange 
 #' @param var 
@@ -15,10 +14,10 @@ NULL
 #'
 #' @return a Env class object
 #' @export
-setGeneric("Env", function(pars, seasonMean, seasonAmplitude=c(0,1), seasonRange, var=c(0, 0.1), breedFail=c(0, 0.5, 1)) standardGeneric("Env"))
+setGeneric("Env", function(pars, seasonAmplitude=c(0,1), seasonRange, var=c(0, 0.1), breedFail=c(0, 0.5, 1)) standardGeneric("Env"))
 
 setMethod("Env",
-          signature(pars="missing", seasonMean="missing", seasonAmplitude="ANY", seasonRange="missing", var="ANY", breedFail="ANY"),
+          signature(pars="missing", seasonAmplitude="ANY", seasonRange="missing", var="ANY", breedFail="ANY"),
           function(seasonAmplitude=c(0,1), var=c(0, 0.1), breedFail=c(0, 0.5, 1)){
             season<- getSeasonalParams(seasonAmplitude=seasonAmplitude, envMax=1)
             
@@ -44,7 +43,7 @@ setMethod("Env",
 )
 
 setMethod("Env",
-          signature(pars="missing", seasonMean="missing", seasonAmplitude="missing", seasonRange="matrix", var="ANY", breedFail="ANY"),
+          signature(pars="missing", seasonAmplitude="missing", seasonRange="matrix", var="ANY", breedFail="ANY"),
           function(seasonRange, var=0, breedFail=0){
             mat<- matrix(seasonRange, ncol=2)
             seasonPars<- getSeasonalParams(seasonRange=mat)
@@ -55,7 +54,7 @@ setMethod("Env",
 )  
 
 setMethod("Env",
-          signature(pars="data.frame", seasonMean="ANY", seasonAmplitude="ANY", seasonRange="ANY", var="ANY", breedFail="ANY"),
+          signature(pars="data.frame", seasonAmplitude="ANY", seasonRange="ANY", var="ANY", breedFail="ANY"),
           function(pars){
             pars<- unique(pars[,c("seasonMean", "seasonAmplitude", "var", "breedFail")])
             

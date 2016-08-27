@@ -146,8 +146,8 @@ setMethod("Sim.numericDistri",
 #' @examples Sim.ABM()
 #' 
 #' @export
-setGeneric("Sim.ABM", function(params, N0, transitionsFunc=transitionABM.LH_Beh, 
-                               tf=10, replicates=15, raw=TRUE, discretePopSim=TRUE, Ntf=TRUE, stats=TRUE) standardGeneric("Sim.ABM"))
+setGeneric("Sim.ABM", function(params, N0, transitionsFunc=transitionABM.LH_Beh, tf=10, replicates=15, 
+                               raw=TRUE, discretePopSim=TRUE, Ntf=TRUE, stats=TRUE, ...) standardGeneric("Sim.ABM"))
 setMethod("Sim.ABM",
           signature(params="list", N0="ANY", transitionsFunc="ANY", tf="ANY", replicates="ANY", raw="ANY", discretePopSim="ANY", Ntf="ANY", stats="ANY"),
           function(params){
@@ -159,12 +159,18 @@ setMethod("Sim.ABM",
 
 setMethod("Sim.ABM",
           signature(params="missing", N0="ANY", transitionsFunc="ANY", tf="ANY", replicates="ANY", raw="ANY", discretePopSim="ANY", Ntf="ANY", stats="ANY"),
-          function(N0, transitionsFunc=transitionABM.LH_Beh, tf=10, replicates=15, raw=TRUE, discretePopSim=TRUE, Ntf=TRUE, stats=TRUE){
+          function(N0, transitionsFunc=transitionABM.LH_Beh, tf=10, replicates=15, raw=TRUE, discretePopSim=TRUE, Ntf=TRUE, stats=TRUE, ...){
             if (missing(N0)){
               N0<- c(N1s=0, N1b=1, N1bF=0, N2s=0, N2b=1, N2bF=0)
               N0<- lapply(2^(0:5), function(x) N0 * x)
+              names(N0)<- paste0("N", sapply(N0, sum))
             }
+            
             params<- list(N0=N0, transitionsFunc=transitionsFunc, tf=tf, replicates=replicates, raw=raw, discretePopSim=discretePopSim, Ntf=Ntf, stats=stats)
+            
+            dots<- list(...)
+            params<- c(params, dots)
+            
             sim<- Sim.ABM(params=params)
             
             return (sim)
@@ -190,15 +196,21 @@ setMethod("Sim.ABM",
 #' 
 #' @export
 setGeneric("Sim.ssa", function(params, N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, 
-                               tf=10, replicates=15, raw=TRUE, Ntf=TRUE, stats=TRUE) standardGeneric("Sim.ssa"))
+                               tf=10, replicates=15, raw=TRUE, Ntf=TRUE, stats=TRUE, ...) standardGeneric("Sim.ssa"))
 setMethod("Sim.ssa",
           signature(params="missing", N0="ANY", transitionMat="ANY", rateFunc="ANY", tf="ANY", replicates="ANY", raw="ANY", Ntf="ANY", stats="ANY"),
-          function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, tf=10, replicates=15, raw=TRUE, Ntf=TRUE, stats=TRUE){
+          function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, tf=10, replicates=15, raw=TRUE, Ntf=TRUE, stats=TRUE, ...){
             if (missing(N0)){
               N0<- c(N1s=0, N1b=1, N1bF=0, N1j=0, N2s=0, N2b=1, N2bF=0, N2j=0)
               N0<- lapply(2^(0:5), function(x) N0 * x)
+              names(N0)<- paste0("N", sapply(N0, sum))
             }
+            
             params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, raw=raw, Ntf=Ntf, stats=stats)
+            
+            dots<- list(...)
+            params<- c(params, dots)
+            
             sim<- Sim.ssa(params=params)
             
             return (sim)
