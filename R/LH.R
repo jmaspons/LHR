@@ -15,89 +15,61 @@ NULL
 #'
 #' @param pars 
 #' @param lambda 
-#' @param fecundity 
 #' @param broods 
-#' @param b 
-#' @param a 
-#' @param s 
-#' @param j 
+#' @param b clutch size
+#' @param a adult survival
+#' @param s subadult survival
+#' @param j juvenile survival
 #' @param AFR 
-#'
+#' 
+#' @details Errors for free="a".
 #' @return a \code{LH} object.
 #' @examples 
 #'  LH()
-#'  LH(sampleLH())
+#'  LH(lambda=1)
 #' 
 #' @export
-setGeneric("LH", function(pars, lambda, fecundity, broods, b, a, j, s=a, AFR) standardGeneric("LH"))
+setGeneric("LH", function(pars, lambda=seq(.9, 1.1, by=0.1), fecundity, broods=2^(0:2), b=c(1, 2, 5, 10),
+                          a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s=a, AFR=1, free="j") standardGeneric("LH"))
 
 setMethod("LH",
           signature(pars="data.frame", lambda="missing", fecundity="missing", broods="missing", b="missing",
-                    a="missing", j="missing", s="missing", AFR="missing"),
+                    a="missing", j="missing", s="missing", AFR="missing", free="missing"),
           function(pars){
-            # if not defined, subadult survival is equal to adult survival
+            # if not defined, subadult survival is equal to adult survival. Only useful for AFR > 1
             if (!"s" %in% names(pars)){
               pars$s<- pars$a
             }
+            
             pars<- unique(pars[,c("lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")]) # Sort columns
             
-            strategy<- new("LH", pars)
-            return (strategy)
+            if (requireNamespace("popbio", quietly=TRUE)){
+              popbio<- apply(pars, 1, function(x){
+                mat<- with(as.list(x), LefkovitchPre(a=a, s=s, bj=fecundity * j, AFR=AFR))
+                return(eigen.analisys2df(mat))
+              })
+              popbio<- do.call(rbind, popbio)
+              
+              pars<- cbind(pars, popbio)
+            }
+            
+            return (new("LH", pars))
           }
 )
 
 setMethod("LH",
-          signature(pars="missing", lambda="missing", fecundity="missing", broods="missing", b="missing",
-                    a="missing", j="missing", s="missing", AFR="missing"),
-          function(){
-            pars<- sampleLH()
+          signature(pars="missing", lambda="ANY", fecundity="missing", broods="ANY", b="ANY",
+                    a="ANY", j="ANY", s="ANY", AFR="ANY", free="ANY"),
+          function(lambda=seq(.9, 1.1, by=0.1), broods=2^(0:2), b=c(1, 2, 5, 10), 
+                   a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s=a, AFR=1, free="j"){
+
+            pars<- sampleLH(lambda=lambda, broods=broods, b=b, j=j, a=a, AFR=AFR, free=free)
+            # pars<- sampleLH()
             rownames(pars)<- NULL
             LH(pars=pars)
           }
 )
 
-setMethod("LH",
-          signature(pars="missing", lambda="numeric", fecundity="numeric", broods="numeric", b="numeric",
-                    a="numeric", j="numeric", s="ANY", AFR="numeric"),
-          function(lambda, fecundity, broods, b,   a, j, s=a,  AFR=1){
-            pars<- data.frame(lambda, fecundity, broods, b, a, s, j, AFR)
-            strategy<- LH(pars=pars)
-            return (strategy)
-          }
-)
-
-setMethod("LH",
-          signature(pars="missing", lambda="missing", fecundity="numeric", broods="numeric", b="numeric",
-                    a="numeric", j="numeric", s="ANY", AFR="numeric"),
-          function(fecundity, broods, b,   a, j, s=a, AFR=1){
-            pars<- sampleLH(broods=broods, b=b, j=j, a=a, AFR=AFR, free="lambda", 
-                            maxFecundity=9999, higherJuvMortality=FALSE, census="pre-breeding")
-            strategy<- LH(pars=pars)
-            return (strategy)
-          }          
-)
-
-setMethod("LH",
-          signature(pars="missing", lambda="numeric", fecundity="numeric", broods="numeric", b="numeric",
-                    a="numeric", j="missing", s="ANY", AFR="numeric"),
-          function(lambda, fecundity, broods, b,   a, s=a, AFR=1){
-            pars<- sampleLH(lambda="numeric", broods=broods, b=b, a=a, AFR=AFR, free="j", 
-                            maxFecundity=9999, higherJuvMortality=FALSE, census="pre-breeding")
-            strategy<- LH(pars=pars)
-            return (strategy)
-          }          
-)
-
-setMethod("LH",
-          signature(pars="missing", lambda="numeric", fecundity="numeric", broods="numeric", b="numeric",
-                    a="missing", j="numeric", s="missing", AFR="numeric"),
-          function(lambda, fecundity, broods, b, j, AFR=1){
-            pars<- sampleLH(lambda="numeric", broods=broods, b=b, j=j, AFR=AFR, free="a", 
-                            maxFecundity=9999, higherJuvMortality=FALSE, census="pre-breeding")
-            strategy<- LH(pars=pars)
-            return (strategy)
-          }          
-)
 
 ## Generic ----
 #' @export
@@ -123,78 +95,69 @@ setMethod("show", signature(object="LH"),
 }
 
 ## Sample LH ----
-# imposing the deterministic relations between the lambda and the rest of parameters
+# Impose the deterministic relations between the lambda and the rest of parameters
 # lambda=1; broods=2^(0:2); b=1:10; j=c(.2, .8); a=seq(.3, .9, length=10); AFR=1
 # sampleLH<- function(lambda=seq(.8, 2, by=0.1), broods=2^(0:2), b=c(1, seq(2, 20, by=2)), 
 #                     j=seq(0.2, 0.8, by=0.1), a=seq(0.3, 0.9, by=0.1), AFR=1,
 #                     free=c("j", "lambda")[1], maxFecundity=20, higherJuvMortality=TRUE, method=c("regular", "MonteCarlo"), census="pre-breeding"){
 
-#' Sample LH
-#'
-#' @param lambda 
-#' @param broods 
-#' @param b 
-#' @param j 
-#' @param a 
-#' @param AFR 
-#' @param free 
-#' @param maxFecundity 
-#' @param higherJuvMortality 
-#' @param method 
-#' @param census 
-#'
-#' @return a data.frame with different strategies
-#' @examples sampleLH()
-#'
-#' @export
-sampleLH<- function(lambda=seq(.8, 1.2, by=0.2), broods=2^(0:2), b=c(1, 2, 5, 10), 
+# WARNING("There are errors when estimating a = f(lambda, fecundity, j, AFR)")
+
+sampleLH<- function(lambda=seq(.9, 1.1, by=0.1), broods=2^(0:2), b=c(1, 2, 5, 10), 
                     j=seq(0.2, 0.8, by=0.2), a=seq(0.3, 0.9, by=0.2), AFR=1,
-                    free=c("j", "lambda")[1], maxFecundity=20, higherJuvMortality=TRUE, method=c("regular", "MonteCarlo"), census="pre-breeding"){
-                    # with low parameters resolution only broods=1 give correct values on findJ_Euler-Lotka
-  if ("lambda" == free){
-    pars<- expand.grid(broods, b, j, a, AFR)
-    names(pars)<- c("broods", "b", "j", "a", "AFR")
+                    free=c("j", "lambda", "a"), maxFecundity=20, higherJuvMortality=TRUE, method=c("regular", "MonteCarlo"), census="pre-breeding"){
+  free<- match.arg(free)
+  
+  if (free == "lambda"){
+    pars<- expand.grid(broods=broods, b=b, j=j, a=a, AFR=AFR)
     pars$fecundity<- pars$broods * pars$b
     pars<- pars[pars$fecundity <= maxFecundity,]
     
-    pars$lambda<- NA
-    for (i in 1:nrow(pars)){
-      # mean Lambda in the discrete time simulations correspons to pre-breeding census
-      if (census == "pre-breeding"){
-        mat<- with(pars[i,], LefkovitchPre(a=a, s=a, bj=j * fecundity, AFR=AFR)) # subadult survival equal to adult survival
-      }else if (census == "post-breeding"){
-        mat<- with(pars[i,], LefkovitchPost(a=a, s=a, j=j, b=fecundity, AFR=AFR))  # subadult survival equal to adult survival
-      }
-      pars$lambda[i]<- lambda(mat)
+    # mean Lambda in the discrete time simulations correspons to pre-breeding census
+    if (census == "pre-breeding"){
+      pars$lambda<- apply(pars, 1, function(x){
+        mat<- with(as.list(x), LefkovitchPre(a=a, s=a, bj=j * fecundity, AFR=AFR)) # subadult survival equal to adult survival
+        return(lambda(mat))
+      })
+    }else if (census == "post-breeding"){
+      pars$lambda<- apply(pars, 1, function(x){
+        mat<- with(as.list(x), LefkovitchPost(a=a, s=a, j=j, b=fecundity, AFR=AFR))  # subadult survival equal to adult survival # subadult survival equal to adult survival
+        return(lambda(mat))
+      })
     }
+    
   }else if (free == "j"){
-    pars<- expand.grid(lambda, broods, b, a, AFR)
-    names(pars)<- c("lambda", "broods", "b", "a", "AFR")
+    pars<- expand.grid(lambda=lambda, broods=broods, b=b, a=a, AFR=AFR)
     pars$fecundity<- pars$broods * pars$b
     pars<- pars[pars$fecundity <= maxFecundity,]
     # Euler-Lotka corresponds to a pre-breding census matrix
     pars$j<- with(pars, findJ_EulerLotka(lambda=lambda, b=fecundity, a=a, AFR=AFR))
-    # Filter
-    #     pars<- pars[pars$j <= pars$a,]
   }else if (free == "a"){
-    pars<- expand.grid(lambda, broods, b, j, AFR)
-    names(pars)<- c("lambda", "broods", "b", "j", "AFR")
+    # warning("There are errors when estimating a = f(lambda, fecundity, j, AFR)")
+    pars<- expand.grid(lambda=lambda, broods=broods, b=b, j=j, AFR=AFR)
     pars$fecundity<- pars$broods * pars$b
     pars<- pars[pars$fecundity <= maxFecundity,]
     # Euler-Lotka corresponds to a pre-breding census matrix
     pars$a<- with(pars, findA_EulerLotka(lambda=lambda, b=fecundity, j=j, AFR=AFR))
   }
   
+  pars<- stats::na.omit(pars)
+  
+  ## TODO: move to tests
   # Detect errors on the inverse eigenvalue problem and discard them
   if (free != "lambda"){
-    lambdaMat<- numeric(nrow(pars))
-    for (i in 1:nrow(pars)){
-      if (is.na(pars$j[i]) | is.na(pars$a[i])) next
-      mat<- with(pars[i,], LefkovitchPre(a=a, s=a, bj=j * fecundity, AFR=AFR)) # subadult survival equal to adult survival
-      lambdaMat[i]<- lambda(mat)
-    }
+    lambdaMat<- apply(pars, 1, function(x){
+      x<- as.list(x)
+      if (is.na(x$j) | is.na(x$a)) return(NA)
+      mat<- with(x, LefkovitchPre(a=a, s=a, bj=j * fecundity, AFR=AFR)) # subadult survival equal to adult survival
+      return(lambda(mat))
+    })
+    
     errLambda<- abs(pars$lambda - lambdaMat)
-    errLambda<- which(errLambda > 0.01)
+    errLambda<- which(errLambda > 0.001)
+    
+    if (length(errLambda) > 0) warning("Some errors on Euler-Lotka function to find parameters with ", free, "free.")
+    
     if (free == "j"){
       pars$j[errLambda]<- NA
       pars<- pars[!is.na(pars$j),]
@@ -212,5 +175,6 @@ sampleLH<- function(lambda=seq(.8, 1.2, by=0.2), broods=2^(0:2), b=c(1, 2, 5, 10
   
   # Sort columns
   pars<- pars[order(pars$lambda, pars$fecundity, pars$a), c("lambda", "fecundity", "broods", "b", "a", "j", "AFR")]
+  
   return (pars)
 }

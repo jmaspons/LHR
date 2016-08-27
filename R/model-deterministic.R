@@ -184,20 +184,49 @@ Rmax<- function(fecundity, ageFirstBreeding, lifespan){ # values in years
 
 
 
-## TODO: check and reference ----
-# @importFrom popbio eigen.analysis generation.time
+## popbio matrix analysis ----
+#' Population matrix anaysis with popbio
+#'
+#' @param x a Leslie or Lefkovitch matrix
+#'
+#' @return a data.frame with the characteristics of the matrix.
+#' @export
+#'
+#' @examples
+eigen.analisys2df<- function(x){
+  tmpRes<- popbio::eigen.analysis(x)
 
-# lifeExpectancy<- - 1 / log(GdemoLH$sA) ## SRC: http://www.countrysideinfo.co.uk/bird_lifespan.htm
+  ## Elasticities of survival for reproductive stages
+  # Reproduction reclute individuals in the first class only (first row)
+  selReproClass<- which(x[1,] != 0)
+  selSurvReproClass<- which(x[-1, selReproClass] != 0)
+  elasSurvRepro<- sum(tmpRes$elasticities[-1, selReproClass][selSurvReproClass]) # Survival
+  
+  ## Elasticities of survival for non reproductive stages
+  selNonReproClass<- which(x[1,] == 0)
+  selSurvNonReproClass<- which(x[-1, selNonReproClass] != 0)
+  elasSurvNonRepro<- sum(tmpRes$elasticities[-1, selNonReproClass][selSurvNonReproClass]) # Survival
+  
+  ## Elasticities of net fecundity (for pre-breeding census matrix, fecundity * juvSurvival) or fecundity (for post-breeding census matrix)
+  elasFecundity<- sum(tmpRes$elasticities[1,])
+  
+  tmp<- popbio::fundamental.matrix(x)
+  if (is.list(tmp)){
+    # Life expectancy for the first repoductive class
+    matureLifeExpectancy<- as.numeric(tmp$N[selReproClass[1], selReproClass[1]])
+  }else{
+    matureLifeExpectancy<- NA
+  }
+  
+  generation.time<- popbio::generation.time(x)
+  net.reproductive.rate<- popbio::net.reproductive.rate(x)
+  
+  survCurve<- cumprod(colSums(x[-1, , drop=FALSE]))
+  ## how to classify the curves??
 
-# TempsGeneracio<- function(sensitivities){##Article matrius multiestats
-#   return (1 / sensitivities[1, ncol(sensitivities)])
-# }
+  data.frame(elasFecundity, elasSurvRepro, elasSurvNonRepro,
+             generation.time, net.reproductive.rate,
+             matureLifeExpectancy, damping.ratio=tmpRes$damping.ratio)
+}
 
-# Gen.time<- function(A, peryear=5){ ##T  #(Ted J. Case. "An Illustrated Guide to Theoretical Ecology" pàg 89-90 #mirar el peryear!!
-#   ro <- calc.ro(A)
-#   ea <- eigen.analysis(A)
-#   T <- peryear*log(ro)/log(ea$lambda)
-#   
-#   T
-# }
 
