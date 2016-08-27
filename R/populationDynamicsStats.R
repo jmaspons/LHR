@@ -43,19 +43,14 @@ r.discretePopSim<- function(pop, dt=1){
 
 # r.numericDistri on models-compoundDistributions.R
 
-#' @export
-lambda<- function(...){
-  UseMethod("lambda")  
-}
-
 #' @rdname discretePopSim
 #' @export
-lambda.discretePopSim<- function(pop, dt=1){
-  sampleT<- seq(1, ncol(pop), by=dt)
+lambda.discretePopSim<- function(x, dt=1){
+  sampleT<- seq(1, ncol(x), by=dt)
   if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
-  pop<- pop[,sampleT]
-  lambda<- pop[,-1] / pop[,-ncol(pop)] # lambda = Nt+1 / Nt
-  return (lambda)
+  x<- x[,sampleT]
+  
+  return (x[,-1] / x[,-ncol(x)]) # lambda = Nt+1 / Nt
 }
 
 # lambda.leslieMatrix on model-deterministic.R

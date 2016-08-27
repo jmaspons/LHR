@@ -77,6 +77,10 @@ LefkovitchPost<- function(a, s, j, b, AFR=1){
   return (mat)
 }
 
+#' @export
+lambda<- function(x, ...){
+  UseMethod("lambda")  
+}
 
 #' Lambda
 #'
@@ -86,8 +90,8 @@ LefkovitchPost<- function(a, s, j, b, AFR=1){
 #' @export
 #'
 #' @examples
-lambda.leslieMatrix<- function(mat){ # Ted J. Case. "An Illustrated Guide to Theoretical Ecology" pàg. 64-73
-  return (max(Re(eigen(mat, only.values=TRUE)$values)))
+lambda.leslieMatrix<- function(x){ # Ted J. Case. "An Illustrated Guide to Theoretical Ecology" pàg. 64-73
+  max(Re(eigen(x, only.values=TRUE)$values))
 }
 
 # Use eigen.analysis function to analyse matrices. It is imported from popbio package
@@ -134,13 +138,15 @@ findF_EulerLotka<- function(lambda, a, AFR){
 #' @rdname EulerLotka
 #' @export
 findJ_EulerLotka<- function(lambda, b, a, AFR){
-  F<- findF_EulerLotka(lambda, a, AFR)
+  F<- findF_EulerLotka(lambda=lambda, a=a, AFR=AFR)
   j<- F / b
   j[j < 0 | j > 1]<- NA
   return (j)
 }
 
 #' @rdname EulerLotka
+#' @description TODO: check findA_EulerLotka. Some parameters produce adult survival > 1 and 
+#' mal formed output (returns 4 values instead of 1, see test-Euler-Lotka.R)
 #' @export
 findA_EulerLotka<- function(lambda, b, j, AFR){
   a<- -(b * j^2 * a^(AFR-1) * lambda - lambda^(AFR + 1)) / (lambda^AFR)
@@ -179,6 +185,7 @@ Rmax<- function(fecundity, ageFirstBreeding, lifespan){ # values in years
 
 
 ## TODO: check and reference ----
+# @importFrom popbio eigen.analysis generation.time
 
 # lifeExpectancy<- - 1 / log(GdemoLH$sA) ## SRC: http://www.countrysideinfo.co.uk/bird_lifespan.htm
 
