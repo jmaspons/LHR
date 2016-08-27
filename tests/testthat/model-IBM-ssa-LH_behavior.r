@@ -33,7 +33,7 @@ burnin<- -1
 
 # For x0L<- lapply(1:6, function(x) x0 * x) and dtDiscretize<- 1, replicates<- 10000
 
-params<- getParams.LH_Beh("slow", behavior="preferHab2", scenario="mortalHab2") # check extinctions
+params<- getParams.LH_Beh("slow", behavior="preferHab2", habDiffScenario="mortalHab2") # check extinctions
 # user     system  elapsed 
 # 2586.897   16.457  204.755  :  mc.preschedule<- TRUE
 #1 731.257 3779.975 1436.439  :  mc.preschedule<- FALSE

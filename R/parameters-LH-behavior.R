@@ -132,10 +132,10 @@ setParams2diff1<- function(params,
 
 # params<- getParams()
 # setParams2diff1(params, diff=c(PbFDiff=.5, dDiff=-.3, gDiff=-.2))
-getScenario<- function(scenario=c("identicalHab", "mortalHab2", "nestPredHab2")){
-  scenario<- match.arg(scenario)
+getScenario<- function(habDiffScenario=c("identicalHab", "mortalHab2", "nestPredHab2")){
+  habDiffScenario<- match.arg(habDiffScenario)
   
-  diff<- switch(scenario,
+  diff<- switch(habDiffScenario,
                 `identicalHab`= c(bDiff=0, PbFDiff=0, aDiff=0, abDiff=0, jDiff=0),
                 `mortalHab2`=   c(bDiff=0, PbFDiff=0, aDiff=0.5, abDiff=0.5, jDiff=0.5),
                 `nestPredHab2`= c(bDiff=0, PbFDiff=2, aDiff=0, abDiff=0, jDiff=0)
@@ -144,8 +144,8 @@ getScenario<- function(scenario=c("identicalHab", "mortalHab2", "nestPredHab2"))
 }
 
 setScenario<- function(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=.1,ab1=.25,j1=.25,  a2=.1,ab2=.25,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
-                       scenario="identicalHab", type="probabilityMultiplicative"){
-  params<- setParams2diff1(params=params, diff=getScenario(scenario), type=type)
+                       habDiffScenario="identicalHab", type="probabilityMultiplicative"){
+  params<- setParams2diff1(params=params, diff=getScenario(habDiffScenario), type=type)
   
   return (params)
 }

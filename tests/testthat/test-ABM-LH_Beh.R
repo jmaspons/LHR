@@ -21,9 +21,9 @@ test_that("sample parameter space", {
   getScenario("mortalHab2")
   getScenario("nestPredHab2")
   
-  setScenario(scenario="identicalHab")
-  setScenario(scenario="mortalHab2")
-  setScenario(scenario="nestPredHab2")
+  setScenario(habDiffScenario="identicalHab")
+  setScenario(habDiffScenario="mortalHab2")
+  setScenario(habDiffScenario="nestPredHab2")
   
   setParams2diff1(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=.1,ab1=.25,j1=.25,  a2=.1,ab2=.25,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5))
   getParams.LH_Beh()
@@ -31,6 +31,6 @@ test_that("sample parameter space", {
 })
 
 test_that("exploreABM", {
-  matrix(rep(5, 8), nrow=4, ncol=8, dimnames=list(replicates=NULL, state=c("N1s", "N1b", "N1bF", "N2s", "N2b", "N2bF")))
+  matrix(rep(5, 8), nrow=4, ncol=6, dimnames=list(replicates=NULL, state=c("N1s", "N1b", "N1bF", "N2s", "N2b", "N2bF")))
   obj<- exploreABM()
 })
