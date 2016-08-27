@@ -78,8 +78,8 @@ setMethod("combineLH_Env",
             
             ## Brood failure (e.g. nest predation)
             # breedFail is a proportion of juvenile mortality correlated at the brood level
-            # survival: P(j) = P(jbr ∩ jind) = P(jbr) * P(jind)
-            # death:    P(-j) = P(-jbr ∪ P(-jind | jbr))
+            # survival: P(j) = P(jbr AND jind) = P(jbr) * P(jind)
+            # death:    P(-j) = P(-jbr OR P(-jind | jbr))
             scenario$jind<- scenario$j / (scenario$breedFail * (scenario$j-1) + 1)     # juvenile mortality is divided in brood mortality and individual mortality
             scenario$jbr<- scenario$breedFail * (scenario$j-1) + 1
 
@@ -101,7 +101,7 @@ setMethod("combineLH_Env",
 #' @param ... 
 #'
 #' @return a \code{Model} object with the result of the simulation.
-#' @examples res<- run(model)
+#' @examples res<- run(model, cl=2)
 #' @export
 setGeneric("run", function(model, cl=parallel::detectCores(), ...) standardGeneric("run"))
 

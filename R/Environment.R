@@ -176,7 +176,7 @@ setMethod("seasonOptimCal",
 #' @export
 getSeasonalParams<- function(seasonAmplitude, seasonRange, envMax=1){
   if (!missing(seasonAmplitude)){
-    seasonMean<- (seasonAmplitude + envMax) / 2
+    seasonMean<- envMax - seasonAmplitude / 2
   }else if (!missing(seasonRange)){
     seasonMean<- apply(seasonRange, 1, function(x) (min(x) + max(x))/2)
     seasonAmplitude<- apply(seasonRange, 1, function (x) max(x) - min(x))

@@ -22,7 +22,7 @@ y2<- (sin(x) + rnorm(length(x),0,0.1))/2 + 0.3
 y3<- (sin(x) + rnorm(length(x),0,0.1))/10 + 0.5
 y4<- sin(x)
 
-plot(y1, type="l", ylab="Producció neta", xlab="Temps (mesos)")
+plot(y1, type="l", ylab="Produccio neta", xlab="Temps (mesos)")
 points(y2, type="l", col="green")
 points(y3, type="l", col="red")
 points(y4, type="l", col="blue")
@@ -48,7 +48,7 @@ y2<- (sin(x) + rnorm(length(x),0,0.1))/2 + 0.3
 y3<- (sin(x) + rnorm(length(x),0,0.1))/10 + 0.5
 y4<- sin(x)
 
-plot(y1, type="l", ylab="Producció neta", xlab="Temps (mesos)")
+plot(y1, type="l", ylab="Produccio neta", xlab="Temps (mesos)")
 points(y2, type="l", col="green")
 points(y3, type="l", col="red")
 points(y4, type="l", col="blue")

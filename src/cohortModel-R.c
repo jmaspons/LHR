@@ -277,7 +277,7 @@ SEXP exploreCohortModel(SEXP args)
     Free(seasonPattern);
     Free(pSurv);
     Free(fitdist);
-    //Pàg. 110 i 125 R_exts.pdf
+    //Pag. 110 i 125 R_exts.pdf
 //     PROTECT(colnames = allocVector(VECSXP, 5));
     //     SET_VECTOR_ELT(colnames, 0, "mean");
     //     SET_VECTOR_ELT(colnames, 1, "var");

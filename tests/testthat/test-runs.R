@@ -9,12 +9,14 @@ test_that("discrete time models", {
   sim<- Sim.discretePopSim()
   model<- Model(lh=lh, env=env, sim=sim)
   
-  res<- run(model)
-  expect_is(res, "Model")
-  tmp<- lapply(unlist(res@sim@raw, recursive=FALSE), expect_is, class="discretePopSim")
+  if (skip_on_cran()){
+    res<- run(model)
+    expect_is(res, "Model")
+    tmp<- lapply(unlist(res@sim@raw, recursive=FALSE), expect_is, class="discretePopSim")
   
-  expect_is(result(res), "data.frame")
-  expect_is(result(res, type="Ntf"), "data.frame")
+    expect_is(result(res), "data.frame")
+    expect_is(result(res, type="Ntf"), "data.frame")
+  }
 })
 
 test_that("discrete models with 2 sexes", {
@@ -26,14 +28,16 @@ test_that("discrete models with 2 sexes", {
   sim<- Sim.discretePopSim(sexRatio=0.5, matingSystem="monogamy")
   model<- Model(lh=lh, env=env, sim=sim)
   
-  res<- run(model)
-  expect_is(res, "Model")
-  
-  popList<- unlist(res@sim@raw, recursive=FALSE)
-  # Not implemented models return NA
-  popList<- popList[sapply(popList, function(x) !all(is.na(x)))]
-  
-  tmp<- lapply(popList, expect_is, class="discretePopSim")
+  if (skip_on_cran()){
+    res<- run(model)
+    expect_is(res, "Model")
+    
+    popList<- unlist(res@sim@raw, recursive=FALSE)
+    # Not implemented models return NA
+    popList<- popList[sapply(popList, function(x) !all(is.na(x)))]
+    
+    tmp<- lapply(popList, expect_is, class="discretePopSim")
+  }
 })
 
 
@@ -48,19 +52,21 @@ test_that("compound distribution", {
   
   model<- Model(lh=lh, env=env, sim=sim)
   
-  res<- run(model)
-  expect_is(res, "Model")
-  
-  distriList<- unlist(res@sim@raw, recursive=FALSE)
-  # Not implemented models return NA
-  distriList<- distriList[sapply(distriList, function(x) !all(is.na(x)))]
-  tmp<- lapply(distriList, expect_is, class="numericDistri")
-  
-  expect_is(result(res), "data.frame")
-  # Not available for numericDistri expect_is(result(res, type="Ntf"), "data.frame")
-  
-  # TODO: fix wrong distributions!
-  tmp<- lapply(distriList, function(x) expect_gt(abs(sum(x$p)), 0.95))
+  if (skip_on_cran()){
+    res<- run(model)
+    expect_is(res, "Model")
+    
+    distriList<- unlist(res@sim@raw, recursive=FALSE)
+    # Not implemented models return NA
+    distriList<- distriList[sapply(distriList, function(x) !all(is.na(x)))]
+    tmp<- lapply(distriList, expect_is, class="numericDistri")
+    
+    expect_is(result(res), "data.frame")
+    # Not available for numericDistri expect_is(result(res, type="Ntf"), "data.frame")
+    
+    # TODO: fix wrong distributions!
+    tmp<- lapply(distriList, function(x) expect_gt(abs(sum(x$p)), 0.95))
+  }
 })
 
 test_that("compound distribution with environmental variation", {
@@ -71,20 +77,21 @@ test_that("compound distribution with environmental variation", {
   lh<- lh[lh$lambda == 1,]
   
   model<- Model(lh=lh, env=env, sim=sim)
-  
-  res<- run(model)
-  expect_is(res, "Model")
-  distriList<- unlist(res@sim@raw, recursive=FALSE)
-  # Not implemented models return NA
-  distriList<- distriList[sapply(distriList, function(x) !all(is.na(x)))]
-  
-  tmp<- lapply(distriList, expect_is, class="numericDistri")
-  
-  expect_is(result(res), "data.frame")
-  # Not available for numericDistri expect_is(result(res, type="Ntf"), "data.frame")
-  
-  # TODO: fix wrong distributions!
-  tmp<- sapply(distriList, function(x) expect_gt(abs(sum(x$p)), 0.95))
+  if (skip_on_cran()){
+    res<- run(model)
+    expect_is(res, "Model")
+    distriList<- unlist(res@sim@raw, recursive=FALSE)
+    # Not implemented models return NA
+    distriList<- distriList[sapply(distriList, function(x) !all(is.na(x)))]
+    
+    tmp<- lapply(distriList, expect_is, class="numericDistri")
+    
+    expect_is(result(res), "data.frame")
+    # Not available for numericDistri expect_is(result(res, type="Ntf"), "data.frame")
+    
+    # TODO: fix wrong distributions!
+    tmp<- sapply(distriList, function(x) expect_gt(abs(sum(x$p)), 0.95))
+  }
 })
 
 context("Run discreteABMSim models")
@@ -101,15 +108,17 @@ test_that("ABM LH-behavior", {
   # model<- Model(lh=lh, env=env, sim=sim)
   # model<- model[model$habDiff == "nestPredHab2" & model$behavior == "learnExploreBreed", ]
   
-  res<- run(model)
-  expect_is(res, "Model")
-  
-  #TODO:
-  popABML<- res@sim@raw
-  tmp<- lapply(popABML, expect_is, class="exploreABMSim")
-  
-  expect_is(result(res), "data.frame")
-  expect_is(result(res, type="Ntf"), "data.frame")
+  if (skip_on_cran()){
+    res<- run(model)
+    expect_is(res, "Model")
+    
+    #TODO:
+    popABML<- res@sim@raw
+    tmp<- lapply(popABML, expect_is, class="exploreABMSim")
+    
+    expect_is(result(res), "data.frame")
+    expect_is(result(res, type="Ntf"), "data.frame")
+  }
 })
 
 
@@ -129,9 +138,11 @@ test_that("IBM LH-behavior", {
                 tf=tf, replicates=replicates, raw=FALSE, Ntf=TRUE, stats=TRUE)
   model<- Model(pars=params, sim=sim)
 
-  system.time(res<- run(model, dt=0.5))
-  
-  expect_is(resD<- result(res), "data.frame")
-  # plot(resD[,-1])
-  expect_is(result(res, type="Ntf"), "data.frame")
+  if (skip_on_cran()){
+    system.time(res<- run(model, dt=0.5))
+    
+    expect_is(resD<- result(res), "data.frame")
+    # plot(resD[,-1])
+    expect_is(result(res, type="Ntf"), "data.frame")
+  }
 })

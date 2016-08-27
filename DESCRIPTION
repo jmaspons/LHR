@@ -1,6 +1,6 @@
 Package: LHR
 Type: Package
-Title: Tools for life history modeling
+Title: Tools For Life History Modeling
 Version: 0.2
 Date: 2012-05-23
 Authors@R: person("Joan", "Maspons", email = "j.maspons@creaf.uab.cat", role = c("aut", "cre"))

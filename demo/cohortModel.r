@@ -11,7 +11,7 @@ x<- cohortModel(5, .4, .1, .05, 3, 14, .3, .02, c(1,.8,.5))
 n0<-30
 maxPomitted<- 0.01
 
-survA<- 0.7	# supervivència dels adults
+survA<- 0.7	# supervivencia dels adults
 var.survA<- 0.05	# provabilitat de que un ou arribi a adult [Surv Egg->Adult]
 broods<- 2		# nombre de postes per any
 clutch<- 5		# mida de la posta
@@ -57,7 +57,7 @@ dev.off()
 
 ## Explore parameter space
 ###########################n
-n0<- 3^(0:3) 	# mida de la població inicial
+n0<- 3^(0:3) 	# mida de la poblacio inicial
 maxPomitted<- 0.05
 setwd("../../../../doctorat/projectes/LHT/R")
 source("./libCreaEstrategiesLHT.r")

@@ -90,7 +90,7 @@ lambda<- function(x, ...){
 #' @export
 #'
 #' @examples
-lambda.leslieMatrix<- function(x){ # Ted J. Case. "An Illustrated Guide to Theoretical Ecology" pàg. 64-73
+lambda.leslieMatrix<- function(x){ # Ted J. Case. "An Illustrated Guide to Theoretical Ecology" pag. 64-73
   max(Re(eigen(x, only.values=TRUE)$values))
 }
 
@@ -102,7 +102,7 @@ lambda.leslieMatrix<- function(x){ # Ted J. Case. "An Illustrated Guide to Theor
 
 ## CORRESPONDS TO A PRE-BREEDING CENSUS MATRIX (see test/Euler-Lotka.r)
 # Euler-Lotka equation fails for some cases with no clear pattern (see test/Euler-Lotka.r)
-# http://en.wikipedia.org/wiki/Euler–Lotka_equation
+# http://en.wikipedia.org/wiki/Euler-Lotka_equation
 # http://darwin.eeb.uconn.edu/eeb310/lecture-notes/spotted-owl/node3.html
 # see Euler-Lotka.txt
 # alpha= AFR

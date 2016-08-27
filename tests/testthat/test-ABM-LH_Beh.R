@@ -32,5 +32,8 @@ test_that("sample parameter space", {
 
 test_that("exploreABM", {
   matrix(rep(5, 8), nrow=4, ncol=6, dimnames=list(replicates=NULL, state=c("N1s", "N1b", "N1bF", "N2s", "N2b", "N2bF")))
-  obj<- exploreABM()
+  if (skip_on_cran()){
+    obj<- exploreABM()
+    expect_is(obj, "exploreABMSim")
+  }
 })
