@@ -66,7 +66,7 @@ getParams.LH_Beh<- function(params=data.frame(b=1, broods=1, a=0.7, j=0.3, AFR=1
   habDiffScenario<- match.arg(habDiffScenario)
   behavior<- match.arg(behavior)
   
-  out<- with(params, data.frame(b1=b, b2=b,   broods=broods, PbF1=jbr, PbF2=jbr,  a1=a,ab1=a,j1=jind,  a2=a,ab2=a,j2=jind, AFR=AFR))
+  out<- with(params, data.frame(b1=b, b2=b,   broods=broods, PbF1=1 - jbr, PbF2=1 - jbr,  a1=a,ab1=a,j1=jind,  a2=a,ab2=a,j2=jind, AFR=AFR))
   
   # Add extra parameters for neutral behavior and density dependence
   out$K<- -1 # densodependence not implemented
@@ -91,9 +91,13 @@ getParams.LH_Beh<- function(params=data.frame(b=1, broods=1, a=0.7, j=0.3, AFR=1
   }
   out<- data.frame(do.call("rbind", out))
   
-  return (out)
+  out<- lapply(out, function(x){
+    attributes(x)<- NULL
+    x
+  })
+  
+  return (data.frame(out))
 }
-
 
 
 ## TODO translate parameters to probabilities 
@@ -130,15 +134,15 @@ setParams2diff1<- function(params,
   return (params)
 }
 
-# params<- getParams()
+# params<- getParams.LH_Beh()
 # setParams2diff1(params, diff=c(PbFDiff=.5, dDiff=-.3, gDiff=-.2))
 getScenario<- function(habDiffScenario=c("identicalHab", "mortalHab2", "nestPredHab2")){
   habDiffScenario<- match.arg(habDiffScenario)
   
   diff<- switch(habDiffScenario,
-                `identicalHab`= c(bDiff=0, PbFDiff=0, aDiff=0, abDiff=0, jDiff=0),
-                `mortalHab2`=   c(bDiff=0, PbFDiff=0, aDiff=0.5, abDiff=0.5, jDiff=0.5),
-                `nestPredHab2`= c(bDiff=0, PbFDiff=2, aDiff=0, abDiff=0, jDiff=0)
+                `identicalHab`= c(bDiff=1, PbFDiff=1, aDiff=1, abDiff=1, jDiff=1),
+                `mortalHab2`=   c(bDiff=1, PbFDiff=1, aDiff=0.5, abDiff=0.5, jDiff=0.5),
+                `nestPredHab2`= c(bDiff=1, PbFDiff=2, aDiff=1, abDiff=1, jDiff=1)
   )
   return (diff)
 }

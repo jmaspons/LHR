@@ -116,6 +116,21 @@ setClass("Env", slots=list(seasonRange="data.frame"), contains="data.frame")
 #' @export
 setClass("Model", slots=list(sim="Sim", params="list"), contains="data.frame")
 
+#' Model.discretePopSim
+#' 
+#' @name Model.discretePopSim
+#'
+#' @export
+setClass("Model.discretePopSim", contains="Model")
+
+#' Model.numericDistri
+#' 
+#' @name Model.numericDistri
+#'
+#' @export
+setClass("Model.numericDistri", contains="Model")
+
+
 #' Model.ABM
 #' 
 #' @name Model.ABM
@@ -129,7 +144,6 @@ setClass("Model.ABM", contains="Model")
 #'
 #' @export
 setClass("Model.ssa", contains="Model")
-
 
 ## Check and overview ----
 # getClass("ssa")

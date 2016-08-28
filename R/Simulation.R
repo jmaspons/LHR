@@ -9,17 +9,19 @@ NULL
 #' @return a \code{Sim} object.
 #' @examples Sim()
 #' @export
-setGeneric("Sim", function(params, type="discretePopSim") standardGeneric("Sim"))
+setGeneric("Sim", function(params, type=c("discretePopSim", "numericDistri", "ABM", "ssa")) standardGeneric("Sim"))
 
 setMethod("Sim",
           signature(params="missing", type="ANY"),
-          function(params, type="discretePopSim"){
+          function(params, type=c("discretePopSim", "numericDistri", "ABM", "ssa")){
+            type<- match.arg(type)
+            
             sim<- switch(type,
                          discretePopSim=Sim.discretePopSim(),
                          numericDistri=Sim.numericDistri(),
                          ABM=Sim.ABM(),
                          ssa=Sim.ssa())
-            Sim.discretePopSim()
+            return (sim)
           }
 )
 

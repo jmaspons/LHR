@@ -179,11 +179,11 @@ fitnessdistAIO<- function(n0, survA, var.survA, broods, clutch, survJ, var.survJ
 # }
 
 # Pestabliment<- function(R0poblacio, minR0establiment=2){
-#   resultat<- numeric(ncol(R0poblacio[["R0"]])) # P(establiment) ==> R0 => 2 (remplaç de la poblacio)
+#   resultat<- numeric(ncol(R0poblacio[["R0"]])) # P(establiment) ==> R0 => 2 (population replacement)
 #   names(resultat)<- attributes(R0poblacio[["R0"]])$dimnames$n0
 #   for (i in 1:length(resultat)){
-#     resultat[i]<- which.min(abs(R0poblacio[["R0"]][,i] - minR0establiment)) # posicio de l'R0 més proper a 2
-#     if (R0poblacio[["R0"]][resultat[i],i] < minR0establiment){ # si el més proper esta per sota incrementa en una posicio
+#     resultat[i]<- which.min(abs(R0poblacio[["R0"]][,i] - minR0establiment)) # posicio de l'R0 mes proper a 2
+#     if (R0poblacio[["R0"]][resultat[i],i] < minR0establiment){ # si el mes proper esta per sota incrementa en una posicio
 #       resultat[i]<- resultat[i] + 1
 #     }
 #     resultat[i]<- 1 - sum(R0poblacio[["probabilitat"]][1:resultat[i],i])
@@ -211,16 +211,16 @@ fitnessdistAIO<- function(n0, survA, var.survA, broods, clutch, survJ, var.survJ
 # xyplot(PnAnys ~ nAnys, group=n0, data=x, pch=16, type="s")
 
 ## Fitness(n, exit de cada posta) = n * b * sea -> nombre d'adults produits al llarg de la vida per n0
-# x<-20 #perque el grafic quedi més bonic
-# seqExplor<- trunc(seq(1, max(resulN$n), length=7)) # només grafica per uns quants n
-# n<-0 #perque el grafic quedi més bonic
-# i<-1 #perque el grafic quedi més bonic
+# x<-20 #perque el grafic quedi mes bonic
+# seqExplor<- trunc(seq(1, max(resulN$n), length=7)) # nomes grafica per uns quants n
+# n<-0 #perque el grafic quedi mes bonic
+# i<-1 #perque el grafic quedi mes bonic
 # curve(dbinom(x, size=n[i]*b, prob=sea), from=0, to=x, n=x+1, type="n", add=FALSE, col=0, ylab=)
 # for (i in 1:length(seqExplor)){
 #   curve(dbinom(x, size=seqExplor[i] * nB, prob=sea), from=0, to=x, n=x+1, type="b", pch=1, add=TRUE, col=topo.colors(length(seqExplor))[i])
 # }
 
-## NUMÈRIC
+## NUMERIC
 ###########
 ## n(sa, n0) = anys viscuts pel conjunt de la poblacio adulta (de moment assumim sa constant) -> matriu de lefkovitch?
 # n<-numeric() 

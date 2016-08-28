@@ -37,6 +37,12 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
       popABM[,,ti+1]<- transitionsFunc(N=popABM[,,ti], params=params)
       popABM[,,ti+1]<- apply(popABM[,,ti+1], MARGIN=2, function(x) ifelse(x > maxN, maxN, x))
       
+      if (any(is.na(popABM[,,ti+1]))){
+        warning("NAs produced during the simulation of the discreteABMSim model.")
+        if (ti < tf) popABM[,,(ti+2):(tf+1)]<- -1
+        else popABM[,,tf+1]<- -1
+        break
+      }
       # Stop if all replicates have a class that reach maxN
       if (all(apply(popABM[,,ti+1], MARGIN=1, function(x) any(x == maxN)))){
         popABM[,,tf+1]<- maxN
@@ -144,7 +150,7 @@ exploreABM<- function(x0L=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
     if (discretePop) resPop[[i]]<- list()
     
     pars<- params[i,]
-    
+
     parallel::clusterExport(cl=cl, c("discreteABMSim", "discreteABMSim2discretePopSim", "transitionsFunc", "pars", "replicates", "tf", "maxN", "raw"), envir=environment())
     # parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
     parallel::clusterEvalQ(cl, library(LHR))
@@ -155,9 +161,7 @@ exploreABM<- function(x0L=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
       return(sim)
     })
     
-    # simL<- lapply(x0L, function(x){
-    #   discreteABMSim(N0=x, transitionsFunc=transitionsFunc, params=pars, tf=tf, replicates=replicates, maxN=maxN, raw=raw)
-    # })
+    # simL<- lapply(x0L, function(x) discreteABMSim(N0=x, transitionsFunc=transitionsFunc, params=pars, tf=tf, replicates=replicates, maxN=maxN, raw=raw) )
     
     names(simL)<- paste0("N", N0)
     popL<- lapply(simL, discreteABMSim2discretePopSim)
@@ -222,6 +226,7 @@ exploreABM<- function(x0L=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
   res<- c(res, list(simParams=list(x0L=x0L, tf=tf, replicates=replicates, burnin=burnin)))
   
   if (raw){
+    names(resPop)<- rownames(params)
     res<- c(res, list(discreteABMSim=resABM))
   }
   if (discretePop){

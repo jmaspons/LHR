@@ -428,7 +428,7 @@ mFitSex.tvar<- function(fecundity, j, a, varJ=0, sexRatio=.5, matingSystem=c("mo
                     monogamy=min(popF[,t], popM[,t]),
                     polygyny=popF[,t],
                     polyandry=popM[,t])
-    jEnv<- rbeta(replicates, shape1=jEnv$shape1, shape2=jEnv$shape2)
+    jEnv<- rbeta(replicates, shape1=betaPars$shape1, shape2=betaPars$shape2)
     
     # Juvenile survivors
     reclutes<- rbinom(replicates, nPairs * fecundity * 2, jEnv)

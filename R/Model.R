@@ -13,11 +13,13 @@ NULL
 #' @return a \code{Model} object.
 #' @examples model<- Model()
 #' @export
-setGeneric("Model", function(lh=LH(), env=Env(), sim=Sim(), pars, ...) standardGeneric("Model"))
+setGeneric("Model", function(lh=LH(), env=Env(), sim=Sim(type=match.arg(type)), pars, type=c("discretePopSim", "numericDistri", "ABM", "ssa"), ...) standardGeneric("Model"))
 
+# c("discretePopSim", "numericDistri", "ABM", "ssa")
 setMethod("Model",
-          signature(lh="ANY", env="ANY", sim="ANY", pars="missing"),
-          function(lh=LH(), env=Env(), sim=Sim(), ...){
+          signature(lh="ANY", env="ANY", sim="ANY", pars="missing", type="ANY"),
+          function(lh=LH(), env=Env(), sim=Sim(type=match.arg(type)), type=c("discretePopSim", "numericDistri", "ABM", "ssa"), ...){
+            
             if (inherits(sim, "Sim.ABM")){
               pars<- getParamsCombination.LH_Beh(lh=lh, env=env, ...)
               model<- new("Model.ABM", pars, sim=sim)
@@ -30,8 +32,11 @@ setMethod("Model",
               scenario<- lhEnv$scenario
               parameters<- list(seasonBroodEnv=lhEnv$seasonBroodEnv) #, breedFail=lhEnv$breedFail)
               
-              model<- new("Model", scenario, sim=sim, params=parameters)
-              
+              if (inherits(sim, "Sim.discretePopSim")){
+                model<- new("Model.discretePopSim", scenario, sim=sim, params=parameters)
+              }else{
+                model<- new("Model.numericDistri", scenario, sim=sim, params=parameters)
+              }
             }
             
             return (model)
@@ -40,14 +45,14 @@ setMethod("Model",
 
 
 setMethod("Model",
-          signature(lh="missing", env="missing", sim="Sim.ABM", pars="data.frame"),
+          signature(lh="missing", env="missing", sim="Sim.ABM", pars="data.frame", type="missing"),
           function(sim, pars){
             new("Model.ABM", pars, sim=sim)
           }
 )
 
 setMethod("Model",
-          signature(lh="missing", env="missing", sim="Sim.ssa", pars="data.frame"),
+          signature(lh="missing", env="missing", sim="Sim.ssa", pars="data.frame", type="missing"),
           function(sim, pars){
             new("Model.ssa", pars, sim=sim)
           }
@@ -377,8 +382,8 @@ run.ABM<- function(model, cl=parallel::detectCores(), raw, ...){
   out<- new("Sim.ABM", res$stats, params=model@sim@params)
   
   if (finalPop)    out@Ntf           <- res$Ntf
-  if (discretePop) out@discretePopSim<- res$pop
-  if (raw)         out@raw           <- res$discreABMSim
+  if (discretePop) out@discretePopSim<- res$discretePopSim
+  if (raw)         out@raw           <- res$discreteABMSim
   
   if (numericCL) parallel::stopCluster(cl)
   
@@ -419,7 +424,7 @@ run.ssa<- function(model, cl=parallel::detectCores(), ...){
 
 
 
-## Post process result ----
+## result(): Post process result ----
 #' @rdname Model
 #'
 #' @param model 

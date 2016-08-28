@@ -21,6 +21,7 @@ NULL
 #' @param s subadult survival
 #' @param j juvenile survival
 #' @param AFR 
+#' @param free which parameter is free to vary ("lambda", "j" or "a").
 #' 
 #' @details Errors for free="a".
 #' @return a \code{LH} object.
@@ -30,12 +31,12 @@ NULL
 #' 
 #' @export
 setGeneric("LH", function(pars, lambda=seq(.9, 1.1, by=0.1), fecundity, broods=2^(0:2), b=c(1, 2, 5, 10),
-                          a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s=a, AFR=1, free="j") standardGeneric("LH"))
+                          a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s=a, AFR=1, free="j", popbio=FALSE) standardGeneric("LH"))
 
 setMethod("LH",
           signature(pars="data.frame", lambda="missing", fecundity="missing", broods="missing", b="missing",
-                    a="missing", j="missing", s="missing", AFR="missing", free="missing"),
-          function(pars){
+                    a="missing", j="missing", s="missing", AFR="missing", free="missing", popbio="ANY"),
+          function(pars, popbio=FALSE){
             # if not defined, subadult survival is equal to adult survival. Only useful for AFR > 1
             if (!"s" %in% names(pars)){
               pars$s<- pars$a
@@ -43,7 +44,7 @@ setMethod("LH",
             
             pars<- unique(pars[,c("lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")]) # Sort columns
             
-            if (requireNamespace("popbio", quietly=TRUE)){
+            if (popbio & requireNamespace("popbio", quietly=TRUE)){
               popbio<- apply(pars, 1, function(x){
                 mat<- with(as.list(x), LefkovitchPre(a=a, s=s, bj=fecundity * j, AFR=AFR))
                 return(eigen.analisys2df(mat))
@@ -59,14 +60,14 @@ setMethod("LH",
 
 setMethod("LH",
           signature(pars="missing", lambda="ANY", fecundity="missing", broods="ANY", b="ANY",
-                    a="ANY", j="ANY", s="ANY", AFR="ANY", free="ANY"),
+                    a="ANY", j="ANY", s="ANY", AFR="ANY", free="ANY", popbio="ANY"),
           function(lambda=seq(.9, 1.1, by=0.1), broods=2^(0:2), b=c(1, 2, 5, 10), 
-                   a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s=a, AFR=1, free="j"){
+                   a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s=a, AFR=1, free="j", popbio=FALSE){
 
             pars<- sampleLH(lambda=lambda, broods=broods, b=b, j=j, a=a, AFR=AFR, free=free)
             # pars<- sampleLH()
             rownames(pars)<- NULL
-            LH(pars=pars)
+            LH(pars=pars, popbio=popbio)
           }
 )
 
