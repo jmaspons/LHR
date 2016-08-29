@@ -470,12 +470,6 @@ setMethod("result",
 
 
 ## Generic methods ----
-#' @export
-setMethod("print", signature(x="Model"),
-          function(x, ...){
-            print(S3Part(x), ...)
-          }
-)
 
 #' @export
 setMethod("show", signature(object="Model"),
@@ -489,10 +483,12 @@ setMethod("show", signature(object="Model"),
               print(res)
               cat("Use result(model) to get a data.frame with the parameters and the results.\n")
             }
+            invisible(object)
           }
 )
 
 # Only allowed to subset by rows but $ and [[i]] works for columns
+# TODO: keep the results from run(model)
 #' @rdname Model
 #' @export
 `[.Model`<- function(x, ...){
@@ -500,4 +496,45 @@ setMethod("show", signature(object="Model"),
   Model(lh=LH(xSel), env=Env(xSel), sim=Sim(x))
 }
 
+#' Plot
+#'
+#' @rdname Model
+#' @param x 
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot.Model<- function(x, ...){
+  if (nrow(x@sim) == 0){
+    message("No results found. Plotting the parameter space.\n\trun(model) to simulate.")
+    
+    return(graphics::plot(S3Part(x)))
+  }
+  
+  res<- result(x)
+  res$Pest<- 1 - res$extinct
+  res$scenario<- factor(res$scenario)
+  
+  ggplot2::ggplot(res, ggplot2::aes(x=N0, y=Pest, group=scenario, color=scenario)) + 
+    ggplot2::geom_line() + ggplot2::geom_point() + ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=label_both)
+}
 
+hist.Model<- function(x, ...){
+  if (nrow(x@sim) == 0){
+    stop("No results found.\n\trun(model) to simulate.")
+    
+    return(graphics::hist(S3Part(x)))
+  }
+  
+  N<- x@sim@Ntf
+  xd<- data.frame(x)
+  
+  N<- merge(N, xd, by.x="scenario", by.y=0)
+  N$scenario<- factor(res$scenario)
+  N<- reshape2::melt(N, id.vars=c("scenario", "N0", "seasonAmplitude", "var", "breedFail"), value.name="Ntf")
+  
+  ggplot2::ggplot(N, ggplot2::aes(x=Ntf, group=scenario, color=scenario)) + 
+    ggplot2::geom_histogram() + ggplot2::facet_grid(N0 + breedFail~seasonAmplitude + var, labeller=label_both)
+}

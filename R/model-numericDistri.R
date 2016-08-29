@@ -37,7 +37,7 @@ setMethod("tDistri",
 
             out<- NA
             
-            broodMortality<- sex<- varEnv<- seasonalEnv<- FALSE
+            tf1<- broodMortality<- sex<- varEnv<- seasonalEnv<- FALSE
 
             if (tf == 1) tf1<- TRUE                               # only one time step
             if(any(breedFail != 0)) broodMortality<- TRUE         # differential brood mortality
@@ -317,11 +317,12 @@ mSurvBVSex.distri<- function(broods, b, j, a, breedFail, sexRatio=0.5, matingSys
 
 ## Multiple time steps models ----
 ## Decrease accuracy after 50 timesteps aprox. Use logP(p) reduce omitted probability
+## TODO: fix log probabilities when = 1 or 0??
 mFit.tdistri<- function(fecundity, j, a, N0, tf, logP=TRUE){
   N<- mFit.distri(fecundity, j, a, N0, logP=logP)
   at<- attributes(N)
   for (i in 2:tf){
-    cat(i, "/", tf, nrow(N), "p=", sum(logP(N, logP=FALSE)$p), "max x=", N$x[nrow(N)], "\n")
+    message(i, "/", tf, nrow(N), "p=", sum(logP(N, logP=FALSE)$p), "max x=", N$x[nrow(N)], "\n")
     N<- mFit.distri(fecundity, j, a, N, logP=logP)
     print(utils::head(N$x[N$p %in% c(-Inf, 0)]))
     N<- N[!N$p %in% c(-Inf, 0),]
@@ -337,7 +338,7 @@ mSurvBV.tdistri<- function(broods, b, j, a, breedFail, N0, tf, logP=TRUE){
   N<- mSurvBV.distri(broods, b, j, a, breedFail, N0, logP=logP)
   at<- attributes(N)
   for (i in 2:tf){
-    cat(i, "/", tf, nrow(N), "p=", sum(logP(N, logP=FALSE)$p), "max x=", N$x[nrow(N)], "\n")
+    message(i, "/", tf, nrow(N), "p=", sum(logP(N, logP=FALSE)$p), "max x=", N$x[nrow(N)], "\n")
     N<- mSurvBV.distri(broods, b, j, a, breedFail, N, logP=logP)
     N<- N[!N$p %in% c(-Inf, 0),]
   }

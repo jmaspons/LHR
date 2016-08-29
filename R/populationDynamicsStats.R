@@ -93,4 +93,36 @@ trendsProp.numericDistri<- function(distri, N0){
   return(data.frame(increase, decrease, stable, extinct))
 }
 
+## Graphics ----
+
+#' Plot population size time series of a discretePopSim simulation with replicates.
+#' 
+#' @rdname discretePopSim
+#' @param x a discretePopSim object.
+#' @param ... parameters to \code{\link[graphics]{matplot}}.
+#'
+#' @return
+#' @export
+plot.discretePopSim<- function(x, type="l", xlab="t", ylab="N", ...){
+  x<- t(x)
+  graphics:: matplot(x, type=type, xlab=xlab, ylab=ylab, ...)
+}
+
+#' Plot a histogram with the final population size of each replicate.
+#'
+#' @rdname discretePopSim
+#' @param x 
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+hist.discretePopSim<- function(x, xlab="N", ...){
+  main<- as.expression(bquote("N_t=" * .(ncol(x) - 1) * " for " * .(nrow(x)) * " replicates", where=environment()))
+  x<- x[,ncol(x)]
+  graphics::hist(x, main=main, xlab=xlab, ...)
+}
+
+
 ## Ideas: Lyapunov exponents

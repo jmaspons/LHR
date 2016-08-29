@@ -229,28 +229,26 @@ setMethod("Sim.ssa",
 
 
 ## Generic ----
-#' @export
-setMethod("print", signature(x="Sim"),
-          function(x, ...){
-            print(S3Part(x), ...)
-          }
-)
 
 #' @export
 setMethod("show", signature(object="Sim"),
           function(object){
-            cat("Object of class", class(object), "with", nrow(object), "simulations\n Parameters:\n")
-            cat("N0:\n")
-            print(object@params$N0) # vector with more than one value
-            tmp<- switch (class(object),
-              Sim.ABM=print(data.frame(object@params[-c(1,2)]), row.names=FALSE), # one value only (1=N0, 2=transitionsFunc)
-              Sim.ssa=print(data.frame(object@params[-c(1:3)]), row.names=FALSE), # one value only (1=N0, 2=transitionMat, 3=rateFunc)
-              Sim=print(data.frame(object@params[-1]), row.names=FALSE) # one value only
-            )
+            cat("Object of class", class(object), "with", nrow(object), "simulations\n")
+            if (nrow(object) > 0 ){
+              print(S3Part(object))
+              cat("\n")
+            }
             
-            cat("\n")
-            print(S3Part(object))
+            cat(" Parameters:\n")
+            pars<- object@params
             
+            func<- sapply(pars, inherits, "function")
+            gt1<- sapply(pars, length) > 1
+            
+            print(pars[gt1 & !func]) # Parameters with more than one value
+            print(data.frame(pars[!gt1 &!func]), row.names=FALSE) # Parameters with only one value
+            
+            invisible(object)
           }
 )
 

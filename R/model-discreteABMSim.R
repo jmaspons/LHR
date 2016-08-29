@@ -17,6 +17,7 @@ NULL
 #' @param tf 
 #' @param replicates 
 #' @param maxN 
+#' @param raw if \code{TRUE} return the complete time serie, otherwise only t0  and tf. Useful when memory is limited.
 #'
 #' @return
 #' @export
@@ -24,7 +25,7 @@ NULL
 #' @examples
 discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
                           transitionsFunc=transitionABM.LH_Beh,
-                          params=list(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=.1,ab1=.25,j1=.25,  a2=.1,ab2=.25,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
+                          params=list(b1=2, b2=2,   broods=2, PbF1=.4, PbF2=.4,  a1=.1,ab1=.25,j1=.25,  a2=.1,ab2=.25,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
                           tf=10, replicates=100, maxN=10000, raw=TRUE){
   stateName<- names(N0)
   nStates<- length(stateName)
@@ -111,7 +112,7 @@ discreteABMSim2discretePopSim<- function(popABM, omitJuv=FALSE){
 #                  tf=tf, replicates=replicates, discretePop=discretePop, finalPop=finalPop, cl=cl, ...)
 
 exploreABM<- function(x0L=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
-                      params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=c(.1,.8)  ,ab1=.25,j1=.25,  a2=.1,ab2=.25,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
+                      params=data.frame(b1=2, b2=2,   broods=2, PbF1=.4, PbF2=.4,  a1=c(.1,.8)  ,ab1=.25,j1=.25,  a2=.1,ab2=.25,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
                       transitionsFunc=transitionABM.LH_Beh, tf=10, replicates=100,
                       raw=TRUE, discretePop=TRUE, finalPop=TRUE, burnin=-1, maxN=100000,
                       cl=parallel::detectCores(), verbose=FALSE, ...){
@@ -242,6 +243,41 @@ exploreABM<- function(x0L=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
   
   class(res)<- "exploreABMSim"
   return (res)
+}
+
+## Graphics ----
+#' Plot population size time series of a discreteABMSim simulation with replicates.
+#' 
+#' @rdname discreteABMSim
+#' @param x a discreteABMSim object.
+#' @param ... parameters passed to \code{\link[graphics]{matplot}}.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot.discreteABMSim<- function(x, type="l", xlab="t", ylab="N", ...){
+  x<- t(apply(x, MARGIN=3, rowSums, dims=1))
+  graphics::matplot(x, type=type, xlab=xlab, ylab=ylab, ...)
+}
+
+#' Plot a histogram with the final population size of each replicate.
+#' 
+#' @rdname discreteABMSim
+#' @param x 
+#' @param ... parameters passed to \code{\link[graphics]{hist}}.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+hist.discreteABMSim<- function(x, main, xlab="N", ...){
+  if (missing(main))
+    main<- as.expression(bquote("N"[t] == .(dim(x)[3] - 1) * " for " * .(dim(x)[1]) * " replicates", where=environment()))
+  
+  x<- rowSums(x[,,dim(x)[3]])
+  
+  graphics::hist(x, main=main, xlab=xlab, ...)
 }
 
 

@@ -86,8 +86,12 @@ transitionABM.LH_Beh<- compiler::cmpfun(transitionABM.LH_Beh) # byte-compile the
 
 
 ## Graphics ----
-plotSim<- function(sim, groups=c("habitat", "age", "habitat*age", "all")[1], ...){
+# TODO:
+plotLH_behavior<- function(sim, groups=c("habitat", "age", "habitat*age", "all"), ...){
   if (is.integer(groups)) groups<- c("habitat", "age", "habitat*age", "all")[groups]
+  else groups<- match.arg(groups)
+  
+  if (!inherits(sim, discretePop))
   tmp<- sim
   switch(groups,
          all={
