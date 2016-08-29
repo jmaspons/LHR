@@ -189,9 +189,11 @@ run.discretePopSim<- function(model, cl=parallel::detectCores()){
 }
 
 
-runScenario.discretePopSim<- function (scenario, pars){
-  message(rownames(scenario), "/", nrow(scenario), "\n")
-  print(scenario, row.names=FALSE)
+runScenario.discretePopSim<- function (scenario, pars, verbose=TRUE){
+  if (verbose){
+    message(rownames(scenario), "/", nrow(scenario), "\n")
+    print(scenario, row.names=FALSE)
+  }
   
   res<- matrix(NA_real_, nrow=length(pars$N0), ncol=12, 
                dimnames=list(scenario=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", pars$N0),
@@ -219,9 +221,9 @@ runScenario.discretePopSim<- function (scenario, pars){
     
     pop<- with(scenario, discretePopSim(broods=broods, b=b, j=jindSeason, a=a, breedFail=1 - jbrSeason,
                varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
-               sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, replicates=pars$replicates, tf=pars$tf))
+               sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, replicates=pars$replicates, tf=pars$tf, maxN=pars$maxN))
     
-    if (is.null(pop) | is.na(pop) | is.list(pop)){ ## TODO: pop<- list(popF, popM) when mating system != NA -> 2 sexes
+    if (is.null(pop) | all(is.na(pop)) | is.list(pop)){ ## TODO: pop<- list(popF, popM) when mating system != NA -> 2 sexes
       res[n, c("scenario", "N0")]<- c(as.numeric(rownames(scenario)), N0)
       if (pars$raw){
         rawSim[[n]]<- NA
@@ -297,9 +299,11 @@ run.numericDistri<- function(model, cl=parallel::detectCores()){
 }
 
 
-runScenario.numericDistri<- function(scenario, pars){
-  cat(rownames(scenario), "/", nrow(scenario), "\n")
-  print(scenario, row.names=FALSE)
+runScenario.numericDistri<- function(scenario, pars, verbose=TRUE){
+  if (verbose){
+    cat(rownames(scenario), "/", nrow(scenario), "\n")
+    print(scenario, row.names=FALSE)
+  }
   
   res<- matrix(NA_real_, nrow=length(pars$N0), ncol=12, 
                dimnames=list(scenario=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", pars$N0),
@@ -323,8 +327,8 @@ runScenario.numericDistri<- function(scenario, pars){
     # maybe var collide with var()?? It seems is not the case...
     distri<- with(scenario, tDistri(broods=broods, b=b, j=jindSeason, a=a, breedFail=1 - jbrSeason,
                                                  varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
-                                                 sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, tf=pars$tf))
-    if (is.null(distri) | is.na(distri)){
+                                                 sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, tf=pars$tf)) #TODO: add , maxN=pars$maxN
+    if (is.null(distri) | all(is.na(distri))){
       res[n,c("scenario", "N0")]<- c(as.numeric(rownames(scenario)), N0)
       if (pars$raw){
         rawSim[[n]]<- NA
