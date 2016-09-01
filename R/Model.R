@@ -43,18 +43,11 @@ setMethod("Model",
           }
 )
 
-
 setMethod("Model",
-          signature(lh="missing", env="missing", sim="Sim.ABM", pars="data.frame", type="missing"),
-          function(sim, pars){
-            new("Model.ABM", pars, sim=sim)
-          }
-)
-
-setMethod("Model",
-          signature(lh="missing", env="missing", sim="Sim.ssa", pars="data.frame", type="missing"),
-          function(sim, pars){
-            new("Model.ssa", pars, sim=sim)
+          signature(lh="missing", env="missing", sim="ANY", pars="data.frame", type="ANY"),
+          function(sim=Sim(type=match.arg(type)), pars, type=c("discretePopSim", "numericDistri", "ABM", "ssa")){
+            modelClass<- gsub("Sim.", "Model.", class(sim))
+            new(modelClass, pars, sim=sim)
           }
 )
 
@@ -281,7 +274,7 @@ run.numericDistri<- function(model, cl=parallel::detectCores()){
 #   }
   
   
-  res<- lapply(sim, function(x) x$res)
+  res<- lapply(sim, function(x) x$stats)
   res<- do.call("rbind", res)
   res<- as.data.frame(res)
   res<- res[order(res$scenario, res$N0),]
@@ -337,15 +330,19 @@ runScenario.numericDistri<- function(scenario, pars, verbose=TRUE){
       next
     }
     
-    ## TODO: pop<- list(popF, popM)
+    ## TODO 2 sexes models: pop<- list(popF, popM)
     distri<- logP(distri, logP=FALSE)
     distri<- cumsum(distri)
     selN0<- which(distri$x == N0)
-    tmp<- c(increase= 1 - distri$cump[selN0], decrease=distri$cump[selN0-1], stable=distri$p[selN0], extinct=distri$p[1])
+    stats<- c(increase= 1 - distri$cump[selN0], decrease=distri$cump[selN0-1], stable=distri$p[selN0], extinct=distri$p[1])
+    
     distriLambda<- lambda(distri, N0=N0, tf=pars$tf)
     distriR<- r(distri, N0=N0, tf=pars$tf)
+    distriLambda<- sdistri(distriLambda)
+    distriR<- sdistri(distriR)
     
-    res[n,]<- c(as.numeric(rownames(scenario)), N0, tmp, as.numeric(sdistri(distriR)), as.numeric(sdistri(distriLambda)))
+    resTmp<- c(scenario=as.numeric(rownames(scenario)), N0=N0, stats, as.numeric(distriR), as.numeric(distriLambda))
+    res[n,]<- resTmp
     
     if (pars$raw){
       rawSim[[n]]<- distri
@@ -353,7 +350,7 @@ runScenario.numericDistri<- function(scenario, pars, verbose=TRUE){
     }
   }
   
-  res<- list(res=res)
+  res<- list(stats=res)
   if (pars$raw) res<- c(res, list(raw=rawSim))
   
   return (res)
@@ -442,20 +439,35 @@ setGeneric("result", function(model, type="stats") standardGeneric("result"))
 
 setMethod("result", 
           signature(model="Model", type="ANY"),
-          function(model, type="stats"){
-            if (nrow(model@sim) == 0){
+          function(model, type=c("stats", "N0_Pest", "Ntf")){
+            type<- match.arg(type)
+            
+            if (nrow(model@sim) == 0 & nrow(model@sim@N0_Pest) == 0){
               stop("There are no results yet. Use run(model) to start the simulations. The function return a model with the results on the sim slot.\n")
             }
 
             res<- switch(type,
               stats={
+                if (nrow(model@sim) == 0){
+                  stop("There are no results yet. Use run(model) to start the simulations. The function return a model with the results on the sim slot.\n")
+                }
                 res<- merge(S3Part(model), S3Part(model@sim), by.x="row.names", by.y="scenario")
                 names(res)[1]<- "scenario"
                 if (is.numeric(model@sim$scenario)) res$scenario<- as.numeric(res$scenario)
                 res<- cbind(res[,c("scenario","N0")], res[,-c(1, grep("N0", names(res)))]) # sort columns scenario, N0, ...
                 res<- res[order(res$scenario, res$N0),]
-                res},
+                res
+              },
+              N0_Pest={
+                if (nrow(model@sim@N0_Pest) == 0){
+                  stop("There are no results yet. Use findN0_Pest(model) to start the simulations. The function return a model with the results on the model@sim@N0_Pest slot.\n")
+                }
+                res<- cbind(S3Part(model), S3Part(model@sim@N0_Pest))
+              },
               Ntf={
+                if (nrow(model@sim@Ntf) == 0){
+                  stop("There are no results yet. Use run(model) to start the simulations. Check that model@sim@params@Ntf is TRUE before running. The function return a model with the results on the @sim@Ntf slot.\n")
+                }
                 res<- model@sim@Ntf
                 res<- reshape2::melt(res, id.vars=1:2, value.name="Ntf") # id vars: scenario and N0
                 res$quantile<- as.numeric(res$variable)
@@ -474,15 +486,36 @@ setMethod("result",
 #' @export
 setMethod("show", signature(object="Model"),
           function(object){
-            cat("Object of class ", class(object), " with", nrow(object), "scenarios\n")
-            if (nrow(object@sim) == 0){
+            cat("Object of class ", class(object), " with", nrow(object), "scenarios\n\n")
+            
+            if (nrow(object@sim) == 0 & nrow(object@sim@N0_Pest) == 0){
               print(S3Part(object)) # S3Part(x)[,1:12]
-              cat("There are no results yet. Use run(model) to start the simulations.\n")
-            }else{
-              res<- result(object)
-              print(res)
-              cat("Use result(model) to get a data.frame with the parameters and the results.\n")
+              cat("There are no results yet. Use run(model) to start the simulations for all scenarios and N0 or findN0_Pest(model) to find the N0 giving a fixed extinction probability.\n")
+            } else {
+            
+              if(nrow(object@sim) > 0) {
+                cat("Stats:\n")
+                res<- result(object)
+                print(res)
+                cat("Use result(model) to get a data.frame with the parameters and the results.\n\n")
+              }
+              
+              if (nrow(object@sim@N0_Pest) > 0){
+                cat("N0_Pest:\n")
+                res<- result(object, type="N0_Pest")
+                print(res)
+                cat("Use result(model, type=\"N0_Pest\") to get a data.frame with the parameters and the results.\n\n")
+              }
+              
+              if (nrow(object@sim) == 0){
+                cat("Use run(model) to start the simulations for all scenarios and N0.\n")
+              }
+              
+              if (nrow(object@sim@N0_Pest) == 0){
+                cat("Use findN0_Pest(model) to find the N0 giving a fixed extinction probability (0.5 by default).\n")
+              }
             }
+            
             invisible(object)
           }
 )

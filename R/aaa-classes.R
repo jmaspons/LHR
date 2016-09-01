@@ -41,9 +41,10 @@ setClass("LH.ssa", contains="LH")
 #'
 #' @slot params list. 
 #' @slot raw list. 
+#' @slot N0_Pest.
 #'
 #' @export
-setClass("Sim", slots=list(params="list", raw="ANY"), 
+setClass("Sim", slots=list(params="list", raw="ANY", N0_Pest="data.frame"), 
          contains="data.frame")
 
 

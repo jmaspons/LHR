@@ -38,6 +38,7 @@ Collate:
     'exploreCohortModel.R'
     'exploreSSA.R'
     'exploreStructures.R'
+    'findN0_Pest.R'
     'model-ABM_LH_behavior.R'
     'model-IBM-ssa_LH_behavior.R'
     'model-deterministic.R'

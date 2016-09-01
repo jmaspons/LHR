@@ -235,10 +235,17 @@ setMethod("Sim.ssa",
 #' @export
 setMethod("show", signature(object="Sim"),
           function(object){
-            cat("Object of class", class(object), "with", nrow(object), "simulations\n")
+            cat("Object of class", class(object), "with", nrow(object), "simulations\n\n")
+            
             if (nrow(object) > 0 ){
               print(S3Part(object))
-              cat("\n")
+              cat("\n\n")
+            }
+            
+            if (nrow(object@N0_Pest) > 0 ){
+              cat("N0=f(P_est):\n")
+              print(object@N0_Pest)
+              cat("\n\n")
             }
             
             cat(" Parameters:\n")
