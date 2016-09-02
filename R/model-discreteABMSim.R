@@ -45,11 +45,11 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
         break
       }
       # Stop if all replicates have a class that reach maxN
-      if (all(apply(popABM[,,ti+1], MARGIN=1, function(x) any(x == maxN)))){
+      if (all(apply(popABM[,,ti+1], MARGIN=1, function(x) any(c(x == maxN, FALSE), na.rm=TRUE)))){ # FALSE in case all is NA
         popABM[,,tf+1]<- maxN
         break
       }# Stop if all replicates get extinct
-      if (all(apply(popABM[,,ti+1], MARGIN=1, function(x) all(x <= 0))) & ti < tf){
+      if (all(apply(popABM[,,ti+1], MARGIN=1, function(x) all(c(x <= 0, TRUE), na.rm=TRUE))) & ti < tf){ # TRUE in case all is NA
         popABM[,,(ti+2):(tf+1)]<- 0
         break
       }
@@ -64,12 +64,12 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
       popABM[,,2]<- apply(popABM[,,2], MARGIN=2, function(x) ifelse(x > maxN, maxN, x))
 
       # Stop if all replicates have a class that reach maxN
-      if (all(apply(popABM[,,2], MARGIN=1, function(x) any(x == maxN)))){
+      if (all(apply(popABM[,,2], MARGIN=1, function(x) any(c(x == maxN, FALSE), na.rm=TRUE)))){ # FALSE in case all is NA
         popABM[,,2]<- maxN
         pop[,ti + 1]<- maxN
         break
       }# Stop if all replicates get extinct
-      if (all(apply(popABM[,,2], MARGIN=1, function(x) all(x <= 0)))){
+      if (all(apply(popABM[,,2], MARGIN=1, function(x) all(c(x <= 0, TRUE), na.rm=TRUE)))){ # TRUE in case all is NA
         break
       }
     }
@@ -79,12 +79,12 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
   pop<- discreteABMSim2discretePopSim(popABM) # sort replicates by final size
   
   popABM<- popABM[order(pop[,ncol(pop)]),,, drop=FALSE]
-  class(popABM)<- c("discreteABMSim", "array")
   
   if (Ntf){
-    popABM<- popABM[,,c(1, dim(popABM)[3])]
+    popABM<- popABM[,,c(1, dim(popABM)[3]), drop=FALSE]
   }
   
+  class(popABM)<- c("discreteABMSim", "array")
   return(popABM)
 }
 
@@ -98,8 +98,6 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
 #'
 #' @examples
 discreteABMSim2discretePopSim<- function(popABM, omitJuv=FALSE){
-  if (inherits(popABM, "list")) popABM<- popABM$discreteABMSim
-
   if (omitJuv){
     pop<- apply(popABM[, !grepl("j", colnames(popABM)),], MARGIN=3, rowSums)
   }else{

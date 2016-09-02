@@ -2,7 +2,10 @@ context("discreteABMSim LH_behavior")
 
 test_that("discreteABMSim", {
   obj<- discreteABMSim()
-  
+  expect_is(obj, "discreteABMSim")
+  obj<- discreteABMSim(Ntf=TRUE)
+  expect_is(obj, "discreteABMSim")
+  expect_is(summary(obj), "data.frame")
   
   pop<- discreteABMSim2discretePopSim(obj)
   expect_is(pop, "discretePopSim")

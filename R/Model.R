@@ -456,7 +456,7 @@ runScenario.ABM<- function (scenario, pars, verbose=FALSE){
   
   for (n in 1:length(pars$N0)){
     N0<- pars$N0[[n]]
-    popABM<- discreteABMSim(N0=N0, params=scenario, transitionsFunc=pars$transitionsFunc, replicates=pars$replicates, tf=pars$tf, maxN=pars$maxN, Ntf=!pars$raw)
+    popABM<- discreteABMSim(N0=N0, params=scenario, transitionsFunc=pars$transitionsFunc, replicates=pars$replicates, tf=pars$tf, maxN=pars$maxN, Ntf=!pars$raw & !pars$discretePopSim)
     
     N0<- sum(N0)
     
@@ -483,6 +483,7 @@ runScenario.ABM<- function (scenario, pars, verbose=FALSE){
     if (pars$Ntf){
       popABM<- popABM[,,dim(popABM)[3]]
       popABM<- rowSums(popABM)
+      popABM[is.na(popABM)]<- 0
       Ntf[n, -c(1:2)]<- sort(popABM) # First columns: scenario and N0
     }
   }

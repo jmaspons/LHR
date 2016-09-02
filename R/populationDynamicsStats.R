@@ -20,6 +20,7 @@ summary.discretePopSim<- function(object, dt=1){
   GL<- G(meanL, varL)
   trends<- trendsProp(object)
   res<- data.frame(trends, GR, meanR, varR, GL, meanL, varL)
+  
   return(res)
 }
 
@@ -47,9 +48,9 @@ r<- function(...){
 r.discretePopSim<- function(pop, dt=1){
   sampleT<- seq(1, ncol(pop), by=dt)
   if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
-  pop<- pop[, sampleT]
+  pop<- pop[, sampleT, drop=FALSE]
   dN<- t(diff(t(pop))) # dN =  N_t+1 - N_t
-  N0<- pop[,-ncol(pop)]
+  N0<- pop[,-ncol(pop), drop=FALSE]
   r<- (dN / dt) / N0
 #   names(r)<- colnames(dN) # otherwise it takes the names from N0 (0:(tf-1) instead of 1:tf as does lambda function
   return (r) # intrinsic grow rate (r = dN / dt / N)
@@ -62,9 +63,9 @@ r.discretePopSim<- function(pop, dt=1){
 lambda.discretePopSim<- function(x, dt=1){
   sampleT<- seq(1, ncol(x), by=dt)
   if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
-  x<- x[,sampleT]
+  x<- x[,sampleT, drop=FALSE]
   
-  return (x[,-1] / x[,-ncol(x)]) # lambda = Nt+1 / Nt
+  return (x[,-1, drop=FALSE] / x[,-ncol(x), drop=FALSE]) # lambda = Nt+1 / Nt
 }
 
 # lambda.leslieMatrix on model-deterministic.R
@@ -81,10 +82,10 @@ trendsProp<- function(...){
 trendsProp.discretePopSim<- function(pop, dt=1){
   sampleT<- seq(1, ncol(pop), by=dt)
   if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
-  pop<- pop[, sampleT]
+  pop<- pop[, sampleT, drop=FALSE]
   dN<- t(diff(t(pop))) # dN =  N_t+1 - N_t
-  N0<- pop[,-ncol(pop)]
-  popF<- pop[,ncol(pop)] # final population
+  N0<- pop[,-ncol(pop), drop=FALSE]
+  popF<- pop[,ncol(pop), drop=FALSE] # final population
   popF[is.na(popF)]<- 0
   replicates<- nrow(pop)
   nTransitions<- sum(!is.na(dN))
@@ -104,6 +105,7 @@ trendsProp.numericDistri<- function(distri, N0){
   decrease<- sum(distri$p[1:which(distri$x == (N0 - 1))])
   stable<- distri$p[distri$x == N0]
   extinct<- distri$p[distri$x == 0]
+  
   return(data.frame(increase, decrease, stable, extinct))
 }
 
