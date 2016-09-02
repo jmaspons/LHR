@@ -23,10 +23,11 @@ findN0_Pest<- function(model=Model(), cl=parallel::detectCores(), Pobjective=.5,
     numericCL<- FALSE
   }
   
-  parallel::clusterExport(cl=cl, c("model", "Pobjective", "verbose"), envir=environment())
+  sim<- model@sim
+  parallel::clusterExport(cl=cl, c("sim", "Pobjective", "verbose"), envir=environment())
   parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
   parallel::clusterEvalQ(cl, library(LHR))
-  N0_Pest<- parallel::parLapply(cl=cl, scenario, findN0_Pest.scenario, sim=model@sim, Pobjective=Pobjective, verbose=verbose)
+  N0_Pest<- parallel::parLapply(cl=cl, scenario, findN0_Pest.scenario, sim=sim, Pobjective=Pobjective, verbose=verbose)
 
   # N0_Pest<- lapply(scenario, findN0_Pest.scenario, sim=model@sim, Pobjective=Pobjective, verbose=verbose)
   # 
@@ -168,7 +169,7 @@ Pestablishment.discretePopSim<- function(N0, scenario, parsSim){
   parsSim$Ntf<- FALSE
   res<- runScenario.discretePopSim(scenario=scenario, pars=parsSim, verbose=FALSE)
   
-  Pest<- 1 - res$res[,"extinct"]
+  Pest<- 1 - res$stats[,"extinct"]
   
   return(Pest)
 }
@@ -189,11 +190,15 @@ Pestablishment.numericDistri<- function(N0, scenario, parsSim){
 Pestablishment.ABM<- function(N0, scenario, parsSim){
   if (N0 == 0) return(0)
   
-  N0class<- parsSim$N0[[1]] * N0 %/% sum(parsSim$N0[[1]]) # split N0 between classes with N0 != 0
-  N0class[which(N0class > 0)[1]]<- N0class[which(N0class > 0)[1]] + N0 %% sum(N0class) # add the remaining to the first class with N0 != 0
+  selClass<- which(parsSim$N0[[1]] > 0)
+  N0class<- parsSim$N0[[1]] * (N0 %/% sum(parsSim$N0[[1]])) # split N0 evenly between classes with N0 != 0
   
-  res<- exploreABM(x0L=N0class, params=scenario, transitionsFunc=parsSim$transitionsFunc, tf=parsSim$tf, replicates=parsSim$replicates,
-                   raw=FALSE, discretePop=FALSE, finalPop=FALSE, maxN=parsSim$maxN, cl=1) # cl=1 -> only one N0.
+  mod<- N0 %% sum(parsSim$N0[[1]])
+  if (mod > 0) N0class[selClass[1:mod]]<- N0class[selClass[1:mod]] + 1 # add the module to the firsts classes with N0 != 0
+  
+  parsSim$N0<- list(N0class)
+  
+  res<- runScenario.ABM(scenario=scenario, pars=parsSim)
   
   Pest<- 1 - res$stats[,"extinct"]
   

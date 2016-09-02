@@ -147,6 +147,7 @@ run.discretePopSim<- function(model, cl=parallel::detectCores()){
   parallel::clusterExport(cl=cl, "pars", envir=environment())
   parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
   parallel::clusterEvalQ(cl, library(LHR))
+  
   sim<- parallel::parLapply(cl=cl, scenario, runScenario.discretePopSim, pars=pars)
 
   # sim<- lapply(scenario, LHR:::runScenario.discretePopSim, pars=pars)
@@ -157,11 +158,11 @@ run.discretePopSim<- function(model, cl=parallel::detectCores()){
   # }
   
   
-  res<- lapply(sim, function(x) x$res)
-  res<- do.call("rbind", res)
-  res<- as.data.frame(res)
+  stats<- lapply(sim, function(x) x$stats)
+  stats<- do.call("rbind", stats)
+  stats<- as.data.frame(stats)
 
-  simRes<- new("Sim.discretePopSim", res, params=pars)
+  simRes<- new("Sim.discretePopSim", stats, params=pars)
 
   if (pars$raw){
     rawSim<- lapply(sim, function(x) x$raw)
@@ -188,14 +189,20 @@ runScenario.discretePopSim<- function (scenario, pars, verbose=TRUE){
     print(scenario, row.names=FALSE)
   }
   
-  res<- matrix(NA_real_, nrow=length(pars$N0), ncol=12, 
+  stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=12, 
                dimnames=list(scenario=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", pars$N0),
                              stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
+  stats<- as.data.frame(stats)
+  stats$scenario<- rownames(scenario)
+  stats$N0<- pars$N0
+  
   if (pars$Ntf){
     Ntf<- matrix(nrow=length(pars$N0), ncol=2 + pars$replicates, 
                  dimnames=list(scenario=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", pars$N0), 
                                Ntf=c("scenario", "N0", 1:pars$replicates)))
     Ntf<- as.data.frame(Ntf)
+    Ntf$scenario<- rownames(scenario)
+    Ntf$N0<- pars$N0
   }
   if (pars$raw) rawSim<- list()
   
@@ -217,18 +224,15 @@ runScenario.discretePopSim<- function (scenario, pars, verbose=TRUE){
                sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, replicates=pars$replicates, tf=pars$tf, maxN=pars$maxN))
     
     if (is.null(pop) | all(is.na(pop)) | is.list(pop)){ ## TODO: pop<- list(popF, popM) when mating system != NA -> 2 sexes
-      res[n, c("scenario", "N0")]<- c(as.numeric(rownames(scenario)), N0)
       if (pars$raw){
         rawSim[[n]]<- NA
         names(rawSim)[n]<- N0
       }
-      if (pars$Ntf){
-        Ntf[n, c("scenario", "N0")]<- c(as.numeric(rownames(scenario)), N0)
-      }
+      
       next
     }
     
-    res[n,]<- c(as.numeric(rownames(scenario)), N0, as.numeric(summary(pop)))
+    stats[n, -c(1:2)]<- as.numeric(summary(pop))
     
     if (pars$raw){
       rawSim[[n]]<- pop
@@ -237,11 +241,11 @@ runScenario.discretePopSim<- function (scenario, pars, verbose=TRUE){
     if (pars$Ntf){
       pop<- pop[,ncol(pop)]
       pop[is.na(pop)]<- 0
-      Ntf[n,]<- c(as.numeric(rownames(scenario)), N0, sort(pop))
+      Ntf[n, -(1:2)]<- sort(pop)
     }
   }
   
-  res<- list(res=res)
+  res<- list(stats=stats)
   if (pars$Ntf) res<- c(res, list(Ntf=Ntf))
   if (pars$raw) res<- c(res, list(raw=rawSim))
   
@@ -274,12 +278,12 @@ run.numericDistri<- function(model, cl=parallel::detectCores()){
 #   }
   
   
-  res<- lapply(sim, function(x) x$stats)
-  res<- do.call("rbind", res)
-  res<- as.data.frame(res)
-  res<- res[order(res$scenario, res$N0),]
+  stats<- lapply(sim, function(x) x$stats)
+  stats<- do.call("rbind", stats)
+  stats<- as.data.frame(stats)
+  stats<- stats[order(stats$scenario, stats$N0),]
   
-  simRes<- new("Sim.discretePopSim", res, params=pars)
+  simRes<- new("Sim.discretePopSim", stats, params=pars)
   
   if (pars$raw){
     rawSim<- lapply(sim, function(x) x$raw)
@@ -298,9 +302,13 @@ runScenario.numericDistri<- function(scenario, pars, verbose=TRUE){
     print(scenario, row.names=FALSE)
   }
   
-  res<- matrix(NA_real_, nrow=length(pars$N0), ncol=12, 
+  stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=12, 
                dimnames=list(scenario=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", pars$N0),
                              stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
+  stats<- as.data.frame(stats)
+  stats$scenario<- rownames(scenario)
+  stats$N0<- pars$N0
+  
   if (pars$raw) rawSim<- list()
   
   ## Seasonality
@@ -322,7 +330,6 @@ runScenario.numericDistri<- function(scenario, pars, verbose=TRUE){
                                                  varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
                                                  sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, tf=pars$tf)) #TODO: add , maxN=pars$maxN
     if (is.null(distri) | all(is.na(distri))){
-      res[n,c("scenario", "N0")]<- c(as.numeric(rownames(scenario)), N0)
       if (pars$raw){
         rawSim[[n]]<- NA
         names(rawSim)[n]<- N0
@@ -334,15 +341,15 @@ runScenario.numericDistri<- function(scenario, pars, verbose=TRUE){
     distri<- logP(distri, logP=FALSE)
     distri<- cumsum(distri)
     selN0<- which(distri$x == N0)
-    stats<- c(increase= 1 - distri$cump[selN0], decrease=distri$cump[selN0-1], stable=distri$p[selN0], extinct=distri$p[1])
+    statsTmp<- c(increase= 1 - distri$cump[selN0], decrease=distri$cump[selN0-1], stable=distri$p[selN0], extinct=distri$p[1])
     
     distriLambda<- lambda(distri, N0=N0, tf=pars$tf)
     distriR<- r(distri, N0=N0, tf=pars$tf)
     distriLambda<- sdistri(distriLambda)
     distriR<- sdistri(distriR)
     
-    resTmp<- c(scenario=as.numeric(rownames(scenario)), N0=N0, stats, as.numeric(distriR), as.numeric(distriLambda))
-    res[n,]<- resTmp
+    resTmp<- c(statsTmp, as.numeric(distriR), as.numeric(distriLambda))
+    stats[n, -c(1:2)]<- resTmp
     
     if (pars$raw){
       rawSim[[n]]<- distri
@@ -350,7 +357,7 @@ runScenario.numericDistri<- function(scenario, pars, verbose=TRUE){
     }
   }
   
-  res<- list(stats=res)
+  res<- list(stats=stats)
   if (pars$raw) res<- c(res, list(raw=rawSim))
   
   return (res)
@@ -358,18 +365,11 @@ runScenario.numericDistri<- function(scenario, pars, verbose=TRUE){
 
 
 run.ABM<- function(model, cl=parallel::detectCores(), raw, ...){
-  x0L<- model@sim@params$N0
-  params<- S3Part(model)
-  transitionsFunc<- model@sim@params$transitionsFunc
-  tf<- model@sim@params$tf
-  replicates<- model@sim@params$replicates
-  raw<- model@sim@params$raw
-  discretePop<- model@sim@params$discretePopSim
-  finalPop<- model@sim@params$Ntf
-  #   burnin=-1
-  #   dtDiscretize=NULL
-  #   cl=1
-  
+  scenario<- S3Part(model)
+  scenario<- split(scenario, rownames(scenario))
+
+  pars<- model@sim@params
+
   if (is.numeric(cl)){
     numericCL<- TRUE
     cl<- parallel::makeCluster(cl)
@@ -377,19 +377,123 @@ run.ABM<- function(model, cl=parallel::detectCores(), raw, ...){
     numericCL<- FALSE
   }
   
-  res<- exploreABM(x0L=x0L, params=params, transitionsFunc=transitionsFunc, 
-                   tf=tf, replicates=replicates, raw=raw, discretePop=discretePop, finalPop=finalPop, cl=cl, ...)
+  parallel::clusterExport(cl=cl, "pars", envir=environment())
+  parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
+  parallel::clusterEvalQ(cl, library(LHR))
   
-  out<- new("Sim.ABM", res$stats, params=model@sim@params)
+  sim<- parallel::parLapply(cl=cl, scenario, runScenario.ABM, pars=pars)
+
+  # sim<- lapply(scenario, LHR:::runScenario.ABM, pars=pars)
+  # 
+  # sim<- list()
+  # for (i in seq_along(scenario)){
+  #   sim[[i]]<- runScenario.discretePopSim(scenario=scenario[[i]], pars=pars)
+  # }
   
-  if (finalPop)    out@Ntf           <- res$Ntf
-  if (discretePop) out@discretePopSim<- res$discretePopSim
-  if (raw)         out@raw           <- res$discreteABMSim
+  
+  stats<- lapply(sim, function(x) x$stats)
+  stats<- do.call("rbind", stats)
+  stats<- as.data.frame(stats)
+
+  simRes<- new("Sim.ABM", stats, params=pars)
+
+  if (pars$raw){
+    simRes@raw<- lapply(sim, function(x) x$raw)
+  }
+  if (pars$discretePopSim){
+    simRes@discretePopSim<- lapply(sim, function(x) x$discretePopSim)
+  }
+  if (pars$Ntf){
+    Ntf<- lapply(sim, function(x) x$Ntf)
+    Ntf<- do.call("rbind", Ntf)
+    Ntf<- as.data.frame(Ntf)
+    rownames(Ntf)<- paste0(Ntf$scenario, "_N", Ntf$N0)
+    # Ntf[,-1]<- apply(Ntf[,2:ncol(Ntf)], 2, as.numeric)
+    simRes@Ntf<- Ntf
+  }
   
   if (numericCL) parallel::stopCluster(cl)
   
-  return (out)
+  return (simRes)
 }
+
+
+runScenario.ABM<- function (scenario, pars, verbose=FALSE){
+  if (verbose){
+    message(rownames(scenario), "/", nrow(scenario), "\n")
+    print(scenario, row.names=FALSE)
+  }
+  
+  stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=12, 
+               dimnames=list(scenario=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", sapply(pars$N0, sum)),
+                             stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
+  stats<- as.data.frame(stats)
+  stats$scenario<- rownames(scenario)
+  stats$N0<- sapply(pars$N0, sum)
+  
+  if (pars$Ntf){
+    Ntf<- matrix(NA_real_, nrow=length(pars$N0), ncol=2 + pars$replicates, 
+                 dimnames=list(scenario=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", sapply(pars$N0, sum)), 
+                               Ntf=c("scenario", "N0", 1:pars$replicates)))
+    Ntf<- as.data.frame(Ntf)
+    Ntf$scenario<- rownames(scenario)
+    Ntf$N0<- sapply(pars$N0, sum)
+  }
+  
+  if (pars$discretePopSim) pop<- list()
+  
+  if (pars$raw) rawSim<- list()
+  
+  ## Seasonality
+#   seasonVar<- seasonOptimCal(env=Env(scenario))[[1]] #, resolution=resolution, nSteps=seasonBroods$broods, interval=interval, criterion=criterion)
+#   if (any(seasonVar !=1)){
+#     jindSeason<- scenario$jind * seasonVar
+#     jbrSeason<- scenario$jbr * seasonVar
+#   }else{
+#     jindSeason<- scenario$jind
+#     jbrSeason<- scenario$jbr
+#   }
+  
+  for (n in 1:length(pars$N0)){
+    N0<- pars$N0[[n]]
+    popABM<- discreteABMSim(N0=N0, params=scenario, transitionsFunc=pars$transitionsFunc, replicates=pars$replicates, tf=pars$tf, maxN=pars$maxN, Ntf=!pars$raw)
+    
+    N0<- sum(N0)
+    
+    if (is.null(popABM) | all(is.na(popABM))){
+      if (pars$raw){
+        rawSim[[n]]<- NA
+        names(rawSim)[n]<- paste0("N", N0)
+      }
+      
+      next
+    }
+    
+    
+    stats[n, -c(1:2)]<- summary(popABM) # First columns: scenario and N0
+    
+    if (pars$raw){
+      rawSim[[n]]<- popABM
+      names(rawSim)[n]<- N0
+    }
+    if (pars$discretePopSim){
+      pop[[n]]<- discreteABMSim2discretePopSim(popABM)
+      names(pop)[n]<- N0
+    }
+    if (pars$Ntf){
+      popABM<- popABM[,,dim(popABM)[3]]
+      popABM<- rowSums(popABM)
+      Ntf[n, -c(1:2)]<- sort(popABM) # First columns: scenario and N0
+    }
+  }
+  
+  res<- list(stats=stats)
+  if (pars$Ntf) res<- c(res, list(Ntf=Ntf))
+  if (pars$raw) res<- c(res, list(raw=rawSim))
+  
+  return (res)
+}
+
 
 
 run.ssa<- function(model, cl=parallel::detectCores(), ...){
@@ -551,7 +655,7 @@ plot.Model<- function(x, ...){
   res$scenario<- factor(res$scenario)
   
   ggplot2::ggplot(res, ggplot2::aes(x=N0, y=Pest, group=scenario, color=scenario)) + 
-    ggplot2::geom_line() + ggplot2::geom_point() + ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=label_both)
+    ggplot2::geom_line() + ggplot2::geom_point() + ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=ggplot2::label_both)
 }
 
 hist.Model<- function(x, ...){
@@ -569,5 +673,5 @@ hist.Model<- function(x, ...){
   N<- reshape2::melt(N, id.vars=c("scenario", "N0", "seasonAmplitude", "var", "breedFail"), value.name="Ntf")
   
   ggplot2::ggplot(N, ggplot2::aes(x=Ntf, group=scenario, color=scenario)) + 
-    ggplot2::geom_histogram() + ggplot2::facet_grid(N0 + breedFail~seasonAmplitude + var, labeller=label_both)
+    ggplot2::geom_histogram() + ggplot2::facet_grid(N0 + breedFail~seasonAmplitude + var, labeller=ggplot2::label_both)
 }

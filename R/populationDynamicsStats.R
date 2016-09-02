@@ -23,6 +23,20 @@ summary.discretePopSim<- function(object, dt=1){
   return(res)
 }
 
+
+#' @rdname discreteABMSim
+#'
+#' @param object 
+#' @param dt 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+summary.discreteABMSim<- function(x, dt=1){
+  summary(discreteABMSim2discretePopSim(x), dt=dt)
+}
+
 #' @export
 r<- function(...){
   UseMethod("r")  
