@@ -29,7 +29,9 @@ setMethod("Model",
             } else if (inherits(sim, c("Sim.discretePopSim", "Sim.numericDistri"))){
               ## WARNING: Sim.ABM and Sim.ssa inherits from Sim.discretePopSim. Exclude from here
               lhEnv<- combineLH_Env(lh=lh, env=env)
+              
               scenario<- lhEnv$scenario
+              
               parameters<- list(seasonBroodEnv=lhEnv$seasonBroodEnv) #, breedFail=lhEnv$breedFail)
               
               if (inherits(sim, "Sim.discretePopSim")){
@@ -73,6 +75,7 @@ setMethod("combineLH_Env",
           function(lh=LH(), env=Env(), resolution=12, interval=2, criterion="maxFirst"){
             tmpLH<- data.frame(S3Part(lh), interval)
             scenario<- merge(tmpLH, S3Part(env))
+            scenario<- data.frame(scenario=as.numeric(rownames(scenario)), scenario, stringsAsFactors=FALSE)
             
             ## Brood failure (e.g. nest predation)
             # breedFail is a proportion of juvenile mortality correlated at the brood level

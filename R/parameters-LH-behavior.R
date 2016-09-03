@@ -30,25 +30,27 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, var=0
   LH_Env<- lhEnv$scenario
   # parameters<- list(seasonBroodEnv=lhEnv$seasonBroodEnv) # TODO: add seasonality
   
-  comb<- expand.grid(scenario=rownames(LH_Env), habDiffScenario=habDiffScenario, behavior=behavior, stringsAsFactors=FALSE)
-  comb<- merge(comb, LH_Env, by.x="scenario", by.y=0)
+  comb<- expand.grid(scenario=LH_Env$scenario, habDiffScenario=habDiffScenario, behavior=behavior, stringsAsFactors=FALSE)
+  comb<- merge(comb, LH_Env, by="scenario")
   
   combL<- split(comb, rownames(comb))
+  
   params<- lapply(combL, function (x){
     out<- getParams.LH_Beh(x, habDiffScenario=x$habDiffScenario, behavior=x$behavior)
-    data.frame(scenario=x$scenario, habDiff=x$habDiffScenario, behavior=x$behavior, out, stringsAsFactors=FALSE)
+    out<- data.frame(scenario=x$scenario, habDiff=x$habDiffScenario, behavior=x$behavior, out, stringsAsFactors=FALSE)
+    
+    out
   })
   params<- do.call(rbind, params)
 
-  params<- merge(params, LH_Env[,setdiff(names(LH_Env), names(params))], by.x="scenario", by.y=0)
+  params<- merge(params, LH_Env[,c("scenario", setdiff(names(LH_Env), names(params)))], by="scenario")
   rownames(params)<- with(params, paste(scenario, habDiff, behavior, sep="_"))
   
   # Sort
-  params$scenario<- as.numeric(params$scenario)
   params$habDiff<- factor(params$habDiff, levels=c("identicalHab", "mortalHab2", "nestPredHab2"))
   params$behavior<- factor(params$behavior, levels=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2"))
-    
-  params<- params[order(params$scenario, params$habDiff, params$behavior),]
+  
+  params<- params[order(as.numeric(params$scenario), params$habDiff, params$behavior),]
   
   return (params)
 }
