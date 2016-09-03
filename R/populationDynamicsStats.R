@@ -9,7 +9,7 @@
 #' @export
 #'
 #' @examples
-summary.discretePopSim<- function(object, dt=1){
+summary.discretePopSim<- function(object, dt=1, ...){
   R<- as.numeric(r(object, dt=dt)) # intrinsic growth rate
   L<- as.numeric(lambda(object, dt=dt)) # lambda
   meanR<- mean(R, na.rm=TRUE)
@@ -34,8 +34,8 @@ summary.discretePopSim<- function(object, dt=1){
 #' @export
 #'
 #' @examples
-summary.discreteABMSim<- function(x, dt=1){
-  summary(discreteABMSim2discretePopSim(x), dt=dt)
+summary.discreteABMSim<- function(object, dt=1, ...){
+  summary(discreteABMSim2discretePopSim(object), dt=dt)
 }
 
 #' @export
@@ -45,12 +45,12 @@ r<- function(...){
 
 #' @rdname discretePopSim
 #' @export
-r.discretePopSim<- function(pop, dt=1){
-  sampleT<- seq(1, ncol(pop), by=dt)
+r.discretePopSim<- function(x, dt=1, ...){
+  sampleT<- seq(1, ncol(x), by=dt)
   if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
-  pop<- pop[, sampleT, drop=FALSE]
-  dN<- t(diff(t(pop))) # dN =  N_t+1 - N_t
-  N0<- pop[,-ncol(pop), drop=FALSE]
+  x<- x[, sampleT, drop=FALSE]
+  dN<- t(diff(t(x))) # dN =  N_t+1 - N_t
+  N0<- x[,-ncol(x), drop=FALSE]
   r<- (dN / dt) / N0
 #   names(r)<- colnames(dN) # otherwise it takes the names from N0 (0:(tf-1) instead of 1:tf as does lambda function
   return (r) # intrinsic grow rate (r = dN / dt / N)
@@ -60,7 +60,7 @@ r.discretePopSim<- function(pop, dt=1){
 
 #' @rdname discretePopSim
 #' @export
-lambda.discretePopSim<- function(x, dt=1){
+lambda.discretePopSim<- function(x, dt=1, ...){
   sampleT<- seq(1, ncol(x), by=dt)
   if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
   x<- x[,sampleT, drop=FALSE]
@@ -79,15 +79,15 @@ trendsProp<- function(...){
 
 #' @rdname discretePopSim
 #' @export
-trendsProp.discretePopSim<- function(pop, dt=1){
-  sampleT<- seq(1, ncol(pop), by=dt)
+trendsProp.discretePopSim<- function(x, dt=1, ...){
+  sampleT<- seq(1, ncol(x), by=dt)
   if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
-  pop<- pop[, sampleT, drop=FALSE]
-  dN<- t(diff(t(pop))) # dN =  N_t+1 - N_t
-  N0<- pop[,-ncol(pop), drop=FALSE]
-  popF<- pop[,ncol(pop), drop=FALSE] # final population
+  x<- x[, sampleT, drop=FALSE]
+  dN<- t(diff(t(x))) # dN =  N_t+1 - N_t
+  N0<- x[,-ncol(x), drop=FALSE]
+  popF<- x[,ncol(x), drop=FALSE] # final population
   popF[is.na(popF)]<- 0
-  replicates<- nrow(pop)
+  replicates<- nrow(x)
   nTransitions<- sum(!is.na(dN))
   
   increase<- length(which(dN > 0)) / nTransitions
@@ -100,11 +100,11 @@ trendsProp.discretePopSim<- function(pop, dt=1){
 
 #' @rdname numericDistri
 #' @export
-trendsProp.numericDistri<- function(distri, N0){
-  increase<- sum(distri$p[which(distri$x == (N0 + 1)):nrow(distri)])
-  decrease<- sum(distri$p[1:which(distri$x == (N0 - 1))])
-  stable<- distri$p[distri$x == N0]
-  extinct<- distri$p[distri$x == 0]
+trendsProp.numericDistri<- function(x, N0, ...){
+  increase<- sum(x$p[which(x$x == (N0 + 1)):nrow(x)])
+  decrease<- sum(x$p[1:which(x$x == (N0 - 1))])
+  stable<- x$p[x$x == N0]
+  extinct<- x$p[x$x == 0]
   
   return(data.frame(increase, decrease, stable, extinct))
 }

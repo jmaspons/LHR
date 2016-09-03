@@ -90,7 +90,7 @@ lambda<- function(x, ...){
 #' @export
 #'
 #' @examples
-lambda.leslieMatrix<- function(x){ # Ted J. Case. "An Illustrated Guide to Theoretical Ecology" pag. 64-73
+lambda.leslieMatrix<- function(x, ...){ # Ted J. Case. "An Illustrated Guide to Theoretical Ecology" pag. 64-73
   max(Re(eigen(x, only.values=TRUE)$values))
 }
 

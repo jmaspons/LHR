@@ -33,7 +33,8 @@ test_that("discrete models with 2 sexes", {
     expect_is(res, "Model")
     
     popList<- unlist(res@sim@raw, recursive=FALSE)
-    # Not implemented models return NA
+    
+    # TODO: Not implemented models return NA
     popList<- popList[sapply(popList, function(x) !all(is.na(x)))]
     
     tmp<- lapply(popList, expect_is, class="discretePopSim")
@@ -57,14 +58,15 @@ test_that("compound distribution", {
     expect_is(res, "Model")
     
     distriList<- unlist(res@sim@raw, recursive=FALSE)
-    # Not implemented models return NA
+    
+    ## TODO: Not implemented models return NA
     distriList<- distriList[sapply(distriList, function(x) !all(is.na(x)))]
+    
     tmp<- lapply(distriList, expect_is, class="numericDistri")
     
     expect_is(result(res), "data.frame")
     # Not available for numericDistri expect_is(result(res, type="Ntf"), "data.frame")
     
-    # TODO: fix wrong distributions!
     tmp<- lapply(distriList, function(x) expect_gt(abs(sum(x$p)), 0.95))
   }
 })
@@ -80,8 +82,10 @@ test_that("compound distribution with environmental variation", {
   if (skip_on_cran()){
     res<- run(model)
     expect_is(res, "Model")
+    
     distriList<- unlist(res@sim@raw, recursive=FALSE)
-    # Not implemented models return NA
+    
+    # TODO: Not implemented models return NA
     distriList<- distriList[sapply(distriList, function(x) !all(is.na(x)))]
     
     tmp<- lapply(distriList, expect_is, class="numericDistri")

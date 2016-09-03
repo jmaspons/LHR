@@ -15,6 +15,7 @@ findN0_Pest<- function(model=Model(), cl=parallel::detectCores(), Pobjective=.5,
   scenario<- S3Part(model)
   scenario<- split(scenario, rownames(scenario))
   pars<- model@sim@params
+  sim<- model@sim
   
   if (is.numeric(cl)){
     numericCL<- TRUE
@@ -23,19 +24,19 @@ findN0_Pest<- function(model=Model(), cl=parallel::detectCores(), Pobjective=.5,
     numericCL<- FALSE
   }
   
-  sim<- model@sim
   parallel::clusterExport(cl=cl, c("sim", "Pobjective", "verbose"), envir=environment())
   parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
   parallel::clusterEvalQ(cl, library(LHR))
+
   N0_Pest<- parallel::parLapply(cl=cl, scenario, findN0_Pest.scenario, sim=sim, Pobjective=Pobjective, verbose=verbose)
 
-  # N0_Pest<- lapply(scenario, findN0_Pest.scenario, sim=model@sim, Pobjective=Pobjective, verbose=verbose)
+  # N0_Pest<- lapply(scenario, findN0_Pest.scenario, sim=sim, Pobjective=Pobjective, verbose=verbose)
   # 
   # N0_Pest<- list()
   # for (i in seq_along(scenario)){
-  #   N0_Pest[[i]]<- runScenario.discretePopSim(scenario=scenario[[i]], pars=pars)
+  #   N0_Pest[[i]]<- findN0_Pest.scenario(scenario=scenario[[i]], sim=sim, Pobjective=Pobjective, verbose=verbose)
   # }
-  
+
   N0_Pest<- do.call("rbind", N0_Pest)
   
   simRes<- model@sim
@@ -65,9 +66,9 @@ findN0_Pest.scenario<- function(scenario=data.frame(Model(lh=LH(lambda=1))[1,]),
               Sim.numericDistri=Pestablishment.numericDistri,
               Sim.ABM=Pestablishment.ABM,
               Sim.ssa=Pestablishment.ssa)
-  minN<- 0
-  Pmin<- 0
-
+  minN<- 1
+  Pmin<- fun(N0=minN, scenario=scenario, parsSim=parsSim)
+  
   if (inherits(sim, c("Sim.ABM", "Sim.ssa"))){
     if (!is.list(parsSim$N0)) parsSim$N0<- list(parsSim$N0)
     maxN<- max(sapply(parsSim$N0, sum))
@@ -82,15 +83,18 @@ findN0_Pest.scenario<- function(scenario=data.frame(Model(lh=LH(lambda=1))[1,]),
     maxN<- max(parsSim$N0)
     Pmax<- fun(N0=maxN, scenario=scenario, parsSim=parsSim)
   }
- 
+  
   N0<- N0anterior<- 0
   i<- 1
   found<- FALSE
+  Pest<- NA
   
   while (!found){
     N0<- interpole(Pobjective, minN, maxN, Pmin, Pmax)
     N0<- ceiling(N0)
     
+    if (is.na(N0)) break
+      
     if (N0 < 1) {N0<- 1}
     
     if (N0 > parsSim$maxN){ # Evita passar Inf com a N0 (important per lambdes baixes)
@@ -150,6 +154,11 @@ findN0_Pest.scenario<- function(scenario=data.frame(Model(lh=LH(lambda=1))[1,]),
   }
   N0interpoled<- interpole(Pobjective, minN, maxN, Pmin, Pmax)
   
+  if (is.na(N0interpoled) & maxN == 1 & minN == 1){
+      ## N0_Pest < 1
+      N0interpoled<- interpole(Pobjective, 0, maxN, 0, Pmax)
+  }
+  
   return (data.frame(N0_Pest=N0, Pest, N0interpoled=N0interpoled, Pobjective))
 }
 
@@ -179,7 +188,7 @@ Pestablishment.numericDistri<- function(N0, scenario, parsSim){
   
   parsSim$N0<- round(N0)
   parsSim$raw<- FALSE
-  parsSim$Ntf<- FALSE
+  # parsSim$Ntf<- FALSE ## TODO Not set in constructor Sim.numericDistri
   res<- runScenario.numericDistri(scenario=scenario, pars=parsSim, verbose=FALSE)
   
   Pest<- 1 - res$stats[,"extinct"]

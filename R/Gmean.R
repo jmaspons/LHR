@@ -48,7 +48,7 @@ G<- function(...){
 #' @param sigma2 variance.
 #' @examples G(mu=5, sigma2=.1)
 #' @export
-G.numeric<- function(mu, sigma2){
+G.numeric<- function(mu, sigma2, ...){
   return (mu - sigma2 / (2 * mu))
 }
 
@@ -60,7 +60,7 @@ G.numeric<- function(mu, sigma2){
 #' pop<- discretePopSim(b=1, j=.5, a=.5)
 #' G(pop)
 #' @export
-G.discretePopSim<- function(pop, growRate=c("lambda", "r"), na.rm=TRUE){
+G.discretePopSim<- function(pop, growRate=c("lambda", "r"), na.rm=TRUE, ...){
   growRate<- match.arg(growRate)
   Gres<- switch(growRate,
          r={rPop<- as.numeric(as.matrix(r(pop))); # avoid var() returns a var/cov matrix

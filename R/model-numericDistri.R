@@ -408,12 +408,27 @@ mSurvBV.cohort<- function(broods, b, j, a, breedFail, N0=1, ...){ # ... = maxX o
 
 
 ## Distribution stats ----
-lambda.numericDistri<- function(distri, N0, tf=1){
-  distri$x<- (distri$x / N0)^(1/tf)
-  return(distri)
+
+#' @export
+lambda.numericDistri<- function(x, N0, tf=1, ...){
+  x$x<- (x$x / N0)^(1/tf)
+  
+  if (N0 == 0){
+    x$x<- 0
+    x$p<- 1
+  }
+  
+  return(x)
 }
 
-r.numericDistri<- function(distri, N0, tf=1){
-  distri$x<- (distri$x - N0) / N0 / tf
-  return(distri)
+#' @export
+r.numericDistri<- function(x, N0, tf=1, ...){
+  x$x<- (x$x - N0) / N0 / tf
+  
+  if (N0 == 0){
+    x$x<- -Inf
+    x$p<- 1
+  }
+  
+  return(x)
 }

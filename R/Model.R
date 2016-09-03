@@ -183,7 +183,7 @@ run.discretePopSim<- function(model, cl=parallel::detectCores()){
 }
 
 
-runScenario.discretePopSim<- function (scenario, pars, verbose=TRUE){
+runScenario.discretePopSim<- function (scenario, pars, verbose=FALSE){
   if (verbose){
     message(rownames(scenario), "/", nrow(scenario), "\n")
     print(scenario, row.names=FALSE)
@@ -268,14 +268,15 @@ run.numericDistri<- function(model, cl=parallel::detectCores()){
 
   parallel::clusterExport(cl=cl, "pars", envir=environment())
   parallel::clusterEvalQ(cl, library(LHR))
-  sim<- parallel::parLapply(cl=cl, X=scenario, fun=runScenario.numericDistri, pars=pars)
+
+  sim<- parallel::parLapply(cl=cl, scenario, runScenario.numericDistri, pars=pars)
   
-#   sim<- lapply(scenario, runScenario.numericDistri, pars=pars)
-#   
-#   sim<- list()
-#   for (i in seq_along(scenario)){
-#     sim[[i]]<- runScenario.numericDistri(scenario=scenario[[i]], pars=pars)
-#   }
+  # sim<- lapply(scenario, runScenario.numericDistri, pars=pars)
+  #   
+  # sim<- list()
+  # for (i in seq_along(scenario)){
+  #   sim[[i]]<- runScenario.numericDistri(scenario=scenario[[i]], pars=pars)
+  # }
   
   
   stats<- lapply(sim, function(x) x$stats)
@@ -296,7 +297,7 @@ run.numericDistri<- function(model, cl=parallel::detectCores()){
 }
 
 
-runScenario.numericDistri<- function(scenario, pars, verbose=TRUE){
+runScenario.numericDistri<- function(scenario, pars, verbose=FALSE){
   if (verbose){
     cat(rownames(scenario), "/", nrow(scenario), "\n")
     print(scenario, row.names=FALSE)

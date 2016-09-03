@@ -193,8 +193,8 @@ logP<- function(distri, logP=TRUE){
 
 ## Generic methods for numericDistri class ----
 
-#' @export
-print<- function(x, ...) UseMethod("print")
+# @export
+# print<- function(x, ...) UseMethod("print")
 
 #' @export
 print.numericDistri<- function(x, ...){
@@ -225,11 +225,11 @@ summary.numericDistri<- function(object, ...){
 #' @export
 plot.numericDistri<- function(x, y, cum=FALSE, ...){
   if (cum){
-    distri<- cumsum(x)
-    distri$p<- distri$cump
+    x<- cumsum(x)
+    x$p<- x$cump
   }
   type<- ifelse(cum, "s", "p")
-  graphics::plot.default(distri, type=type, ...)
+  graphics::plot.default(x, type=type, ...)
 }
 
 
@@ -282,11 +282,15 @@ sdistri.numericDistri<- function(distri){
 
 
 # @exportMethod cumsum
+#' cumsum
+#' 
+#' Overloaded version of \link[base]{cumsum} to add methods for \code{\link{numericDistri}} class.
 #' @export
 cumsum<- function(x, ...){
   UseMethod("cumsum")
 }
 
+#' @rdname cumsum
 #' @export
 cumsum.default<- function(x, ...) base::cumsum(x)
 

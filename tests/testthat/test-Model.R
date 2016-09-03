@@ -17,7 +17,7 @@ test_that("Model class constructors", {
   expect_is(Model(sim=Sim.numericDistri()), "Model")
 
   ## No seasonality implemented
-  expect_is(Model(env=env[env$seasonAmplitude == 0,], sim=Sim.ABM()), "Model")
+  expect_is(Model(env=env[env$seasonAmplitude == 0,], sim=Sim.ABM(),habDiffScenario="nestPredHab2", behavior="learnExploreBreed"), "Model")
   
   ## A data.frame can't define a model. A Sim object is necessary.
   # obj<- Model()
