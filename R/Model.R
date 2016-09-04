@@ -343,7 +343,7 @@ runScenario.numericDistri<- function(scenario, pars, verbose=FALSE){
     
     ## TODO 2 sexes models: pop<- list(popF, popM)
     distri<- logP(distri, logP=FALSE)
-    distri<- cumsum(distri)
+    distri<- cumP(distri)
     selN0<- which(distri$x == N0)
     statsTmp<- c(increase= 1 - distri$cump[selN0], decrease=distri$cump[selN0-1], stable=distri$p[selN0], extinct=distri$p[1])
     

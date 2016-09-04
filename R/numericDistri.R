@@ -225,7 +225,7 @@ summary.numericDistri<- function(object, ...){
 #' @export
 plot.numericDistri<- function(x, y, cum=FALSE, ...){
   if (cum){
-    x<- cumsum(x)
+    x<- cumP(x)
     x$p<- x$cump
   }
   type<- ifelse(cum, "s", "p")
@@ -281,22 +281,17 @@ sdistri.numericDistri<- function(distri){
 }
 
 
-# @exportMethod cumsum
-#' cumsum
-#' 
-#' Overloaded version of \link[base]{cumsum} to add methods for \code{\link{numericDistri}} class.
+# @exportMethod cumP
 #' @export
-cumsum<- function(x, ...){
-  UseMethod("cumsum")
+cumP<- function(x, ...){
+  UseMethod("cumP")
 }
 
-#' @rdname cumsum
-#' @export
-cumsum.default<- function(x, ...) base::cumsum(x)
 
+# @method cumP numericDistri
 #' @rdname numericDistri
 #' @export
-cumsum.numericDistri<- function(x, ...){
+cumP.numericDistri<- function(x, ...){
   if(attributes(x)$logP){
     p<- exp(x$p)
     x$cump<- cumsum(p)

@@ -10,10 +10,10 @@ test_that("constructor", {
   
   res<- resC<- resS<- resP<- numeric()
   for (i in 1:1000){
-    res[i]<- cumsum(distriBinom(2, .6))$cump[3]
-    resP[i]<- cumsum(distri * 2)$cump[3]
-    resC[i]<- cumsum(distriBinom(distri, .3))$cump[3] ## Fixed
-    resS[i]<- cumsum(distri + distriC)$cump[5] ## Fixed
+    res[i]<- cumP(distriBinom(2, .6))$cump[3]
+    resP[i]<- cumP(distri * 2)$cump[3]
+    resC[i]<- cumP(distriBinom(distri, .3))$cump[3] ## Fixed
+    resS[i]<- cumP(distri + distriC)$cump[5] ## Fixed
     # print(resS[i])
   }
   
@@ -28,10 +28,10 @@ test_that("constructor", {
   
   res<- resC<- resS<- resP<- numeric()
   for (i in 1:1000){
-    res[i]<- cumsum(distriBinom(2, .6, log=TRUE))$cump[3]
-    resP[i]<- cumsum(distri * 2)$cump[3]
-    resC[i]<- cumsum(distriBinom(distri, .3, log=TRUE))$cump[3] ## Fixed
-    resS[i]<- cumsum(distri + distriC)$cump[5] ## Fixed
+    res[i]<- cumP(distriBinom(2, .6, log=TRUE))$cump[3]
+    resP[i]<- cumP(distri * 2)$cump[3]
+    resC[i]<- cumP(distriBinom(distri, .3, log=TRUE))$cump[3] ## Fixed
+    resS[i]<- cumP(distri + distriC)$cump[5] ## Fixed
     # print(resS[i])
   }
   
