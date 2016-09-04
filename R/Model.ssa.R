@@ -44,7 +44,7 @@ plotNtf<- function(model){
   scenario<- strsplit(rownames(res), "_")
   scenario<- do.call("rbind", scenario)
   colnames(scenario)<- c("LH", "environment", "behavior", "N0")
-  scenario<- data.frame(scenario=rownames(res), scenario, stringsAsFactors=TRUE)
+  scenario<- data.frame(idScenario=rownames(res), scenario, stringsAsFactors=TRUE)
   scenario$N0<- ordered(as.numeric(gsub("N", "", scenario$N0)))
 #   rownames(res)<- NULL
   rownames(scenario)<- rownames(res)
@@ -53,7 +53,7 @@ plotNtf<- function(model){
   mRes$quantile<- as.numeric(gsub("V", "", mRes$variable))
   mRes$quantile<- mRes$quantile / length(unique(mRes$quantile))
   resSel<- mRes[which(mRes$N0 == 2),]
-  ggplot2::ggplot(data=resSel, ggplot2::aes(quantile, N, colour=behavior, group=scenario)) + ggplot2::geom_line() + 
+  ggplot2::ggplot(data=resSel, ggplot2::aes(quantile, N, colour=behavior, group=idScenario)) + ggplot2::geom_line() + 
     ggplot2::facet_grid(environment ~ LH) # + ggplot2::geom_point()# + ggplot2::coord_cartesian(ylim=c(0, 1))
 }
 

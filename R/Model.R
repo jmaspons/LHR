@@ -73,9 +73,11 @@ setGeneric("combineLH_Env", function(lh=LH(), env=Env(), resolution=12, interval
 setMethod("combineLH_Env", 
           signature(lh="ANY", env="ANY", resolution="ANY", interval="ANY", criterion="ANY"),
           function(lh=LH(), env=Env(), resolution=12, interval=2, criterion="maxFirst"){
-            tmpLH<- data.frame(S3Part(lh), interval)
-            scenario<- merge(tmpLH, S3Part(env))
-            scenario<- data.frame(scenario=as.numeric(rownames(scenario)), scenario, stringsAsFactors=FALSE)
+            tmpLH<- data.frame(idLH=rownames(lh), S3Part(lh), interval, stringsAsFactors=FALSE)
+            tmpEnv<- data.frame(idEnv=rownames(env), S3Part(env), stringsAsFactors=FALSE)
+            scenario<- merge(tmpLH, tmpEnv)
+            scenario<- data.frame(idScenario=paste0("lh", scenario$idLH, "_env", scenario$idEnv), scenario, stringsAsFactors=FALSE)
+            scenario<- scenario[naturalsort::naturalorder(scenario$idScenario),]
             
             ## Brood failure (e.g. nest predation)
             # breedFail is a proportion of juvenile mortality correlated at the brood level
@@ -175,7 +177,7 @@ run.discretePopSim<- function(model, cl=parallel::detectCores()){
     Ntf<- lapply(sim, function(x) x$Ntf)
     Ntf<- do.call("rbind", Ntf)
     Ntf<- as.data.frame(Ntf)
-    rownames(Ntf)<- paste0(Ntf$scenario, "_N", Ntf$N0)
+    rownames(Ntf)<- paste0(Ntf$idScenario, "_N", Ntf$N0)
     # Ntf[,-1]<- apply(Ntf[,2:ncol(Ntf)], 2, as.numeric)
     simRes@Ntf<- Ntf
   }
@@ -193,18 +195,18 @@ runScenario.discretePopSim<- function (scenario, pars, verbose=FALSE){
   }
   
   stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=12, 
-               dimnames=list(scenario=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", pars$N0),
-                             stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
+               dimnames=list(scenario_N0=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", pars$N0),
+                             stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
   stats<- as.data.frame(stats)
-  stats$scenario<- rownames(scenario)
+  stats$idScenario<- rownames(scenario)
   stats$N0<- pars$N0
   
   if (pars$Ntf){
     Ntf<- matrix(nrow=length(pars$N0), ncol=2 + pars$replicates, 
-                 dimnames=list(scenario=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", pars$N0), 
-                               Ntf=c("scenario", "N0", 1:pars$replicates)))
+                 dimnames=list(scenario_N0=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", pars$N0), 
+                               Ntf=c("idScenario", "N0", 1:pars$replicates)))
     Ntf<- as.data.frame(Ntf)
-    Ntf$scenario<- rownames(scenario)
+    Ntf$idScenario<- rownames(scenario)
     Ntf$N0<- pars$N0
   }
   if (pars$raw) rawSim<- list()
@@ -285,7 +287,7 @@ run.numericDistri<- function(model, cl=parallel::detectCores()){
   stats<- lapply(sim, function(x) x$stats)
   stats<- do.call("rbind", stats)
   stats<- as.data.frame(stats)
-  stats<- stats[order(stats$scenario, stats$N0),]
+  stats<- stats[naturalsort::naturalorder(paste0(stats$idScenario, "|", stats$N0)),]
   
   simRes<- new("Sim.discretePopSim", stats, params=pars)
   
@@ -307,10 +309,10 @@ runScenario.numericDistri<- function(scenario, pars, verbose=FALSE){
   }
   
   stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=12, 
-               dimnames=list(scenario=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", pars$N0),
-                             stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
+               dimnames=list(scenario_N0=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", pars$N0),
+                             stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
   stats<- as.data.frame(stats)
-  stats$scenario<- rownames(scenario)
+  stats$idScenario<- rownames(scenario)
   stats$N0<- pars$N0
   
   if (pars$raw) rawSim<- list()
@@ -411,7 +413,7 @@ run.ABM<- function(model, cl=parallel::detectCores(), raw, ...){
     Ntf<- lapply(sim, function(x) x$Ntf)
     Ntf<- do.call("rbind", Ntf)
     Ntf<- as.data.frame(Ntf)
-    rownames(Ntf)<- paste0(Ntf$scenario, "_N", Ntf$N0)
+    rownames(Ntf)<- paste0(Ntf$idScenario, "_N", Ntf$N0)
     # Ntf[,-1]<- apply(Ntf[,2:ncol(Ntf)], 2, as.numeric)
     simRes@Ntf<- Ntf
   }
@@ -429,18 +431,18 @@ runScenario.ABM<- function (scenario, pars, verbose=FALSE){
   }
   
   stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=12, 
-               dimnames=list(scenario=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", sapply(pars$N0, sum)),
-                             stats=c("scenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
+               dimnames=list(scenario_N0=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", sapply(pars$N0, sum)),
+                             stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
   stats<- as.data.frame(stats)
-  stats$scenario<- rownames(scenario)
+  stats$idScenario<- rownames(scenario)
   stats$N0<- sapply(pars$N0, sum)
   
   if (pars$Ntf){
     Ntf<- matrix(NA_real_, nrow=length(pars$N0), ncol=2 + pars$replicates, 
-                 dimnames=list(scenario=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", sapply(pars$N0, sum)), 
-                               Ntf=c("scenario", "N0", 1:pars$replicates)))
+                 dimnames=list(scenario_N0=paste0(rep(rownames(scenario), length=length(pars$N0)), "_N", sapply(pars$N0, sum)), 
+                               Ntf=c("idScenario", "N0", 1:pars$replicates)))
     Ntf<- as.data.frame(Ntf)
-    Ntf$scenario<- rownames(scenario)
+    Ntf$idScenario<- rownames(scenario)
     Ntf$N0<- sapply(pars$N0, sum)
   }
   
@@ -474,7 +476,7 @@ runScenario.ABM<- function (scenario, pars, verbose=FALSE){
     }
     
     
-    stats[n, -c(1:2)]<- summary(popABM) # First columns: scenario and N0
+    stats[n, -c(1:2)]<- summary(popABM) # First columns: idScenario and N0
     
     if (pars$raw){
       rawSim[[n]]<- popABM
@@ -488,7 +490,7 @@ runScenario.ABM<- function (scenario, pars, verbose=FALSE){
       popABM<- popABM[,,dim(popABM)[3]]
       popABM<- rowSums(popABM)
       popABM[is.na(popABM)]<- 0
-      Ntf[n, -c(1:2)]<- sort(popABM) # First columns: scenario and N0
+      Ntf[n, -c(1:2)]<- sort(popABM) # First columns: idScenario and N0
     }
   }
   
@@ -560,11 +562,12 @@ setMethod("result",
                 if (nrow(model@sim) == 0){
                   stop("There are no results yet. Use run(model) to start the simulations. The function return a model with the results on the sim slot.\n")
                 }
-                res<- merge(S3Part(model), S3Part(model@sim), by.x="row.names", by.y="scenario")
-                names(res)[1]<- "scenario"
-                if (is.numeric(model@sim$scenario)) res$scenario<- as.numeric(res$scenario)
-                res<- cbind(res[,c("scenario","N0")], res[,-c(1, grep("N0", names(res)))]) # sort columns scenario, N0, ...
-                res<- res[order(res$scenario, res$N0),]
+                res<- merge(S3Part(model), S3Part(model@sim), by="idScenario")
+                names(res)[1]<- "idScenario"
+                
+                # sort columns idScenario, N0, ...
+                res<- cbind(res[,c("idScenario","N0")], res[,-c(1, grep("N0", names(res)))]) 
+                res<- res[naturalsort::naturalorder(paste0(res$idScenario, "|", res$N0)),]
                 res
               },
               N0_Pest={
@@ -578,7 +581,7 @@ setMethod("result",
                   stop("There are no results yet. Use run(model) to start the simulations. Check that model@sim@params@Ntf is TRUE before running. The function return a model with the results on the @sim@Ntf slot.\n")
                 }
                 res<- model@sim@Ntf
-                res<- reshape2::melt(res, id.vars=1:2, value.name="Ntf") # id vars: scenario and N0
+                res<- reshape2::melt(res, id.vars=1:2, value.name="Ntf") # id vars: idScenario and N0
                 res$quantile<- as.numeric(res$variable)
                 res$quantile<- (res$quantile - 1) / (model@sim@params$replicates - 1) # length(unique(res$quantile)) == replicates
                 res<- res[,-3]

@@ -67,6 +67,7 @@ getParams.LH_Beh.ssa<- function(strategy=c("slow", "fast", "freqRepro"), diffHab
     names(params)<- paste(names(params), behavior, sep="_")
   }
   params<- data.frame(do.call("rbind", params), stringsAsFactors=FALSE)
+  params<- data.frame(idScenario=rownames(params), params, stringsAsFactors=FALSE)
   
   return (params)
 }

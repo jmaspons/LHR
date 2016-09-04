@@ -13,7 +13,8 @@ Imports:
     adaptivetau,
     parallel,
     reshape2,
-    ggplot2
+    ggplot2,
+    naturalsort
 Suggests:
     popbio,
     testthat

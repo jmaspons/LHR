@@ -40,5 +40,5 @@ test_that("subsetting", {
   expect_is(obj[1:10,], "Model")
 
   expect_is(obj$lambda[2], "numeric")
-  expect_is(obj[[2]], "numeric")
+  expect_is(obj[[1]], "character")
 })
