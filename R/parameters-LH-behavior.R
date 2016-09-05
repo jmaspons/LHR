@@ -15,8 +15,8 @@
 #' @export
 #'
 #' @examples
-getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, var=0), 
-                                       habDiffScenario=c("identicalHab", "mortalHab2", "nestPredHab2"), 
+getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, var=0),
+                                       habDiffScenario=c("identicalHab", "mortalHab2", "nestPredHab2"),
                                        behavior=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2")){
   habDiffScenario<- match.arg(habDiffScenario, several.ok=TRUE)
   behavior<- match.arg(behavior, several.ok=TRUE)
@@ -44,12 +44,12 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, var=0
   params<- do.call(rbind, params)
 
   params<- merge(params, LH_Env[,c("idScenario", setdiff(names(LH_Env), names(params)))], by="idScenario")
-  rownames(params)<- with(params, paste(idScenario, habDiff, behavior, sep="_"))
+  params$idScenario<- with(params, paste(idScenario, habDiff, behavior, sep="_"))
+  rownames(params)<- params$idScenario
   
   # Sort
   params$habDiff<- factor(params$habDiff, levels=c("identicalHab", "mortalHab2", "nestPredHab2"))
   params$behavior<- factor(params$behavior, levels=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2"))
-  
   params<- params[naturalsort::naturalorder(paste0(params$idScenario, "|", params$habDiff, "|", params$behavior)),]
   
   return (params)
