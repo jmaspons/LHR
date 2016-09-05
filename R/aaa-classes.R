@@ -23,14 +23,6 @@ setOldClass("leslieMatrix")
 setClass("LH", contains="data.frame")
 
 
-#' LH.ssa
-#' 
-#' @name LH.ssa
-#'
-#' @export
-setClass("LH.ssa", contains="LH")
-
-
 ## Simulation classes ----
 
 #' Simulation class

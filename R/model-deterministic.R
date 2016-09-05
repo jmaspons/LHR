@@ -185,14 +185,10 @@ Rmax<- function(fecundity, ageFirstBreeding, lifespan){ # values in years
 
 
 ## popbio matrix analysis ----
-#' Population matrix anaysis with popbio
-#'
-#' @param x a Leslie or Lefkovitch matrix
-#'
-#' @return a data.frame with the characteristics of the matrix.
-#' @export
-#'
-#' @examples
+# Population matrix anaysis with popbio
+#
+# @param x a Leslie or Lefkovitch matrix
+# @return a data.frame with the characteristics of the matrix.
 eigen.analisys2df<- function(x){
   tmpRes<- popbio::eigen.analysis(x)
 

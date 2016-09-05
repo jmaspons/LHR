@@ -25,7 +25,6 @@ Collate:
     'Environment.R'
     'Gmean.R'
     'LH.R'
-    'LH.ssa.R'
     'LHR-package.r'
     'Model.R'
     'Model.ssa.R'
