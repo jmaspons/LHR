@@ -29,6 +29,7 @@ setMethod("Env",
             comb<- merge(season, comb)
             
             comb<- unique(comb)
+            comb<- data.frame(idEnv=rownames(comb), comb, stringsAsFactors=FALSE)
             
             ## Remove combinations of mean and var out of the domain of the Beta distribution
             # betaPars<- fbeta(mean=comb$seasonalMean, var=comb$var)
@@ -56,7 +57,12 @@ setMethod("Env",
 setMethod("Env",
           signature(pars="data.frame", seasonAmplitude="ANY", seasonRange="ANY", var="ANY", breedFail="ANY"),
           function(pars){
-            pars<- unique(pars[,c("seasonMean", "seasonAmplitude", "var", "breedFail")])
+            if (inherits(pars, "Model")) pars<- data.frame(pars, stringsAsFactors=FALSE)
+            if (!"idEnv" %in% names(pars)) pars$idEnv<- rownames(pars)
+            
+            pars<- unique(pars[,c("idEnv", "seasonMean", "seasonAmplitude", "var", "breedFail")])
+            pars<- pars[naturalsort::naturalorder(pars$idEnv),]
+            rownames(pars)<- pars$idEnv
             
             new("Env", pars, seasonRange=getSeasonalRange(seasonMean=pars$seasonMean, seasonAmplitude=pars$seasonAmplitude))
           }
@@ -82,7 +88,9 @@ setMethod("seasonalPattern",
             timeSteps<- seq(0, 2*pi*cicles - 2*pi/resolution, by=2*pi/resolution)
             timeSteps<- sin(timeSteps)
             
-            pat<- t(apply(env, 1, function(x) timeSteps * x["seasonAmplitude"] / 2 + x["seasonMean"]))
+            pat<- t(apply(env[c("seasonAmplitude", "seasonMean")], 1, function(x){
+              timeSteps * x["seasonAmplitude"] / 2 + x["seasonMean"]
+            }))
             dimnames(pat)<- list(NULL, t=1:length(timeSteps))
             
             return (pat)

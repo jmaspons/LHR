@@ -37,12 +37,18 @@ setMethod("LH",
           signature(pars="data.frame", lambda="missing", fecundity="missing", broods="missing", b="missing",
                     a="missing", j="missing", s="missing", AFR="missing", free="missing", popbio="ANY"),
           function(pars, popbio=FALSE){
+            if (inherits(pars, "Model")) pars<- data.frame(pars, stringsAsFactors=TRUE)
+            
             # if not defined, subadult survival is equal to adult survival. Only useful for AFR > 1
             if (!"s" %in% names(pars)){
               pars$s<- pars$a
             }
             
-            pars<- unique(pars[,c("lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")]) # Sort columns
+            if (!"idLH" %in% names(pars)) pars$idLH<- rownames(pars)
+            
+            pars<- unique(pars[,c("idLH", "lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")]) # Sort columns
+            pars<- pars[naturalsort::naturalorder(pars$idLH),]
+            rownames(pars)<- pars$idLH
             
             if (popbio & requireNamespace("popbio", quietly=TRUE)){
               popbio<- apply(pars, 1, function(x){
@@ -65,8 +71,9 @@ setMethod("LH",
                    a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s=a, AFR=1, free="j", popbio=FALSE){
 
             pars<- sampleLH(lambda=lambda, broods=broods, b=b, j=j, a=a, AFR=AFR, free=free)
-            # pars<- sampleLH()
             rownames(pars)<- NULL
+            pars<- data.frame(idLH=rownames(pars), pars, stringsAsFactors=FALSE)
+            
             LH(pars=pars, popbio=popbio)
           }
 )

@@ -532,6 +532,24 @@ run.ssa<- function(model, cl=parallel::detectCores(), ...){
                    maxTf=tf, replicates=replicates, discretePop=discretePop, finalPop=finalPop, cl=cl, ...)
 
   res<- new("Sim.ssa", res$stats, Ntf=res$Ntf, params=model@sim@params, raw=res, N0_Pest=model@sim@N0_Pest)
+  # simRes<- model@sim
+  # S3Part(simRes)<- res$stats
+  # 
+  # # if (pars$raw){
+  # #   simRes@raw<- lapply(res, function(x) x$raw)
+  # # }
+  # if (discretePop){
+  #   simRes@discretePopSim<- lapply(res$pop, function(x) x$pop)
+  # }
+  # if (finalPop){
+  #   Ntf<- lapply(res, function(x) x$Ntf)
+  #   Ntf<- do.call("rbind", Ntf)
+  #   Ntf<- as.data.frame(Ntf)
+  #   rownames(Ntf)<- paste0(Ntf[,"idScenario"], "_N", Ntf[,"N0"])
+  #   # Ntf[,-1]<- apply(Ntf[,2:ncol(Ntf)], 2, as.numeric)
+  #   simRes@Ntf<- Ntf
+  # }
+  # 
   
   if (numericCL) parallel::stopCluster(cl)
   
@@ -649,41 +667,67 @@ setMethod("show", signature(object="Model"),
 #'
 #' @rdname Model
 #' @param x 
+#' @param resultType 
 #' @param ... 
 #'
 #' @return
 #' @export
 #'
 #' @examples
-plot.Model<- function(x, ...){
-  if (nrow(x@sim) == 0){
+plot.Model<- function(x, resultType=c("stats", "N0_Pest"), ...){
+  resultType<- match.arg(resultType)
+  
+  if (nrow(x@sim) == 0 & nrow(x@sim@N0_Pest) == 0){
     message("No results found. Plotting the parameter space.\n\trun(model) to simulate.")
-    
-    return(graphics::plot(S3Part(x)))
+    selNum<- sapply(S3Part(x), is.numeric)
+    return(graphics::plot(S3Part(x)[, selNum]))
   }
   
-  res<- result(x)
-  res$Pest<- 1 - res$extinct
-  res$scenario<- factor(res$scenario)
+  if (nrow(x@sim) == 0 | resultType == "N0_Pest"){  
+    res<- result(x, type="N0_Pest")
+    res$idScenario<- factor(res$idScenario)
+    
+    out<- ggplot2::ggplot(res, ggplot2::aes(x=lambda, y=(N0interpoled), group=idScenario, color=idScenario)) + 
+      ggplot2::geom_point() + ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=ggplot2::label_both)  
+    return(out)
+  }
   
-  ggplot2::ggplot(res, ggplot2::aes(x=N0, y=Pest, group=scenario, color=scenario)) + 
-    ggplot2::geom_line() + ggplot2::geom_point() + ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=ggplot2::label_both)
+  if (nrow(x@sim@N0_Pest) == 0 | resultType == "stats")
+  res<- result(x, type="stats")
+  res$Pest<- 1 - res$extinct
+  res$idScenario<- factor(res$idScenario)
+  
+  out<- ggplot2::ggplot(res, ggplot2::aes(x=N0, y=Pest, group=idScenario, color=idScenario)) + 
+    ggplot2::geom_line() + ggplot2::geom_point() +
+    ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=ggplot2::label_both)
+  return(out)
 }
 
+
+#' Histogram
+#'
+#' @rdname Model
+#' @param x 
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 hist.Model<- function(x, ...){
   if (nrow(x@sim) == 0){
     stop("No results found.\n\trun(model) to simulate.")
-    
-    return(graphics::hist(S3Part(x)))
+    selNum<- sapply(S3Part(x), is.numeric)
+    return(graphics::hist(S3Part(x)[, selNum]))
   }
   
   N<- x@sim@Ntf
   xd<- data.frame(x)
   
-  N<- merge(N, xd, by.x="scenario", by.y=0)
-  N$scenario<- factor(res$scenario)
-  N<- reshape2::melt(N, id.vars=c("scenario", "N0", "seasonAmplitude", "var", "breedFail"), value.name="Ntf")
+  N<- merge(N, xd, by="idScenario")
+  N$idScenario<- factor(res$idScenario)
+  N<- reshape2::melt(N, id.vars=c("idScenario", "N0", "seasonAmplitude", "var", "breedFail"), value.name="Ntf")
   
-  ggplot2::ggplot(N, ggplot2::aes(x=Ntf, group=scenario, color=scenario)) + 
+  ggplot2::ggplot(N, ggplot2::aes(x=Ntf, group=idScenario, color=idScenario)) + 
     ggplot2::geom_histogram() + ggplot2::facet_grid(N0 + breedFail~seasonAmplitude + var, labeller=ggplot2::label_both)
 }
