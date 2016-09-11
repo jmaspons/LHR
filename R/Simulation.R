@@ -58,7 +58,7 @@ setMethod("Sim",
 #' @examples Sim.discretePopSim()
 #' 
 #' @export
-setGeneric("Sim.discretePopSim", function(params, N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE),
+setGeneric("Sim.discretePopSim", function(params, N0=c(2, 10), envVar=list(j=TRUE, breedFail=TRUE),
                                           sexRatio=0.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"),
                                           tf=10, replicates=15, maxN=10000, raw=TRUE, Ntf=TRUE) standardGeneric("Sim.discretePopSim"))
 
@@ -74,7 +74,7 @@ setMethod("Sim.discretePopSim",
 setMethod("Sim.discretePopSim",
           signature(params="missing", N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY",
                     tf="ANY", replicates="ANY", maxN="ANY", raw="ANY", Ntf="ANY"),
-          function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=0.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"),
+          function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=TRUE), sexRatio=0.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"),
                    tf=10, replicates=15, maxN=10000, raw=TRUE, Ntf=TRUE){
             
             if (!all(is.na(matingSystem))){
@@ -104,7 +104,7 @@ setMethod("Sim.discretePopSim",
 #' @return a \code{Sim.numericDistri} object.
 #' @examples Sim.numericDistri()
 #' @export
-setGeneric("Sim.numericDistri", function(params, N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), 
+setGeneric("Sim.numericDistri", function(params, N0=c(2, 10), envVar=list(j=TRUE, breedFail=TRUE), 
                                          sexRatio=0.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"), 
                                          tf=1, maxN=10000, raw=TRUE) standardGeneric("Sim.numericDistri"))
 
@@ -119,7 +119,7 @@ setMethod("Sim.numericDistri",
 
 setMethod("Sim.numericDistri",
           signature(params="missing", N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY", tf="ANY", maxN="ANY", raw="ANY"),
-          function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=FALSE), sexRatio=0.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"), tf=1, maxN=10000, raw=TRUE){
+          function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=TRUE), sexRatio=0.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"), tf=1, maxN=10000, raw=TRUE){
             
             if (!all(is.na(matingSystem))){
               matingSystem<- match.arg(matingSystem)
