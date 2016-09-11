@@ -60,7 +60,7 @@ setMethod("Env",
             if (inherits(pars, "Model")) pars<- data.frame(pars, stringsAsFactors=FALSE)
             if (!"idEnv" %in% names(pars)) pars$idEnv<- rownames(pars)
             
-            pars<- unique(pars[,c("idEnv", "seasonMean", "seasonAmplitude", "var", "breedFail")])
+            pars<- unique(pars[,c("idEnv", "seasonAmplitude", "seasonMean", "var", "breedFail")])
             pars<- pars[naturalsort::naturalorder(pars$idEnv),]
             rownames(pars)<- pars$idEnv
             
@@ -190,7 +190,7 @@ getSeasonalParams<- function(seasonAmplitude, seasonRange, envMax=1){
     seasonAmplitude<- apply(seasonRange, 1, function (x) max(x) - min(x))
   }
   
-  return (data.frame(seasonMean, seasonAmplitude))
+  return (data.frame(seasonAmplitude, seasonMean))
 }
 
 #' @export
