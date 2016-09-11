@@ -214,20 +214,14 @@ runScenario.discretePopSim<- function (scenario, pars, verbose=FALSE){
   if (pars$raw) rawSim<- list()
   
   ## Seasonality
-  seasonVar<- seasonOptimCal(env=Env(scenario))[[1]] #, resolution=resolution, nSteps=seasonBroods$broods, interval=interval, criterion=criterion)
-  if (any(seasonVar !=1)){
-    jindSeason<- scenario$jind * seasonVar
-    jbrSeason<- scenario$jbr * seasonVar
-  }else{
-    jindSeason<- scenario$jind
-    jbrSeason<- scenario$jbr
-  }
-  
+  seasonVar<- seasonOptimCal(env=Env(scenario), nSteps=scenario$broods, interval=scenario$interval)[[1]] #, resolution=resolution, nSteps=seasonBroods$broods, interval=interval, criterion=criterion)
+
   for (n in 1:length(pars$N0)){
     N0<- pars$N0[n]
     
-    pop<- with(scenario, discretePopSim(broods=broods, b=b, j=jindSeason, a=a, breedFail=1 - jbrSeason,
-               varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
+    pop<- with(scenario, discretePopSim(broods=broods, b=b, j=jind, a=a, breedFail=1 - jbr,
+               varJ=ifelse(pars$envVar$j, scenario$var, 0), varBreedFail=ifelse(pars$envVar$breedFail, scenario$var, 0),
+               seasonVar=seasonVar,
                sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, replicates=pars$replicates, tf=pars$tf, maxN=pars$maxN))
     
     if (is.null(pop) | all(is.na(pop)) | is.list(pop)){ ## TODO: pop<- list(popF, popM) when mating system != NA -> 2 sexes

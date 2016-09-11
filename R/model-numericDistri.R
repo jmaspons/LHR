@@ -47,10 +47,10 @@ setMethod("tDistri",
 
             if (tf1){
               if (!broodMortality & !varEnv & !seasonalEnv & !sex){
-                out<- mFit.distri(fecundity=b, j=j, a=a, N0=N0)
+                out<- mFit.distri(fecundity=b * broods, j=j, a=a, N0=N0)
               }
               if (!broodMortality & !varEnv & !seasonalEnv &  sex){
-                out<- mFitSex.distri(fecundity=b, j=j, a=a, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0)
+                out<- mFitSex.distri(fecundity=b * broods, j=j, a=a, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0)
               }
               if (!broodMortality & !varEnv & seasonalEnv  & !sex){
                 ## TODO 
@@ -61,12 +61,12 @@ setMethod("tDistri",
                 warning("## TODO: out<- mFitSex_season.distri")
               }
               if (!broodMortality & varEnv  & !seasonalEnv & !sex){
-                out<- mFit_var.distri(fecundity=b, j=j, a=a, varJ=varJ, N0=N0)
+                out<- mFit_var.distri(fecundity=b * broods, j=j, a=a, varJ=varJ, N0=N0)
               }
               if (!broodMortality & varEnv  & !seasonalEnv &  sex){
                 ## TODO 
                 warning("## TODO: out<- mFitSex_var.distri")
-                # out<- mFitSex_var.distri(fecundity=b, j=j, a=a, varJ=varJ, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0)
+                # out<- mFitSex_var.distri(fecundity=b * broods, j=j, a=a, varJ=varJ, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0)
               }
               if (!broodMortality & varEnv  & seasonalEnv  & !sex){
                 ## TODO 
@@ -123,12 +123,12 @@ setMethod("tDistri",
             }else{ # tf > 1
             
               if (!broodMortality & !varEnv & !seasonalEnv & !sex){
-                out<- mFit.tdistri(fecundity=b, j=j, a=a, N0=N0, tf=tf)
+                out<- mFit.tdistri(fecundity=b * broods, j=j, a=a, N0=N0, tf=tf)
               }
               if (!broodMortality & !varEnv & !seasonalEnv &  sex){
                 ## TODO 
                 warning("## TODO: out<- mFitSex.tdistri")
-                # out<- mFitSex.tdistri(fecundity=b, j=j, a=a, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0, tf=tf)
+                # out<- mFitSex.tdistri(fecundity=b * broods, j=j, a=a, sexRatio=sexRatio, matingSystem=matingSystem, Nf=N0, tf=tf)
               }
               if (!broodMortality & !varEnv & seasonalEnv  & !sex){
                 ## TODO 
