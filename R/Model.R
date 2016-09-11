@@ -72,11 +72,11 @@ setGeneric("combineLH_Env", function(lh=LH(), env=Env(), resolution=12, interval
 setMethod("combineLH_Env", 
           signature(lh="ANY", env="ANY", resolution="ANY", interval="ANY", criterion="ANY"),
           function(lh=LH(), env=Env(), resolution=12, interval=2, criterion="maxFirst"){
-            tmpLH<- data.frame(idLH=rownames(lh), S3Part(lh), interval, stringsAsFactors=FALSE)
-            tmpEnv<- data.frame(idEnv=rownames(env), S3Part(env), stringsAsFactors=FALSE)
+            tmpLH<- data.frame(S3Part(lh), interval, stringsAsFactors=FALSE)
+            tmpEnv<- S3Part(env)
 
             scenario<- merge(tmpLH, tmpEnv)
-            scenario<- data.frame(idScenario=paste0("lh", scenario$idLH, "_env", scenario$idEnv), scenario, stringsAsFactors=FALSE)
+            scenario<- data.frame(idScenario=paste0("LH", scenario$idLH, "_Env", scenario$idEnv), scenario, stringsAsFactors=FALSE)
             scenario<- scenario[naturalsort::naturalorder(scenario$idScenario),]
             rownames(scenario)<- scenario$idScenario
             
@@ -582,15 +582,24 @@ setMethod("result",
                 res<- merge(S3Part(model), S3Part(model@sim), by="idScenario")
 
                 # sort columns idScenario, N0, ...
-                res<- cbind(res[,c("idScenario","N0")], res[,-c(1, grep("N0", names(res)))]) 
-                res<- res[naturalsort::naturalorder(paste0(res$idScenario, "|", res$N0)),]
+                res<- cbind(res[,c("idScenario","N0")], res[,-c(1, grep("N0", names(res)))])
+                rownames(res)<- paste0(res$idScenario, "-N", res$N0)
+                res<- res[naturalsort::naturalorder(rownames(res)),]
+                
                 res
+
               },
               N0_Pest={
                 if (nrow(model@sim@N0_Pest) == 0){
                   stop("There are no results yet. Use findN0_Pest(model) to start the simulations. The function return a model with the results on the model@sim@N0_Pest slot.\n")
                 }
-                res<- cbind(S3Part(model), S3Part(model@sim@N0_Pest))
+                res<- merge(S3Part(model), S3Part(model@sim@N0_Pest), by="idScenario")
+                
+                rownames(res)<- res$idScenario
+                res<- res[naturalsort::naturalorder(rownames(res)),]
+                
+                res
+                
               },
               Ntf={
                 if (nrow(model@sim@Ntf) == 0){
@@ -601,6 +610,18 @@ setMethod("result",
                 res$quantile<- as.numeric(res$variable)
                 res$quantile<- (res$quantile - 1) / (model@sim@params$replicates - 1) # length(unique(res$quantile)) == replicates
                 res<- res[,-3]
+                # sort columns idScenario, N0, ...
+                res<- cbind(res[,c("idScenario","N0")], res[,-c(1, grep("N0", names(res)))])
+                rownames(res)<- paste0(res$idScenario, "-N", res$N0)
+                res<- res[naturalsort::naturalorder(rownames(res)),]
+                
+                # resl<- reshape2::melt(res[, c("idScenario", "N0", selQuantile)], id.vars=1:2, value.name="Ntf") # id vars: idScenario and N0
+                # resl$quantile<- as.numeric(as.character(resl$variable))
+                # resl$quantile<- (resl$quantile - 1) / (model@sim@params$replicates - 1) # length(unique(resl$quantile)) == replicates
+                # resl<- resl[,-3] # remove "variable" column, a id for replicates
+                
+                res
+                
               }
             )
 

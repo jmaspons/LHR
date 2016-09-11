@@ -159,7 +159,7 @@ findN0_Pest.scenario<- function(scenario=data.frame(Model(lh=LH(lambda=1))[1,]),
       N0interpoled<- interpole(Pobjective, 0, maxN, 0, Pmax)
   }
   
-  return (data.frame(N0_Pest=N0, Pest, N0interpoled=N0interpoled, Pobjective))
+  return (data.frame(idScenario=scenario$idScenario, N0_Pest=N0, Pest, N0interpoled=N0interpoled, Pobjective, stringsAsFactors=FALSE))
 }
 
 
