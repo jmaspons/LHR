@@ -12,12 +12,12 @@ NULL
 #' @return a \code{Model} object.
 #' @examples model<- Model()
 #' @export
-setGeneric("Model", function(lh=LH(), env=Env(), sim=Sim(type=match.arg(type)), pars, type=c("discretePopSim", "numericDistri", "ABM", "ssa"), ...) standardGeneric("Model"))
+setGeneric("Model", function(lh=LH(method="LH axes"), env=Env(), sim=Sim(type=match.arg(type)), pars, type=c("discretePopSim", "numericDistri", "ABM", "ssa"), ...) standardGeneric("Model"))
 
 # c("discretePopSim", "numericDistri", "ABM", "ssa")
 setMethod("Model",
           signature(lh="ANY", env="ANY", sim="ANY", pars="missing", type="ANY"),
-          function(lh=LH(), env=Env(), sim=Sim(type=match.arg(type)), type=c("discretePopSim", "numericDistri", "ABM", "ssa"), ...){
+          function(lh=LH(method="LH axes"), env=Env(), sim=Sim(type=match.arg(type)), type=c("discretePopSim", "numericDistri", "ABM", "ssa"), ...){
             
             if (inherits(sim, "Sim.ABM")){
               pars<- getParamsCombination.LH_Beh(lh=lh, env=env, ...)

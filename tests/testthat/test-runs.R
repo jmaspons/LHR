@@ -1,8 +1,7 @@
 context("Run discretePopSim models")
 
 test_that("discrete time models", {
-  lh<- LH()
-  lh<- lh[lh$lambda == 1,]
+  lh<- LH(method="LH axes")
   env<- Env()
   
   ## Female only
@@ -20,8 +19,7 @@ test_that("discrete time models", {
 })
 
 test_that("discrete models with 2 sexes", {
-  lh<- LH()
-  lh<- lh[lh$lambda == 1,]
+  lh<- LH(method="LH axes")
   env<- Env()
   
   ## 2 sexes
@@ -48,8 +46,7 @@ test_that("compound distribution", {
   sim<- Sim.numericDistri()
   env<- Env()
   env<- env[env$var == 0,] ## Errors if var != 0
-  lh<- LH()
-  lh<- lh[lh$lambda == 1,]
+  lh<- LH(method="LH axes")
   
   model<- Model(lh=lh, env=env, sim=sim)
   
@@ -75,8 +72,7 @@ test_that("compound distribution with environmental variation", {
   sim<- Sim.numericDistri()
   env<- Env()
   env<- env[env$var != 0,] ## Errors if var != 0
-  lh<- LH()
-  lh<- lh[lh$lambda == 1,]
+  lh<- LH(method="LH axes")
   
   model<- Model(lh=lh, env=env, sim=sim)
   if (skip_on_cran()){
@@ -103,8 +99,7 @@ test_that("compound distribution with environmental variation", {
 context("Run discreteABMSim models")
 
 test_that("ABM LH-behavior", { 
-  lh<- LH()
-  lh<- lh[lh$lambda == 1,]
+  lh<- LH(method="LH axes")
   env<- Env(seasonAmplitude=0, var=0)
   sim<- Sim.ABM()
   pars<- getParamsCombination.LH_Beh(lh=lh, env=env, habDiffScenario="nestPredHab2", behavior="learnExploreBreed")

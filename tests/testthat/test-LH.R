@@ -2,6 +2,7 @@ context("Class LH")
 
 test_that("constructor", {
   expect_is(LH(), "LH")
+  expect_is(LH(method="LH axes"), "LH")
   expect_is(pars<- sampleLH(), "data.frame")
   expect_is(LH(pars), "LH")
   

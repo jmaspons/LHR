@@ -22,6 +22,7 @@ NULL
 #' @param j juvenile survival
 #' @param AFR 
 #' @param free which parameter is free to vary ("lambda", "j" or "a").
+#' @param ... parameters passed to \code{\link{sampleLH}}.
 #' 
 #' @details Errors for free="a".
 #' @return a \code{LH} object.
@@ -31,7 +32,7 @@ NULL
 #' 
 #' @export
 setGeneric("LH", function(pars, lambda=seq(.9, 1.1, by=0.1), fecundity, broods=2^(0:2), b=c(1, 2, 5, 10),
-                          a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s=a, AFR=1, free="j", popbio=FALSE) standardGeneric("LH"))
+                          a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s=a, AFR=1, free="j", popbio=FALSE, ...) standardGeneric("LH"))
 
 setMethod("LH",
           signature(pars="data.frame", lambda="missing", fecundity="missing", broods="missing", b="missing",
@@ -68,10 +69,10 @@ setMethod("LH",
           signature(pars="missing", lambda="ANY", fecundity="missing", broods="ANY", b="ANY",
                     a="ANY", j="ANY", s="ANY", AFR="ANY", free="ANY", popbio="ANY"),
           function(lambda=seq(.9, 1.1, by=0.1), broods=2^(0:2), b=c(1, 2, 5, 10), 
-                   a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s=a, AFR=1, free="j", popbio=FALSE){
+                   a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s=a, AFR=1, free="j", popbio=FALSE, ...){
 
-            pars<- sampleLH(lambda=lambda, broods=broods, b=b, j=j, a=a, AFR=AFR, free=free)
-            rownames(pars)<- NULL
+            pars<- sampleLH(lambda=lambda, broods=broods, b=b, j=j, a=a, AFR=AFR, free=free, ...)
+            
             pars<- data.frame(idLH=rownames(pars), pars, stringsAsFactors=FALSE)
             
             LH(pars=pars, popbio=popbio)
@@ -110,12 +111,47 @@ setMethod("show", signature(object="LH"),
 #                     free=c("j", "lambda")[1], maxFecundity=20, higherJuvMortality=TRUE, method=c("regular", "MonteCarlo"), census="pre-breeding"){
 
 # WARNING("There are errors when estimating a = f(lambda, fecundity, j, AFR)")
+examplesLH<- function(){
+  idLH<- c("fast", "slow", "freqRepro")
+  lambda<- c(1.2, 1.05, 1.1)
+  broods<- c(1, 1, 4)
+  b<- c(10, 1, 1)
+  a<- c(.4, .85, .6)
+  s<- a
+  AFR<- c(1, 1, 1) # ABM LH_behavior doesn't implement Age at First Reproduction
+  
+  fecundity<- broods * b
+  
+  j<- findJ_EulerLotka(lambda=lambda, b=fecundity, a=a, AFR=AFR)
+  
+  pars<- data.frame(idLH, lambda, fecundity, broods, b, a, s, j, AFR, stringsAsFactors=FALSE, row.names=idLH)
+  
+  return(pars)
+}
 
+#' Sample Life History strategies
+#'
+#' @param lambda 
+#' @param broods 
+#' @param b 
+#' @param free 
+#' @param maxFecundity 
+#' @param higherJuvMortality 
+#' @param method 
+#' @param census 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 sampleLH<- function(lambda=seq(.9, 1.1, by=0.1), broods=2^(0:2), b=c(1, 2, 5, 10), 
                     j=seq(0.2, 0.8, by=0.2), a=seq(0.3, 0.9, by=0.2), AFR=1,
-                    free=c("j", "lambda", "a"), maxFecundity=20, higherJuvMortality=TRUE, method=c("regular", "MonteCarlo"), census="pre-breeding"){
+                    free=c("j", "lambda", "a"), maxFecundity=20, higherJuvMortality=TRUE, method=c("regular", "MonteCarlo", "LH axes"), census="pre-breeding"){
   free<- match.arg(free)
+  method<- match.arg(method)
   
+  if (method == "LH axes") return(examplesLH())
+
   if (free == "lambda"){
     pars<- expand.grid(broods=broods, b=b, j=j, a=a, AFR=AFR)
     pars$fecundity<- pars$broods * pars$b
@@ -178,11 +214,13 @@ sampleLH<- function(lambda=seq(.9, 1.1, by=0.1), broods=2^(0:2), b=c(1, 2, 5, 10
     }
   }
   
+  
   # Filter restrictions
   if (higherJuvMortality) pars<- pars[pars$j <= pars$a,]
   
   # Sort columns
-  pars<- pars[order(pars$lambda, pars$fecundity, pars$a), c("lambda", "fecundity", "broods", "b", "a", "j", "AFR")]
+  pars<- pars[order(pars$lambda, pars$a, pars$fecundity), c("lambda", "fecundity", "broods", "b", "a", "j", "AFR")]
+  rownames(pars)<- NULL
   
   return (pars)
 }

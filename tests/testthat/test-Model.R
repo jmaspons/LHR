@@ -7,6 +7,9 @@ test_that("combine LH and Env", {
   
   expect_equal(length(obj$seasonBroodEnv$broodEnv), nrow(obj$scenario))
   expect_equal(nrow(obj$seasonBroodEnv$parsBroodEnv), nrow(obj$scenario))
+  
+  d<- obj$scenario
+  expect_true(all(abs(d$j - d$jbr * d$jind) < .Machine$double.eps))
 })
 
 test_that("Model class constructors", {
