@@ -605,11 +605,12 @@ setMethod("result",
                 if (nrow(model@sim@Ntf) == 0){
                   stop("There are no results yet. Use run(model) to start the simulations. Check that model@sim@params@Ntf is TRUE before running. The function return a model with the results on the @sim@Ntf slot.\n")
                 }
-                res<- model@sim@Ntf
-                res<- reshape2::melt(res, id.vars=1:2, value.name="Ntf") # id vars: idScenario and N0
-                res$quantile<- as.numeric(res$variable)
-                res$quantile<- (res$quantile - 1) / (model@sim@params$replicates - 1) # length(unique(res$quantile)) == replicates
-                res<- res[,-3]
+                
+                Ntf<- apply(model@sim@Ntf[,-c(1,2)], 1, stats::ecdf)
+                Ntf<- cbind(model@sim@Ntf[, c(1,2)], t(sapply(Ntf, quantile)))
+                
+                res<- merge(S3Part(model), Ntf, by="idScenario")
+                
                 # sort columns idScenario, N0, ...
                 res<- cbind(res[,c("idScenario","N0")], res[,-c(1, grep("N0", names(res)))])
                 rownames(res)<- paste0(res$idScenario, "-N", res$N0)
