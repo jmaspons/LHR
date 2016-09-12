@@ -80,22 +80,27 @@ trendsProp<- function(...){
 #' @rdname discretePopSim
 #' @export
 trendsProp.discretePopSim<- function(x, dt=1, ...){
+  pop0<- x[, 1, drop=FALSE]
+  popF<- x[,ncol(x), drop=FALSE] # final population
+  popF[is.na(popF)]<- 0
+  replicates<- nrow(x)
+  
   sampleT<- seq(1, ncol(x), by=dt)
   if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
   x<- x[, sampleT, drop=FALSE]
   dN<- t(diff(t(x))) # dN =  N_t+1 - N_t
-  N0<- x[,-ncol(x), drop=FALSE]
-  popF<- x[,ncol(x), drop=FALSE] # final population
-  popF[is.na(popF)]<- 0
-  replicates<- nrow(x)
   nTransitions<- sum(!is.na(dN))
   
-  increase<- length(which(dN > 0)) / nTransitions
-  decrease<- length(which(dN < 0)) / nTransitions
-  stable<- length(which(dN == 0)) / nTransitions
+  increaseTrans<- length(which(dN > 0)) / nTransitions
+  decreaseTrans<- length(which(dN < 0)) / nTransitions
+  stableTrans<- length(which(dN == 0)) / nTransitions
+  
+  increase<- length(which(popF > pop0)) / replicates
+  decrease<- length(which(popF < pop0)) / replicates
+  stable<- length(which(popF == pop0)) / replicates
   extinct<- length(which(popF == 0)) / replicates
   
-  return (data.frame(increase, decrease, stable, extinct))
+  return (data.frame(increase, decrease, stable, extinct, increaseTrans, decreaseTrans, stableTrans))
 }
 
 #' @rdname numericDistri

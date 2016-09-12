@@ -196,9 +196,10 @@ runScenario.discretePopSim<- function (scenario, pars, verbose=FALSE){
     print(scenario, row.names=FALSE)
   }
   
-  stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=12, 
+  stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=15, 
                dimnames=list(scenario_N0=paste0(rep(scenario$idScenario, length=length(pars$N0)), "_N", pars$N0),
-                             stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
+                             stats=c("idScenario", "N0", "increase", "decrease", "stable","extinct", 
+                             "increaseTrans", "decreaseTrans", "stableTrans", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 15 = ncol(summary(pop)) + 2 (id,
   stats<- as.data.frame(stats)
   stats$idScenario<- scenario$idScenario
   stats$N0<- pars$N0
@@ -429,9 +430,10 @@ runScenario.ABM<- function (scenario, pars, verbose=FALSE){
     print(scenario, row.names=FALSE)
   }
   
-  stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=12, 
+  stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=15, 
                dimnames=list(scenario_N0=paste0(rep(scenario$idScenario, length=length(pars$N0)), "_N", sapply(pars$N0, sum)),
-                             stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
+                             stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct",
+                             "increaseTrans", "decreaseTrans", "stableTrans", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 15 = ncol(summary(pop)) + 2 (id, N0)
   stats<- as.data.frame(stats)
   stats$idScenario<- scenario$idScenario
   stats$N0<- sapply(pars$N0, sum)
@@ -607,7 +609,7 @@ setMethod("result",
                 }
                 
                 Ntf<- apply(model@sim@Ntf[,-c(1,2)], 1, stats::ecdf)
-                Ntf<- cbind(model@sim@Ntf[, c(1,2)], t(sapply(Ntf, quantile)))
+                Ntf<- cbind(model@sim@Ntf[, c(1,2)], t(sapply(Ntf, quantile, ...)))
                 
                 res<- merge(S3Part(model), Ntf, by="idScenario")
                 
