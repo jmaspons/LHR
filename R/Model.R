@@ -563,11 +563,11 @@ run.ssa<- function(model, cl=parallel::detectCores(), ...){
 #' @return a data frame with the aggregated results and parameters of a simulation.
 #' @examples result(res) 
 #' @export
-setGeneric("result", function(model, type=c("stats", "N0_Pest", "Ntf")) standardGeneric("result"))
+setGeneric("result", function(model, type=c("stats", "N0_Pest", "Ntf"), popbio=FALSE, ...) standardGeneric("result"))
 
 setMethod("result", 
           signature(model="Model", type="ANY"),
-          function(model, type=c("stats", "N0_Pest", "Ntf")){
+          function(model, type=c("stats", "N0_Pest", "Ntf"), popbio=FALSE, ...){
             type<- match.arg(type)
             
             if (nrow(model@sim) == 0 & nrow(model@sim@N0_Pest) == 0){
@@ -625,6 +625,22 @@ setMethod("result",
                 
               }
             )
+            
+            if (popbio & requireNamespace("popbio", quietly=TRUE)){
+              lh<- unique(res[, c("idLH", "a", "s", "j", "fecundity", "AFR")])
+              
+              popbio<- apply(lh[,-1], 1, function(x){ # First column is a character and makes x a character vector
+                mat<- with(as.list(x), LefkovitchPre(a=a, s=s, bj=fecundity * j, AFR=AFR))
+                return(eigen.analisys2df(mat))
+              })
+              popbio<- do.call(rbind, popbio)
+              popbio<- cbind(idLH=lh$idLH, popbio)
+              
+              res<- merge(res, popbio, by="idLH")
+              
+              # sort columns
+              res<- cbind(res[,c("idScenario","N0")], res[,-c(grep("^(idScenario|N0)$", names(res)))])
+            }
 
           return(res)
         }

@@ -52,7 +52,7 @@ setMethod("LH",
             rownames(pars)<- pars$idLH
             
             if (popbio & requireNamespace("popbio", quietly=TRUE)){
-              popbio<- apply(pars, 1, function(x){
+              popbio<- apply(pars[,-1], 1, function(x){ # First column is a character and makes x a character vector
                 mat<- with(as.list(x), LefkovitchPre(a=a, s=s, bj=fecundity * j, AFR=AFR))
                 return(eigen.analisys2df(mat))
               })
