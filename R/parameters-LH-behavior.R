@@ -60,15 +60,18 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, var=0
 ### TODO: rename scenario -> lh. fix code
 # diffHab2: named vector with the differences in the parameters at habitat 2 respect habitat 1
 # Warning: clutch have no effect on the simulation. It's necessary to modify the reaction channels (getReactionChannels(clutch1, clutch2))
+# @params nonBreedingSurv increase factor on survival for non breeding adults.
 getParams.LH_Beh<- function(params=data.frame(b=1, broods=1, a=0.7, j=0.3, AFR=1, breedFail=0.5, jind=0.4615385, jbr=0.65),
-                            diffHab2,
+                            diffHab2, nonBreedingSurv=1.5,
                             habDiffScenario=c("identicalHab", "mortalHab2", "nestPredHab2"),
                             behavior=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2")){
 
   habDiffScenario<- match.arg(habDiffScenario)
   behavior<- match.arg(behavior)
   
-  out<- with(params, data.frame(b1=b, b2=b,   broods=broods, PbF1=1 - jbr, PbF2=1 - jbr,  a1=a,ab1=a,j1=jind,  a2=a,ab2=a,j2=jind, AFR=AFR))
+  aNonBreed<- 1 - (1 - params$a)^nonBreedingSurv
+  
+  out<- with(params, data.frame(b1=b, b2=b,   broods=broods, PbF1=1 - jbr, PbF2=1 - jbr,  a1=aNonBreed,ab1=a,j1=jind,  a2=aNonBreed,ab2=a,j2=jind, AFR=AFR))
   
   # Add extra parameters for neutral behavior and density dependence
   out$K<- -1 # densodependence not implemented
