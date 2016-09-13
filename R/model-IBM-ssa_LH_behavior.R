@@ -62,7 +62,7 @@ getParams.LH_Beh.ssa<- function(strategy=c("slow", "fast", "freqRepro"), diffHab
     params<- lapply(params, function(x) setParams2diff1(x, diffHab2, type="multiplicative"))
   }else{
     params<- lapply(params, function(x) setScenario.ssa(x, habDiffScenario))
-    names(params)<- paste(names(params), habDiffScenario, sep="_")
+    names(params)<- paste(names(params), habDiffScenario, sep="-")
     params<- lapply(params, function(x) setBehavior(x, behavior))
     names(params)<- paste(names(params), behavior, sep="_")
   }

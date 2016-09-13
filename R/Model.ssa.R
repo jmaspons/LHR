@@ -28,7 +28,7 @@ run.ssa.deterministic<- function(model, cl=parallel::detectCores(), ...){
 #' @param model 
 #'
 #' @export
-plotPest<- function(model){
+plotPest_N0.Model.ssa<- function(model){
   res<- result(model)
   ggplot2::ggplot(data=res, ggplot2::aes(N0, 1 - decrease, colour=behavior)) + ggplot2::geom_line() + ggplot2::geom_point() + 
     ggplot2::facet_grid(environment ~ LH) + ggplot2::coord_cartesian(ylim=c(0, 1))
@@ -39,7 +39,7 @@ plotPest<- function(model){
 #' @param model 
 #'
 #' @export
-plotNtf<- function(model){
+plotNtf.Model.ssa<- function(model){
   res<- model@sim@Ntf
   scenario<- strsplit(rownames(res), "_")
   scenario<- do.call("rbind", scenario)

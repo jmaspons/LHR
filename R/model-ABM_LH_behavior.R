@@ -86,56 +86,267 @@ transitionABM.LH_Beh<- compiler::cmpfun(transitionABM.LH_Beh) # byte-compile the
 
 
 ## Graphics ----
-# TODO:
-plotLH_behavior<- function(sim, groups=c("habitat", "age", "habitat*age", "all"), ...){
+
+#' Plot LH_behavior simulations
+#'
+#' @param x a \code{\link{discreteABMSim}} or a \code{\link{Model.ABM}}
+#' @param ... 
+#'
+#' @export
+plotLH_behavior<- function(x, ...){ UseMethod("plotLH_behavior") }
+
+#' plotLH_behavior
+#' 
+#' @describeIn discreteABMSim
+#' @param x 
+#' @param groups 
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plotLH_behavior.discreteABMSim<- function(x, groups=c("all", "habitat", "age", "habitat*age"), ...){
+  
   if (is.integer(groups)) groups<- c("habitat", "age", "habitat*age", "all")[groups]
   else groups<- match.arg(groups)
   
-  if (!inherits(sim, discretePop))
-  tmp<- sim
+  tmp<- x
+  
   switch(groups,
          all={
-           color<- grDevices::rainbow(length(grep("N1", colnames(sim))), start=0, end=1/7)
-           color<- c(color, rev(grDevices::rainbow(length(grep("N2", colnames(sim))), start=2/6, end=4/7)))
+           color<- grDevices::rainbow(length(grep("N1", colnames(x))), start=0, end=1/7)
+           color<- c(color, rev(grDevices::rainbow(length(grep("N2", colnames(x))), start=2/6, end=4/7)))
            ylab<- "N by state"
          },
          habitat={
-            nRow<- nrow(sim)
-            sim<- matrix(nrow=nRow, ncol=3, dimnames=list(timeSeries=rep("", nRow), c("", "Hab1", "Hab2")))
-            sim[,1]<-  tmp[,1]
-            sim[,2]<-  apply(tmp[,2:5], 1, sum)
-            sim[,3]<-  apply(tmp[,6:9], 1, sum)
-            
-            color<- grDevices::rainbow(length(grep("1", colnames(sim))), start=0, end=1/7)
-            color<- c(color, rev(grDevices::rainbow(length(grep("2", colnames(sim))), start=2/6, end=4/7)))
-            ylab<- "N by Habitat"
+           tmp<- array(dim=c(nrow(x), 2, dim(x)[3]), dimnames=list(replicate=NULL, state=c("Hab1", "Hab2"), t=0:(dim(x)[3] - 1)))
+           tmp[,1,]<-  apply(x[,grep("1", colnames(x)),], 3, rowSums)
+           tmp[,2,]<-  apply(x[,grep("2", colnames(x)),], 3, rowSums)
+           
+           color<- grDevices::rainbow(length(grep("1", colnames(tmp))), start=0, end=1/7)
+           color<- c(color, rev(grDevices::rainbow(length(grep("2", colnames(tmp))), start=2/6, end=4/7)))
+           ylab<- "N by Habitat"
          },
          age={
-           nRow<- nrow(sim)
-            sim<- matrix(nrow=nRow, ncol=3, dimnames=list(timeSeries=rep("", nRow), c("", "Ad", "Juv")))
-            sim[,1]<- tmp[,1]
-            sim[,2]<- apply(tmp[,c(2:4, 6:8)], 1, sum)
-            sim[,3]<- apply(tmp[,c(5,9)], 1, sum)
+           tmp<- array(dim=c(nrow(x), 2, dim(x)[3]), dimnames=list(replicate=NULL, state=c("Hab1", "Hab2"), t=0:(dim(x)[3] - 1)))
+           tmp[,1,]<-  apply(x[,grep("1", colnames(x)),], 3, rowSums)
+           tmp[,2,]<-  apply(x[,grep("2", colnames(x)),], 3, rowSums)
+           
+           nRow<- nrow(x)
+            tmp<- matrix(nrow=nRow, ncol=3, dimnames=list(timeSeries=rep("", nRow), c("", "Ad", "Juv")))
+            tmp[,1]<- x[,1]
+            tmp[,2]<- apply(x[,c(2:4, 6:8)], 1, sum)
+            tmp[,3]<- apply(x[,c(5,9)], 1, sum)
             
             color<- grDevices::rainbow(2, start=0, end=4/6)
             ylab<- "N by Age"
          },
          `habitat*age`={
-            nRow<- nrow(sim)
-            sim<- matrix(nrow=nRow, ncol=5, dimnames=list(timeSeries=rep("", nRow), c("", "AdHab1", "JuvHab1", "AdHab2", "JuvHab2")))
-            sim[,1]<-  tmp[,1]
-            sim[,2]<-  apply(tmp[,2:4], 1, sum)
-            sim[,3]<-  tmp[,5]
-            sim[,4]<-  apply(tmp[,6:8], 1, sum)
-            sim[,5]<-  tmp[,9]
+            nRow<- nrow(x)
+            tmp<- matrix(nrow=nRow, ncol=5, dimnames=list(timeSeries=rep("", nRow), c("", "AdHab1", "JuvHab1", "AdHab2", "JuvHab2")))
+            tmp[,1]<-  x[,1]
+            tmp[,2]<-  apply(x[,2:4], 1, sum)
+            tmp[,3]<-  x[,5]
+            tmp[,4]<-  apply(x[,6:8], 1, sum)
+            tmp[,5]<-  x[,9]
             
-            color<- grDevices::rainbow(length(grep("1", colnames(sim))), start=0, end=1/8)
-            color<- c(color, rev(grDevices::rainbow(length(grep("2", colnames(sim))), start=2/6, end=4/7)))
+            color<- grDevices::rainbow(length(grep("1", colnames(tmp))), start=0, end=1/8)
+            color<- c(color, rev(grDevices::rainbow(length(grep("2", colnames(tmp))), start=2/6, end=4/7)))
             ylab<- "N by Habitat and Age"
          }
   )
   
-  graphics::matplot(sim[, 1], sim[,2:ncol(sim)], pch=19, cex=0.1, col=color, bty="n", xlab="Time", ylab=ylab, ...)
-  graphics::legend("topright", legend = colnames(sim)[-1], bty = "y", pch = 19, col=color)
+  # graphics::matplot(1:dim(tmp)[3], t(tmp[1,,]), pch=19, cex=0.1, col=color, bty="n", xlab="Time", ylab=ylab, lty=1, type="b", ...)
+  # graphics::legend("topright", legend = colnames(tmp)[-1], bty = "y", pch = 19, col=color)
+  
+  # tmpMean<- colMeans(tmp)
+  # tmpMean<- data.frame(t=as.numeric(colnames(tmpMean)), t(tmpMean))
+  # tmpMean<- reshape2::melt(tmpMean, id.vars="t", value.name="meanN")
+  # names(tmpMean)[2]<- "state"
+  # tmpMean$id<- paste0(tmpMean$t, "_", tmpMean$state)
+  
+  tmpQuantile<- apply(tmp, 2:3, quantile)
+  tmpQuantile<- apply(tmpQuantile, 3, function(x){
+    out<- reshape2::melt(x, value.name="N")
+    colnames(out)[1]<- "quantile"
+   
+    out
+  })
+  tmpQuantile<- lapply(seq_along(tmpQuantile), function(x){
+    # out<- as.data.frame(t(tmpQuantile[[x]]), stringsAsFactors=FALSE)
+    # names(out)<- paste0(out["state",], "-", out["quantile",])
+    # out<- out["N",]
+    out<- tmpQuantile[[x]]
+    out$t<- x
+    out
+  })
+  tmpQuantile<- do.call(rbind, tmpQuantile)
+  
+  tmpQuantile$color<- tmpQuantile$state
+  
+  tmpMean<- tmpQuantile[tmpQuantile$quantile == "50%",]
+  tmpQuantile<- tmpQuantile[tmpQuantile$quantile %in% c("25%", "75%"),]
+  tmpQuantile<- reshape2::dcast(tmpQuantile, t + state + color ~ quantile, value.var="N")
+  # tmp<- reshape2::melt(tmpQuantile, id.vars="t", value.name="N")
+  
+  ggplot2::ggplot(tmpMean, ggplot2::aes(x=t, y=N, color=color, group=state)) + ggplot2::scale_y_log10() +
+    ggplot2::geom_ribbon(data=tmpQuantile, mapping=ggplot2::aes(x=t, ymin=`25%`, ymax=`75%`, fill=color, color=color), alpha=.4, linetype=0, inherit.aes=FALSE) + ggplot2::geom_line() + 
+    ggplot2::labs(x="Time", y=expression(N[t] * " (mean and 50%)"))
 }
 
+
+#' Plot Model
+#'
+#' @describeIn Model.ABM
+#' @param x 
+#' @param resultType 
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plotLH_behavior.Model<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf"), facet_grid=breedFail~habDiff + behavior, ...){
+  
+  if (missing(resultType)) noType<- TRUE else noType<- FALSE
+  
+  resultType<- match.arg(resultType)
+  
+  
+  stats<- nrow(x@sim) > 0
+  N0_Pest<- nrow(x@sim@N0_Pest) > 0
+  Ntf<- nrow(x@sim@Ntf) > 0
+  
+  # if no type is specified select a existing one with precedence stats > N0_Pest > Ntf
+  if (noType){
+    if (stats) resultType<- "Pest_N0"
+    else if (N0_Pest) resultType<- "N0_Pest"
+    else if (Ntf) resultType<- "Ntf"
+    else {
+      invisible(graphics::plot(x))
+    }
+  }
+  
+  if (stats & resultType == "Pest_N0"){
+    res<- result(x, type="stats")
+
+    out<- plotPest_N0.LH_behavior(res, facet_grid=facet_grid, ...)
+  }
+  
+  if (stats & resultType == "G"){
+    res<- result(x, type="stats")
+
+    out<- plotG.LH_behavior(res, facet_grid=facet_grid, ...)
+  }
+  
+  if (N0_Pest & resultType == "N0_Pest"){  
+    res<- result(x, type="N0_Pest")
+
+    out<- plotN0_Pest.LH_behavior(res, facet_grid=facet_grid, ...)
+  }
+  
+  if (Ntf & resultType == "Ntf"){
+    res<- result(x, type="Ntf")
+
+    out<- plotNtf.LH_behavior(res, facet_grid=facet_grid, ...)
+  }
+  
+  # out<- out + ggplot2::scale_color_gradient2(low="red", mid="yellow", high="green") +
+  #   ggplot2::scale_fill_gradient2(low="red", mid="yellow", high="green")
+  
+  # out<- out + ggplot2::scale_color_gradientn(colors=grDevices::terrain.colors(nrow(lh))) +
+  #   ggplot2::scale_fill_gradientn(colors=grDevices::terrain.colors(nrow(lh)))
+  
+  return(out)
+}
+
+#' PlotLH_behavior
+#' 
+#' @describeIn plotLH_behavior
+#' @param x 
+#' @param resultType 
+#' @param facet_grid 
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plotLH_behavior.data.frame<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf"), facet_grid=breedFail~habDiff + behavior, ...){
+  
+  if (missing(resultType)) noType<- TRUE else noType<- FALSE
+  
+  resultType<- match.arg(resultType)
+  
+  
+  stats<- all(c("idScenario", "N0", "GL", "colorLH", "lambda", "seasonAmplitude", "var", "breedFail") %in% names(x))
+  N0_Pest<- all(c("idScenario", "N0interpoled", "colorLH", "lambda", "seasonAmplitude", "var", "breedFail") %in% names(x))
+  Ntf<- all(c("idScenario", "N0", "25%", "50%", "75%", "colorLH", "lambda", "seasonAmplitude", "var", "breedFail") %in% names(x))
+  
+  # if no type is specified select a existing one with precedence stats > N0_Pest > Ntf
+  if (noType){
+    if (stats) resultType<- "Pest_N0"
+    else if (N0_Pest) resultType<- "N0_Pest"
+    else if (Ntf) resultType<- "Ntf"
+    else {
+      invisible(plot(x))
+    }
+  }
+  
+  if (stats & resultType == "Pest_N0"){
+    x$Pest<- 1 - x$extinct
+    
+    out<- plotPest_N0.LH_behavior(x, facet_grid=facet_grid, ...)
+  }
+  
+  if (stats & resultType == "G"){
+    out<- plotG.LH_behavior(x, facet_grid=facet_grid, ...)
+  }
+  
+  if (N0_Pest & resultType == "N0_Pest"){  
+    out<- plotN0_Pest.LH_behavior(x, facet_grid=facet_grid, ...)
+  }
+  
+  if (Ntf & resultType == "Ntf"){
+    out<- plotNtf.LH_behavior(x, facet_grid=facet_grid, ...)
+  }
+  
+  # out<- out + ggplot2::scale_color_gradient2(low="red", mid="yellow", high="green") +
+  #   ggplot2::scale_fill_gradient2(low="red", mid="yellow", high="green")
+  
+  # out<- out + ggplot2::scale_color_gradientn(colors=grDevices::terrain.colors(nrow(lh))) +
+  #   ggplot2::scale_fill_gradientn(colors=grDevices::terrain.colors(nrow(lh)))
+  
+  return(out)
+}
+
+plotPest_N0.LH_behavior<- function(x, ...){
+  x$Pest<- 1 - x$extinct
+  
+  ggplot2::ggplot(data=x, ggplot2::aes(x=N0, y=Pest, group=idScenario, color=colorLH)) + 
+    ggplot2::geom_line(mapping=ggplot2::aes(size=lambda), alpha=0.5) + ggplot2::geom_point() +
+    ggplot2::facet_grid(facet_grid, labeller=ggplot2::label_both) +
+    ggplot2::scale_size(breaks=unique(x$lambda), range=c(0.5, 2))
+}
+
+plotG.LH_behavior<- function(x, ...){
+  ggplot2::ggplot(data=x, ggplot2::aes(x=N0, y=GL, group=idScenario, color=colorLH)) + 
+    ggplot2::geom_hline(yintercept=1) + ggplot2::geom_line(mapping=ggplot2::aes(size=lambda), alpha=0.5) + # ggplot2::geom_point() +
+    ggplot2::geom_line(mapping=ggplot2::aes(y=meanL), linetype=2) +
+    ggplot2::facet_grid(facet_grid, labeller=ggplot2::label_both) +
+    ggplot2::labs(x=expression(N[0]), y=expression(lambda * " geometric mean and mean (dashed) for all transitions")) +
+    ggplot2::scale_size(breaks=unique(x$lambda), range=c(0.5, 2))
+}
+
+plotN0_Pest.LH_behavior<- function(x, ...){
+  ggplot2::ggplot(data=x, ggplot2::aes(x=lambda, y=N0interpoled, group=idScenario, color=colorLH)) + ggplot2::scale_y_log10() +
+    ggplot2::geom_point() + ggplot2::facet_grid(facet_grid, labeller=ggplot2::label_both)  
+}
+
+plotNtf.LH_behavior<- function(x, ...){
+  ggplot2::ggplot(data=x, ggplot2::aes(x=N0, color=colorLH, fill=colorLH, group=idScenario)) + ggplot2::scale_y_log10() + 
+    ggplot2::geom_ribbon(mapping=ggplot2::aes(ymin=`25%`, ymax=`75%`), alpha=.4, linetype=0) + ggplot2::geom_line(mapping=ggplot2::aes(y=`50%`, size=lambda)) + 
+    ggplot2::facet_grid(facet_grid, labeller=ggplot2::label_both) + ggplot2::labs(x=expression(N[0]), y=expression(N[tf] * " (mean and 50%)")) +
+    ggplot2::scale_size(breaks=unique(x$lambda), range=c(0.5, 2))
+}

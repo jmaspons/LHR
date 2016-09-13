@@ -575,19 +575,18 @@ setMethod("result",
             if (nrow(model@sim) == 0 & nrow(model@sim@N0_Pest) == 0){
               stop("There are no results yet. Use run(model) to start the simulations. The function return a model with the results on the sim slot.\n")
             }
-
+            
             res<- switch(type,
               stats={
                 if (nrow(model@sim) == 0){
                   stop("There are no results yet. Use run(model) to start the simulations. The function return a model with the results on the sim slot.\n")
                 }
                 res<- merge(S3Part(model), S3Part(model@sim), by="idScenario")
+                res$Pest<- 1 - res$extinct
 
-                # sort columns idScenario, N0, ...
-                res<- cbind(res[,c("idScenario","N0")], res[,-c(1, grep("N0", names(res)))])
                 rownames(res)<- paste0(res$idScenario, "-N", res$N0)
                 res<- res[naturalsort::naturalorder(rownames(res)),]
-                
+
                 res
 
               },
@@ -613,8 +612,6 @@ setMethod("result",
                 
                 res<- merge(S3Part(model), Ntf, by="idScenario")
                 
-                # sort columns idScenario, N0, ...
-                res<- cbind(res[,c("idScenario","N0")], res[,-c(1, grep("N0", names(res)))])
                 rownames(res)<- paste0(res$idScenario, "-N", res$N0)
                 res<- res[naturalsort::naturalorder(rownames(res)),]
                 
@@ -628,6 +625,21 @@ setMethod("result",
               }
             )
             
+            # Continuous color
+            # lh<- data.frame(LH(res))
+            # lh$color<- scale(lh$a * 10 + (lh$lambda - 1) * 8)
+            
+            # Pick strategy name and remove lambda info (rowname scheme from sampleLH(method="LH axes", lambda=1)
+            
+            # TODO: workaround for ssa models DEPRECATED
+            if (!"idLH" %in% names(res)) res$idLH<- res$idScenario
+            
+            idLH<- unique(res$idLH)
+            lh<- strsplit(idLH, "-")
+            lh<- sapply(lh, function(y) y[[1]])
+            lh<- data.frame(idLH=idLH, colorLH=lh, stringsAsFactors=FALSE)
+            res<- merge(res, lh, by="idLH")
+            
             if (popbio & requireNamespace("popbio", quietly=TRUE)){
               lh<- unique(res[, c("idLH", "a", "s", "j", "fecundity", "AFR")])
               
@@ -639,12 +651,12 @@ setMethod("result",
               popbio<- cbind(idLH=lh$idLH, popbio)
               
               res<- merge(res, popbio, by="idLH")
-              
-              # sort columns
-              res<- cbind(res[,c("idScenario","N0")], res[,-c(grep("^(idScenario|N0)$", names(res)))])
             }
-
-          return(res)
+            
+            # sort columns
+            res<- cbind(res[,grep("^(idScenario|N0)$", names(res)), drop=FALSE], res[,-c(grep("^(idScenario|N0)$", names(res)))])
+            
+            return(res)
         }
 )
 
@@ -697,7 +709,7 @@ setMethod("show", signature(object="Model"),
   Model(lh=LH(xSel), env=Env(xSel), sim=Sim(x))
 }
 
-#' Plot
+#' Plot Model
 #'
 #' @rdname Model
 #' @param x 
@@ -708,33 +720,103 @@ setMethod("show", signature(object="Model"),
 #' @export
 #'
 #' @examples
-plot.Model<- function(x, resultType=c("stats", "N0_Pest"), ...){
+plot.Model<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf"), ...){
+  
+  if (missing(resultType)) noType<- TRUE else noType<- FALSE
+  
   resultType<- match.arg(resultType)
   
-  if (nrow(x@sim) == 0 & nrow(x@sim@N0_Pest) == 0){
-    message("No results found. Plotting the parameter space.\n\trun(model) to simulate.")
-    selNum<- sapply(S3Part(x), is.numeric)
-    return(graphics::plot(S3Part(x)[, selNum]))
+  stats<- nrow(x@sim) > 0
+  N0_Pest<- nrow(x@sim@N0_Pest) > 0
+  Ntf<- nrow(x@sim@Ntf) > 0
+  
+  # if no type is specified select a existing one with precedence stats > N0_Pest > Ntf
+  if (noType){
+    if (stats) resultType<- "Pest_N0"
+    else if (N0_Pest) resultType<- "N0_Pest"
+    else if (Ntf) resultType<- "Ntf"
+    else {
+      message("No results found. Plotting the parameter space.\n\trun(model) or findN0_Pest(model) to simulate.")
+      
+      idLH<- unique(res$idLH)
+      lh<- strsplit(idLH, "-")
+      lh<- sapply(lh, function(y) y[[1]])
+      lh<- data.frame(idLH=res$idLH, colorLH=lh, stringsAsFactors=FALSE)
+
+      res<- merge(S3Part(x), lh, by="idLH")
+      res$colorLH<- factor(res$colorLH)
+      
+      selNum<- sapply(res, is.numeric)
+      
+      out<- graphics::plot(res[, selNum], col=res$colorLH)
+      # graphics::legend("topright", legend=levels(res$colorLH), bty = "y", pch = 19, col=res$colorLH)
+      
+      invisible(out)
+    }
   }
   
-  if (nrow(x@sim) == 0 | resultType == "N0_Pest"){  
+  if (stats & resultType == "Pest_N0"){
+    res<- result(x, type="stats")
+
+    out<- plotPest_N0(res, ...)
+  }
+  
+  if (stats & resultType == "G"){
+    res<- result(x, type="stats")
+
+    out<- plotG(res, ...)
+  }
+  
+  if (N0_Pest & resultType == "N0_Pest"){  
     res<- result(x, type="N0_Pest")
-    res$idScenario<- factor(res$idScenario)
-    
-    out<- ggplot2::ggplot(res, ggplot2::aes(x=lambda, y=(N0interpoled), group=idScenario, color=idScenario)) + 
-      ggplot2::geom_point() + ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=ggplot2::label_both)  
-    return(out)
+
+    out<- plotN0_Pest(res, ...)
+  }
+
+  if (Ntf & resultType == "Ntf"){
+    res<- result(x, type="Ntf")
+
+    out<- plotNtf(res, ...)
   }
   
-  if (nrow(x@sim@N0_Pest) == 0 | resultType == "stats")
-  res<- result(x, type="stats")
-  res$Pest<- 1 - res$extinct
-  res$idScenario<- factor(res$idScenario)
+  # out<- out + ggplot2::scale_color_gradient2(low="red", mid="yellow", high="green") +
+  #   ggplot2::scale_fill_gradient2(low="red", mid="yellow", high="green")
   
-  out<- ggplot2::ggplot(res, ggplot2::aes(x=N0, y=Pest, group=idScenario, color=idScenario)) + 
-    ggplot2::geom_line() + ggplot2::geom_point() +
-    ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=ggplot2::label_both)
+  # out<- out + ggplot2::scale_color_gradientn(colors=grDevices::terrain.colors(nrow(lh))) +
+  #   ggplot2::scale_fill_gradientn(colors=grDevices::terrain.colors(nrow(lh)))
+  
   return(out)
+}
+
+
+plotPest_N0<- function(x, ...){
+  x$Pest<- 1 - x$extinct
+
+  ggplot2::ggplot(data=x, ggplot2::aes(x=N0, y=Pest, group=idScenario, color=colorLH)) + 
+    ggplot2::geom_line(mapping=ggplot2::aes(size=lambda), alpha=0.5) + ggplot2::geom_point() +
+    ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=ggplot2::label_both) +
+    ggplot2::scale_size(breaks=unique(x$lambda), range=c(0.5, 2))
+}
+
+plotG<- function(x, ...){
+  ggplot2::ggplot(data=x, ggplot2::aes(x=N0, y=GL, group=idScenario, color=colorLH)) + 
+    ggplot2::geom_hline(yintercept=1) + ggplot2::geom_line(mapping=ggplot2::aes(size=lambda), alpha=0.5) + # ggplot2::geom_point() +
+    ggplot2::geom_line(mapping=ggplot2::aes(y=meanL, size=lambda), linetype=2) +
+    ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=ggplot2::label_both) +
+    ggplot2::labs(x=expression(N[0]), y=expression(lambda * " geometric mean and mean (dashed) for all transitions")) +
+    ggplot2::scale_size(breaks=unique(x$lambda), range=c(0.5, 2))
+}
+
+plotN0_Pest<- function(x, ...){
+  ggplot2::ggplot(data=x, ggplot2::aes(x=lambda, y=N0interpoled, group=idScenario, color=colorLH)) + ggplot2::scale_y_log10() +
+    ggplot2::geom_point() + ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=ggplot2::label_both)  
+}
+
+plotNtf<- function(x, ...){
+  ggplot2::ggplot(data=x, ggplot2::aes(x=N0, color=colorLH, fill=colorLH, group=idScenario)) + ggplot2::scale_y_log10() + 
+    ggplot2::geom_ribbon(mapping=ggplot2::aes(ymin=`25%`, ymax=`75%`), alpha=.4, linetype=0) + ggplot2::geom_line(mapping=ggplot2::aes(y=`50%`, size=lambda)) + 
+    ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=ggplot2::label_both) + ggplot2::labs(x=expression(N[0]), y=expression(N[tf] * " (mean and 50%)")) +
+    ggplot2::scale_size(breaks=unique(x$lambda), range=c(0.5, 2))
 }
 
 
