@@ -47,7 +47,10 @@ setMethod("LH",
             
             if (!"idLH" %in% names(pars)) pars$idLH<- rownames(pars)
             
-            pars<- unique(pars[,c("idLH", "lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")]) # Sort columns
+            selCols<- c("idLH", "lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")
+            if ("baseLH" %in% names(pars)) selCols<- c("baseLH", selCols)
+            
+            pars<- unique(pars[, selCols]) # Sort columns
             pars<- pars[naturalsort::naturalorder(pars$idLH),]
             rownames(pars)<- pars$idLH
             
@@ -118,7 +121,7 @@ examplesLH<- function(){
   
   j<- findJ_EulerLotka(lambda=lambda, b=fecundity, a=a, AFR=AFR)
   
-  pars<- data.frame(idLH, lambda, fecundity, broods, b, a, s, j, AFR, stringsAsFactors=FALSE, row.names=idLH)
+  pars<- data.frame(idLH, baseLH=idLH, lambda, fecundity, broods, b, a, s, j, AFR, stringsAsFactors=FALSE, row.names=idLH)
   
   return(pars)
 }
@@ -151,7 +154,7 @@ examplesLH<- function(){
 #' @examples
 sampleLH<- function(lambda=seq(1, 1.2, by=0.1), broods=2^(0:2), b=c(1, 2, 5, 10), 
                     j=seq(0.2, 0.8, by=0.2), a=seq(0.3, 0.9, by=0.2), AFR=1,
-                    free=c("j", "lambda", "a"), maxFecundity=20, higherJuvMortality=TRUE, method=c("regular", "MonteCarlo", "LH axes"), census="pre-breeding"){
+                    free=c("j", "lambda", "a"), maxFecundity=20, higherJuvMortality=TRUE, method=c("LH axes", "regular", "MonteCarlo"), census="pre-breeding"){
   free<- match.arg(free)
   method<- match.arg(method)
   
@@ -240,6 +243,7 @@ sampleLH<- function(lambda=seq(1, 1.2, by=0.1), broods=2^(0:2), b=c(1, 2, 5, 10)
   # Sort columns
   pars<- pars[order(pars$lambda, pars$a, pars$fecundity), c("lambda", "fecundity", "broods", "b", "a", "j", "AFR")]
   rownames(pars)<- NULL
+  pars<- cbind(idLH=rownames(pars), pars)
   
   return (pars)
 }
