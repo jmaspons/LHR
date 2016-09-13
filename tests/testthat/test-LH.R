@@ -16,8 +16,8 @@ test_that("subsetting", {
   obj<- LH()
   expect_is(obj[c(1,4,8),], "LH")
   expect_is(head(obj), "LH")
-  expect_is(obj[1:10,], "LH")
+  expect_is(obj[1:5,], "LH")
   
   expect_is(obj$a[2], "numeric")
-  expect_is(obj[[2]], "numeric")
+  expect_is(obj[[4]], "numeric")
 })

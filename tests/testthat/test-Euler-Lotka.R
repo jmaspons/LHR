@@ -29,12 +29,12 @@ test_that("find deterministic parameters f(lambda, ...) ", {
   parsJ<- sampleLH(free="j", AFR=1:5)
   # parsA<- sampleLH(free="a")
 
-  parsL$lambdaMat<- apply(parsL, MARGIN=1, function(x){
+  parsL$lambdaMat<- apply(parsL[, sapply(parsL, function(x) inherits(x, "numeric"))], MARGIN=1, function(x){
     mat<- with(as.list(x), LefkovitchPre(a=a, s=a, bj=j * fecundity, AFR=AFR)) # subadult survival equal to adult survival
     lambda(mat)
   })
 
-  parsJ$lambdaMat<- apply(parsJ, MARGIN=1, function(x){
+  parsJ$lambdaMat<- apply(parsJ[, sapply(parsJ, function(x) inherits(x, "numeric"))], MARGIN=1, function(x){
     mat<- with(as.list(x), LefkovitchPre(a=a, s=a, bj=j * fecundity, AFR=AFR)) # subadult survival equal to adult survival
     lambda(mat)
   })
@@ -59,7 +59,7 @@ test_that("find deterministic parameters f(lambda, ...) ", {
   
   # abline(0,1, col="red")
 
-  err<- apply(parsL, 1, function(x){
+  err<- apply(parsL[, sapply(parsL, function(x) inherits(x, "numeric"))], 1, function(x){
     # Net fecundity: F = fecundity * juvenile survival
     errF<- with(as.list(x), fecundity * j - findF_EulerLotka(lambda=lambda, a=a, AFR=AFR)) #Error on findF
     # errA<- with(as.list(x), a - findA_EulerLotka(lambda=lambda, b=fecundity, j=j, AFR=AFR)) # Error on findA returns 4 values instead of 1
@@ -71,7 +71,11 @@ test_that("find deterministic parameters f(lambda, ...) ", {
   
   # matplot(t(err))
 
-  expect_lt(max(err[1,]), 1e-10)
-  expect_lt(max(err[2,]), 1e-10)
-  expect_lt(max(err[3,]), 1e-10)
+  expect_lt(max(err[1,]), .Machine$double.eps)
+  expect_lt(max(err[2,]), .Machine$double.eps)
+  expect_lt(max(err[3,]), .Machine$double.eps)
+  
+  expect_equal(max(err[1,]), 0)
+  expect_equal(max(err[2,]), 0)
+  expect_equal(max(err[3,]), 0)
 })
