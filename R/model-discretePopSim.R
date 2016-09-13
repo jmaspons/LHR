@@ -324,13 +324,13 @@ mFit.tseason<- function(broods, b, j, a, seasonVar, N0, replicates, tf, maxN=100
   return(pop)
 }
 
-mFit.tvarseason<- function(broods, b, j, a, seasonVar, varJ=0, N0, replicates, tf, maxN=100000){
+mFit.tvarseason<- function(broods, b, j, a, seasonVar, varJ, N0, replicates, tf, maxN=100000){
   pop<- matrix(NA_real_, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
   pop[,1]<- N0
   
   jindEnv<- j
 
-  if (varJ > 0) betaJind<- fbeta(mean=j, var=varJ)
+  betaJind<- fbeta(mean=j, var=varJ)
 
   for (t in 1:tf){
     jindEnv<- rbeta(replicates, shape1=betaJind$shape1, shape2=betaJind$shape2)
@@ -360,7 +360,7 @@ mSurvBV.tvar<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, N0, 
   pop<- matrix(NA_real_, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
   pop[,1]<- N0
   if (varJ > 0) betaParsJ<- fbeta(mean=j, var=varJ)
-  if (varBreedFail > 0) betaParsBreedFail<- fbeta(mean=1 - breedFail, var=varBreedFail)
+  if (varBreedFail > 0) betaParsBreedFail<- fbeta(mean=breedFail, var=varBreedFail)
   jEnv<- j
   breedFailEnv<- breedFail
   
@@ -427,10 +427,10 @@ mSurvBV.tvarseason<- function(broods, b, j, a, breedFail, seasonVar, varJ=0, var
   pop[,1]<- N0
   
   jindEnv<- j
-  jbrEnv<- 1 - breedFail
+  breedFailEnv<- breedFail
   
   if (varJ > 0) betaJind<- fbeta(mean=j, var=varJ)
-  if (varBreedFail > 0) betaJbr<- fbeta(mean=breedFail, var=varBreedFail)
+  if (varBreedFail > 0) betaParsBreedFail<- fbeta(mean=breedFail, var=varBreedFail)
   
   for (t in 1:tf){
     # Environmental stochasticity
@@ -439,13 +439,13 @@ mSurvBV.tvarseason<- function(broods, b, j, a, breedFail, seasonVar, varJ=0, var
     }
     
     if (varBreedFail > 0){
-      jbrEnv<- rbeta(replicates, shape1=betaJbr$shape1, shape2=betaJbr$shape2)
+      breedFailEnv<- rbeta(replicates, shape1=betaParsBreedFail$shape1, shape2=betaParsBreedFail$shape2)
     }
     
     pop[,t+1]<- 0
     
     for (k in 1:broods){
-      succeedingBroods<- rbinom(replicates, pop[, t], jbrEnv * seasonVar[k])
+      succeedingBroods<- rbinom(replicates, pop[, t], (1 - breedFailEnv) * seasonVar[k])
       
       # Juvenile survivors
       pop[,t+1]<- pop[, t+1] + rbinom(replicates, b * succeedingBroods, jindEnv * seasonVar[k])
