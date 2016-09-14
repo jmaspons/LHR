@@ -808,8 +808,8 @@ plotG<- function(x, ...){
 }
 
 plotN0_Pest<- function(x, ...){
-  ggplot2::ggplot(data=x, ggplot2::aes(x=lambda, y=N0interpoled, group=idScenario, color=colorLH)) + ggplot2::scale_y_log10() +
-    ggplot2::geom_point() + ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=ggplot2::label_both)  
+  ggplot2::ggplot(data=x, ggplot2::aes(x=lambda, y=N0interpoled, group=colorLH, color=colorLH)) + ggplot2::scale_y_log10() +
+    ggplot2::geom_point() + ggplot2::geom_line(size=0.5) + ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=ggplot2::label_both)  
 }
 
 plotNtf<- function(x, ...){
