@@ -55,12 +55,13 @@ setMethod("LH",
             rownames(pars)<- pars$idLH
             
             if (popbio & requireNamespace("popbio", quietly=TRUE)){
-              popbio<- apply(pars[,-1], 1, function(x){ # First column is a character and makes x a character vector
+              # If one column is a character, makes x a character vector
+              popbio<- apply(pars[,sapply(pars, function(x) inherits(x, "numeric"))], 1, function(x){
                 mat<- with(as.list(x), LefkovitchPre(a=a, s=s, bj=fecundity * j, AFR=AFR))
                 return(eigen.analisys2df(mat))
               })
-              popbio<- do.call(rbind, popbio)
               
+              popbio<- do.call(rbind, popbio)
               pars<- cbind(pars, popbio)
             }
             
@@ -75,8 +76,6 @@ setMethod("LH",
                    a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s=a, AFR=1, free="j", popbio=FALSE, ...){
 
             pars<- sampleLH(lambda=lambda, broods=broods, b=b, j=j, a=a, AFR=AFR, free=free, ...)
-            
-            pars<- data.frame(idLH=rownames(pars), pars, stringsAsFactors=FALSE)
             
             LH(pars=pars, popbio=popbio)
           }
@@ -168,7 +167,9 @@ sampleLH<- function(lambda=seq(1, 1.2, by=0.1), broods=2^(0:2), b=c(1, 2, 5, 10)
       # Euler-Lotka corresponds to a pre-breding census matrix
       pars$j<- with(pars, findJ_EulerLotka(lambda=lambda, b=fecundity, a=a, AFR=AFR))
       
-      rownames(pars)<- paste0(pars$idLH, "-L", pars$lambda)
+      pars$idLH<- paste0(pars$idLH, "-L", pars$lambda)
+      rownames(pars)<- pars$idLH
+      pars<- pars[naturalsort::naturalorder(pars$idLH),]
     }
     
     return(pars)
