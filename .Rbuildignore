@@ -9,3 +9,5 @@ src/test.*
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^src/CMakeLists\.txt$
+^data/
+^vignettes/.*_cache

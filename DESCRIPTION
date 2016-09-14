@@ -17,7 +17,9 @@ Imports:
     naturalsort
 Suggests:
     popbio,
-    testthat
+    testthat,
+    knitr,
+    rmarkdown
 Packaged: 2013-01-07 11:06:19 UTC; joan
 RoxygenNote: 5.0.1
 Collate:
@@ -52,3 +54,4 @@ Collate:
     'probabilityDistributions.R'
     'sampleParameters.R'
     'seasonalEnvironment.R'
+VignetteBuilder: knitr

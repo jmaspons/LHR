@@ -14,11 +14,11 @@ NULL
 #'
 #' @return a Env class object
 #' @export
-setGeneric("Env", function(pars, seasonAmplitude=c(0,1), seasonRange, var=c(0, 0.1), breedFail=c(0, 0.5, 1)) standardGeneric("Env"))
+setGeneric("Env", function(pars, seasonAmplitude=c(0,1), seasonRange, var=c(0, 0.1), breedFail=c(0, 0.5, 0.9)) standardGeneric("Env"))
 
 setMethod("Env",
           signature(pars="missing", seasonAmplitude="ANY", seasonRange="missing", var="ANY", breedFail="ANY"),
-          function(seasonAmplitude=c(0,1), var=c(0, 0.1), breedFail=c(0, 0.5, 1)){
+          function(seasonAmplitude=c(0,1), var=c(0, 0.1), breedFail=c(0, 0.5, 0.9)){
             season<- getSeasonalParams(seasonAmplitude=seasonAmplitude, envMax=1)
             
             ## If seasonAmplitude == 0 there is no seasonality and the environment is constant (P_I(env) = P_i * env$seasonalMean)
@@ -45,7 +45,7 @@ setMethod("Env",
 
 setMethod("Env",
           signature(pars="missing", seasonAmplitude="missing", seasonRange="matrix", var="ANY", breedFail="ANY"),
-          function(seasonRange, var=0, breedFail=0){
+          function(seasonRange, var=c(0, 0.1), breedFail=c(0, 0.5, 0.9)){
             mat<- matrix(seasonRange, ncol=2)
             seasonPars<- getSeasonalParams(seasonRange=mat)
             
