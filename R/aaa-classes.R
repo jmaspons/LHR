@@ -1,6 +1,7 @@
 
 #' @exportClass discretePopSim
 #' @exportClass discreteABMSim
+#' @exportClass distriPopSim
 #' @exportClass numericDistri
 #' @exportClass ssa
 #' @exportClass leslieMatrix
@@ -8,6 +9,7 @@ NULL
 
 setOldClass("discretePopSim")
 setOldClass("discreteABMSim")
+setOldClass("distriPopSim")
 setOldClass("numericDistri")
 setOldClass("ssa")
 setOldClass("leslieMatrix")

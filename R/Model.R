@@ -125,7 +125,7 @@ setMethod("run",
                                Sim.ABM=run.ABM(model, cl=cl, ...),
                                Sim.ssa=run.ssa(model, cl=cl, ...))
 
-            modelRes<- new("Model", 
+            modelRes<- new(class(model), 
                         S3Part(model),
                         sim=simRes,
                         params=model@params)
@@ -317,22 +317,16 @@ runScenario.numericDistri<- function(scenario, pars, verbose=FALSE){
   
   ## Seasonality
   seasonVar<- seasonOptimCal(env=Env(scenario))[[1]] #, resolution=resolution, nSteps=seasonBroods$broods, interval=interval, criterion=criterion)
-  if (any(seasonVar !=1)){
-    jindSeason<- scenario$jind * seasonVar
-    jbrSeason<- scenario$jbr * seasonVar
-  }else{
-    jindSeason<- scenario$jind
-    jbrSeason<- scenario$jbr
-  }
-  
+
   for (n in 1:length(pars$N0)){
     N0<- pars$N0[n]
     ## TODO: check error when breedFail == 1:
     # only happens on run(model), not when calling mSurvBV.distri with the same parameters!!
     # maybe var collide with var()?? It seems is not the case...
-    distri<- with(scenario, tDistri(broods=broods, b=b, j=jindSeason, a=a, breedFail=1 - jbrSeason,
-                                                 varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
-                                                 sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, tf=pars$tf)) #TODO: add , maxN=pars$maxN
+    distri<- with(scenario, tDistri(broods=broods, b=b, j=jind, a=a, breedFail=1 - jbr,
+                                   varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
+                                   seasonVar=seasonVar,
+                                   sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, tf=pars$tf)) #TODO: add , maxN=pars$maxN
     if (is.null(distri) | all(is.na(distri))){
       if (pars$raw){
         rawSim[[n]]<- NA
@@ -603,12 +597,35 @@ setMethod("result",
                 
               },
               Ntf={
-                if (nrow(model@sim@Ntf) == 0){
-                  stop("There are no results yet. Use run(model) to start the simulations. Check that model@sim@params@Ntf is TRUE before running. The function return a model with the results on the @sim@Ntf slot.\n")
+                if (inherits(model, "Model.numericDistri")){
+                  Ntf<- model@sim@raw
+                  Ntf<- unlist(Ntf, recursive=FALSE)
+                  
+                  Ntf<- sapply(Ntf, function(x){
+                    # G(x)
+                    # Gmean(x)
+                    # sdistri(x)
+                    # lambda(x, N0, tf)
+                    # r(x, N0, tf)
+                    # x<- cumP(x)
+                    quantile(x, na.rm=TRUE, ...)
+                  })
+                  
+                  Ntf<- t(Ntf)
+                  idScenario<- unlist(gsub("\\.[0-9]+$", "", rownames(Ntf)))
+                  N0<- as.numeric(unlist(gsub(".+Env[0-9]+\\.", "", rownames(Ntf))))
+                  
+                  Ntf<- cbind(data.frame(idScenario, N0, stringsAsFactors=FALSE), Ntf)
+
+                }else{
+                  
+                  if (nrow(model@sim@Ntf) == 0){
+                    stop("There are no results yet. Use run(model) to start the simulations. Check that model@sim@params@Ntf is TRUE before running. The function return a model with the results on the @sim@Ntf slot.\n")
+                  }
+                  
+                  Ntf<- apply(model@sim@Ntf[,-c(1,2)], 1, stats::ecdf)
+                  Ntf<- cbind(model@sim@Ntf[, c(1,2)], t(sapply(Ntf, stats::quantile, ...)))
                 }
-                
-                Ntf<- apply(model@sim@Ntf[,-c(1,2)], 1, stats::ecdf)
-                Ntf<- cbind(model@sim@Ntf[, c(1,2)], t(sapply(Ntf, quantile, ...)))
                 
                 res<- merge(S3Part(model), Ntf, by="idScenario")
                 
@@ -621,7 +638,7 @@ setMethod("result",
                 # resl<- resl[,-3] # remove "variable" column, a id for replicates
                 
                 res
-                
+              
               }
             )
             
@@ -718,8 +735,7 @@ setMethod("show", signature(object="Model"),
 #'
 #' @return
 #' @export
-#'
-#' @examples
+#' @importFrom graphics plot
 plot.Model<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf"), ...){
   
   if (missing(resultType)) noType<- TRUE else noType<- FALSE
@@ -728,7 +744,11 @@ plot.Model<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf"), ...){
   
   stats<- nrow(x@sim) > 0
   N0_Pest<- nrow(x@sim@N0_Pest) > 0
-  Ntf<- nrow(x@sim@Ntf) > 0
+  if (inherits(x, "Model.numericDistri")){
+    Ntf<- length(x@sim@raw) > 0
+  }else{
+    Ntf<- nrow(x@sim@Ntf) > 0
+  }
   
   # if no type is specified select a existing one with precedence stats > N0_Pest > Ntf
   if (noType){
@@ -754,6 +774,8 @@ plot.Model<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf"), ...){
       invisible(out)
     }
   }
+  
+  out<- NA
   
   if (stats & resultType == "Pest_N0"){
     res<- result(x, type="stats")
@@ -828,7 +850,7 @@ plotNtf<- function(x, ...){
 #'
 #' @return
 #' @export
-#'
+#' @importFrom graphics hist
 #' @examples
 hist.Model<- function(x, ...){
   if (nrow(x@sim) == 0){
