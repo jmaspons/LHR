@@ -175,6 +175,72 @@ distriBetaNegBinom<- function(size, shape1, shape2, logP=FALSE, maxPomitted=0.01
 
 #TODO distriBetaNegBinom.numericDistri
 
+
+## Poisson distribution ----
+#' @rdname numericDistri
+#'
+#' @inheritParams distriBinom
+#' @param lambda 
+#' @param logP 
+#' @param minP probabilities smaller than \code{minP} are discarded. Useful to reduce memory usage.
+#'
+#' @return
+#' @importFrom stats dpois dpois qpois qpois
+#' @export
+distriPois<- function(lambda, logP=FALSE, minP=.Machine$double.eps){
+  UseMethod("distriPois")
+}
+
+#' @rdname numericDistri
+#' @export
+distriPois.numeric<- function(lambda, logP=FALSE, minP=.Machine$double.eps){
+  domain<- max(50, lambda * 3)
+  domain<- 0:domain
+  res<- data.frame(x=domain, p=dpois(x=domain, lambda, log=logP))
+  
+  if (!missing(minP)) res<-  res[res$p > minP,]
+  
+  if (logP){
+    attributes(res)$p.omitted<- 1 - sum(exp(res$p))
+  }else{
+    attributes(res)$p.omitted<- 1 - sum(res$p)
+  }
+  
+  attributes(res)$parameters<- list(lambda=lambda)
+  attributes(res)$logP<- logP
+  class(res)<- c("pois", "infiniteSuport","numericDistri", "data.frame")
+  return (res)
+}
+
+
+## TODO
+# @rdname numericDistri
+# @export
+distriPois.numericDistri<- function(lambda, logP=FALSE, minP=.Machine$double.eps){
+  stop("Compound Poisson distribution not implemented.")
+  ## TODO
+  
+  if (logP != attributes(lambda)$logP){ # Transform p to log scale if necessary
+    lambda<- logP(lambda, logP=logP)
+  }
+  
+  res<- .External("poissonCompound", lambda$x, lambda$p, lambda, logP, max(lambda$x))
+  res<- data.frame(x=0:(length(res) - 1), p=res)
+  
+  if (logP){
+    attributes(res)$p.omitted<- 1 - sum(exp(res$p))
+  }else{
+    attributes(res)$p.omitted<- 1 - sum(res$p)
+  }
+  attributes(res)$parameters<- list(lambda=c(list(distribution=class(lambda)[1]), attributes(lambda)$parameters))
+  attributes(res)$logP<- logP
+  
+  class(res)<- c("compoundPois", "infiniteSuport", "numericDistri", "data.frame")
+  
+  return (res)
+}
+
+
 ## Change probability scale (p vs logp) ----
 #' @rdname numericDistri
 #' @export

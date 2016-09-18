@@ -62,7 +62,7 @@ fbeta<- function(mean, var="max"){
 maxVarBeta<- function(mean) mean - mean^2 # max var is the superior limit (not included)
 
 ## Binomial distribution
-#' Binommial distribution summary
+#' Binomial distribution summary
 #'
 #' @param size 
 #' @param prob 
@@ -106,6 +106,30 @@ snbinom<- function(size, prob){
   
   return (data.frame(mean=mean, var=var))
 }
+
+
+## Poisson distribution
+#' Poisson distribution summary
+#'
+#' @param lambda 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+spois<- function(lambda){
+  mean<- lambda
+  var<- lambda
+  
+  if (any(negL<- lambda < 0)){
+    mean[negL]<- NaN
+    var[negL]<- NaN
+    warning("NaNs produced (parameter out of domain [ lambda > 0 ]).")
+  }
+  
+  return (data.frame(mean=mean, var=var))
+}
+
 
 ## Beta negative binomial and Beta binomial
 # see betabinomial.R and betanegativebinomial.R
