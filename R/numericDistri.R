@@ -194,9 +194,10 @@ logP<- function(distri, logP=TRUE){
 ## Generic methods for numericDistri class ----
 
 # @export
-# print<- function(x, ...) UseMethod("print")
+# print<- function(x, ...) base::print(x, ...)
 
 #' @export
+#' @S3method print numericDistri
 print.numericDistri<- function(x, ...){
   cat("\t", class(x)[1], "distribution\n")
   cat("Probability omitted: ", attributes(x)$p.omitted, "\n")
@@ -206,24 +207,41 @@ print.numericDistri<- function(x, ...){
   cat("\n")
   print(utils::head(data.frame(x), n=15), ...)
   if (nrow(x) > 15) cat("\t ...\t", nrow(x) - 15, "rows omited.\n")
+  
+  invisible(x)
 }
 
 #' @rdname numericDistri
 #' @export
 summary.numericDistri<- function(object, ...){
-  cat("\t", class(object)[1], "distribution\n")
-  cat("Probability omitted: ", attributes(object)$p.omitted, "\nParameters:\n")
-  if (attributes(object)$logP) cat("p in Log probability scale\n")
-  utils::str(attributes(object)$parameters)
+  res<- cbind(sdistri(object), t(quantile(object)))
+
+  at<- attributes(object)
+  attributes(res)$p.omitted<- at$p.omitted
+  attributes(res)$parameters<- at$parameters
+  attributes(res)$logP<- at$logP
+  
+  class(res)<- c("summary.numericDistri", class(res))
+
+  return (res)
+}
+
+#' @export
+#' @S3method print summary.numericDistri
+print.summary.numericDistri<- function(x, ...){
+  cat("Probability omitted: ", attributes(x)$p.omitted, "\nParameters:\n")
+  
+  if (attributes(x)$logP) cat("p in Log probability scale\n")
+  
+  utils::str(attributes(x)$parameters)
+  
   cat("\n")
-  res<- sdistri(object)
-  print(res)
-  invisible(res)
+  print(as.data.frame(x), row.names=FALSE, ...)
 }
 
 #' @rdname numericDistri
 #' @export
-plot.numericDistri<- function(x, y, cum=FALSE, ...){
+plot.numericDistri<- function(x, cum=FALSE, ...){
   if (cum){
     x<- cumP(x)
     x$p<- x$cump
@@ -264,14 +282,14 @@ var.numericDistri<- function(x, ...){
 }
 
 #' @export
-sdistri<- function(distri){
+sdistri<- function(x){
   UseMethod("sdistri")
 }
 
 #' @rdname numericDistri
 #' @export
-sdistri.numericDistri<- function(distri){
-  distri<- logP(distri, logP=FALSE)
+sdistri.numericDistri<- function(x){
+  distri<- logP(x, logP=FALSE)
 
   meanD<- mean(distri)
   varD<- sum(distri$p * (distri$x - meanD)^2) #var(distri)
@@ -303,21 +321,84 @@ cumP.numericDistri<- function(x, ...){
 }
 
 
-#' Random deviates from a numericDistribution
-#' 
+#' @rdname numericDistri
 #' @export
-rdistri<- function(n, distri){
-  UseMethod("rdistri", distri)
+#' @importFrom stats quantile
+quantile.numericDistri<- function(x, na.rm=FALSE, ...){
+  x<- cumP(x)
+  p<- stats::quantile(x$cump, na.rm=na.rm, ...)
+  res<- qdistri(p, x, ...)
+  names(res)<- names(p)
+  res
+}
+
+
+## Probability distribution ----
+
+#' @rdname numericDistri
+#' @export
+ddistri<- function(x, distri){
+  distri$p[match(x, distri$x)]
 }
 
 #' @rdname numericDistri
 #' @export
-rdistri.numericDistri<- function(n, distri){
-  if(attributes(distri)$logP){
-    distri$p<- exp(distri$p)
-  }
-  sample(distri$x, n, replace=TRUE, prob=distri$p)
+pdistri<- function(q, distri){
+  distri<- cumP(distri)
+  sel<- sapply(q, function(x){
+    diffs<- distri$x - x
+    sel<- which.min(abs(diffs))
+    
+    if (diffs[sel] > 0){
+      sel<- sel - 1
+    }
+    sel
+  })
+  res<- distri$cump[sel]
+  res[sel == 0]<- 0
+  res
 }
 
+#' @rdname numericDistri
+#' @export
+qdistri<- function(p, distri){
+  distri<- cumP(distri)
+  
+  if (anyNA(distri$cump)) return(rep(NA_real_, length(p)))
+  
+  sel<- sapply(p, function(x){
+    diffs<- distri$cump - x
 
+    # sel<- which.min(abs(diffs))
+    
+    sel<- which(abs(diffs) == min(abs(diffs)))
+    # Select the x value in the midle if there are more than one value with the minimum distance to p
+    if (length(sel) > 1)
+      sel<- sel[length(sel) %/% 2]
+    
+    if (diffs[sel] > 0){
+      sel<- sel - 1
+    }
+    sel
+  })
+  res<- distri$x[sel]
+  res[sel == 0]<- 0
+  res[p >= 1]<- max(distri$x)
+  res
+}
 
+#' Random deviates from a numericDistribution
+#' 
+#' @export
+rdistri<- function(n, x){
+  UseMethod("rdistri", x)
+}
+
+#' @rdname numericDistri
+#' @export
+rdistri.numericDistri<- function(n, x){
+  if(attributes(x)$logP){
+    x$p<- exp(x$p)
+  }
+  sample(x$x, n, replace=TRUE, prob=x$p)
+}

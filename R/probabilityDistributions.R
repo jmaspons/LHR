@@ -15,7 +15,7 @@
 sbeta<- function(shape1, shape2){
   mean<- shape1 / (shape1 + shape2)
   var<- shape1 * shape2 / ((shape1 + shape2)^2 * (shape1 + shape2 + 1))
-  if (is.na(mean)) return (list(mean=NA, var=NA))
+  if (all(is.na(mean))) return (data.frame(mean=mean, var=mean))
                            
   if (shape1 < 0 || shape2 < 0){
   	mean[which(shape1 < 0 | shape2 < 0)]<- NaN
@@ -23,7 +23,7 @@ sbeta<- function(shape1, shape2){
   	warning("NaNs produced: parameters must be > 0")
   }
   
-  return (list(mean=mean, var=var))
+  return (data.frame(mean=mean, var=var))
 }
 
 #' Find beta parameters
@@ -81,7 +81,7 @@ sbinom<- function(size, prob){
   	warning("NaNs produced (parameters out of domain)")
   }
   
-  return (list(mean=mean, var=var))
+  return (data.frame(mean=mean, var=var))
 }
 
 ## Negative binomial distribution
@@ -104,7 +104,7 @@ snbinom<- function(size, prob){
   	warning("NaNs produced (parameters out of domain)")
   }
   
-  return (list(mean=mean, var=var))
+  return (data.frame(mean=mean, var=var))
 }
 
 ## Beta negative binomial and Beta binomial

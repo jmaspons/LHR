@@ -41,3 +41,19 @@ test_that("constructor", {
   expect_equal(unique(resS), 1)
   
 })
+
+test_that("methods", {
+  distri<- distriBinom(2, .6)
+  distriC<- distriBinom(distri, .3)
+  
+  expect_is(mean(distri), "numeric")
+  expect_is(var(distri), "numeric")
+  expect_is(summary(distri), "data.frame")
+  expect_is(quantile(distri), "numeric")
+  expect_is(sdistri(distri), "data.frame")
+  expect_is(ddistri(0:2, distri), "numeric")
+  expect_is(pdistri(0:2, distri), "numeric")
+  expect_is(qdistri(seq(0, 1, length=5), distri), "numeric")
+  expect_is(rdistri(10, distri), "integer")
+})
+
