@@ -88,6 +88,7 @@ distriBetaBinom.numeric<- function(size, shape1, shape2, logP=FALSE){
   return (res)
 }
 
+
 # size: numericDistribution object which compound a binomial distribution as a size parameter.
 # p: probability
 #' @rdname numericDistri
@@ -115,6 +116,7 @@ distriBetaBinom.numericDistri<- function(size, shape1, shape2, logP=FALSE){
   return (res)
 }
 
+
 ## Negative binomial distribution ----
 #' @rdname numericDistri
 #' 
@@ -126,18 +128,20 @@ distriBetaBinom.numericDistri<- function(size, shape1, shape2, logP=FALSE){
 #' @export
 #'
 #' @examples
-distriNegBinom<- function(size, prob, mu, logP=FALSE, maxPomitted=0.01, maxX){
+distriNegBinom<- function(size, prob, mu, logP=FALSE, minP, maxPomitted=0.01, maxX){
   UseMethod("distriNegBinom")
 }
 
 #' @rdname numericDistri
 #' @export  
-distriNegBinom.numeric<- function(size, prob, mu, logP=FALSE, maxPomitted=0.01, maxX){
+distriNegBinom.numeric<- function(size, prob, mu, logP=FALSE, minP, maxPomitted=0.01, maxX){
   if (missing(prob) & !missing(mu)) prob<- size / (size+mu) #alternative parametrization ?dnbinom
   if (missing(maxX)){
     maxX<- qnbinom(maxPomitted, size=size, prob=prob, lower.tail=FALSE, log.p=logP)
   }
   res<- data.frame(x=0:maxX, p=dnbinom(x=0:maxX, size=size, prob=prob, log=logP))
+  
+  if (!missing(minP)) res<-  res[res$p > minP,]
   
   if (logP){
     attributes(res)$p.omitted<- 1 - sum(exp(res$p))
@@ -155,11 +159,13 @@ distriNegBinom.numeric<- function(size, prob, mu, logP=FALSE, maxPomitted=0.01, 
 ## Beta negative binomial distribution ----
 #' @rdname numericDistri
 #' @export
-distriBetaNegBinom<- function(size, shape1, shape2, logP=FALSE, maxPomitted=0.01, maxX){
+distriBetaNegBinom<- function(size, shape1, shape2, logP=FALSE, minP, maxPomitted=0.01, maxX){
   if (missing(maxX)){
     maxX<- qbetanbinom(maxPomitted, size=size, shape1=shape1, shape2=shape2, lower.tail=FALSE, log.p=logP)
   }
   res<- data.frame(x=0:maxX, p=dbetanbinom(x=0:maxX, size=size, shape1=shape1, shape2=shape2, log=logP))
+  
+  if (!missing(minP)) res<-  res[res$p > minP,]
   
   if (logP){
     attributes(res)$p.omitted<- 1 - sum(exp(res$p))
@@ -187,15 +193,14 @@ distriBetaNegBinom<- function(size, shape1, shape2, logP=FALSE, maxPomitted=0.01
 #' @return
 #' @importFrom stats dpois dpois qpois qpois
 #' @export
-distriPois<- function(lambda, logP=FALSE, minP=.Machine$double.eps){
+distriPois<- function(lambda, logP=FALSE, minP, maxPomitted=0.0001){
   UseMethod("distriPois")
 }
 
 #' @rdname numericDistri
 #' @export
-distriPois.numeric<- function(lambda, logP=FALSE, minP=.Machine$double.eps){
-  domain<- max(50, lambda * 3)
-  domain<- 0:domain
+distriPois.numeric<- function(lambda, logP=FALSE, minP, maxPomitted=0.0001){
+  domain<- 0:qpois(1 - maxPomitted, lambda=lambda)
   res<- data.frame(x=domain, p=dpois(x=domain, lambda, log=logP))
   
   if (!missing(minP)) res<-  res[res$p > minP,]
@@ -216,7 +221,7 @@ distriPois.numeric<- function(lambda, logP=FALSE, minP=.Machine$double.eps){
 ## TODO
 # @rdname numericDistri
 # @export
-distriPois.numericDistri<- function(lambda, logP=FALSE, minP=.Machine$double.eps){
+distriPois.numericDistri<- function(lambda, logP=FALSE, minP, maxPomitted=0.0001){
   stop("Compound Poisson distribution not implemented.")
   ## TODO
   
