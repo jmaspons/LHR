@@ -165,7 +165,7 @@ plotSim<- function(sim, groups=c("habitat", "age", "habitat*age", "all")[1], ...
          },
          habitat={
             nRow<- nrow(sim)
-            sim<- matrix(nrow=nRow, ncol=3, dimnames=list(timeSeries=rep("", nRow), c("", "Hab1", "Hab2")))
+            sim<- matrix(NA_real_, nrow=nRow, ncol=3, dimnames=list(timeSeries=rep("", nRow), c("", "Hab1", "Hab2")))
             sim[,1]<-  tmp[,1]
             sim[,2]<-  apply(tmp[,2:5], 1, sum)
             sim[,3]<-  apply(tmp[,6:9], 1, sum)
@@ -176,7 +176,7 @@ plotSim<- function(sim, groups=c("habitat", "age", "habitat*age", "all")[1], ...
          },
          age={
            nRow<- nrow(sim)
-            sim<- matrix(nrow=nRow, ncol=3, dimnames=list(timeSeries=rep("", nRow), c("", "Ad", "Juv")))
+            sim<- matrix(NA_real_, nrow=nRow, ncol=3, dimnames=list(timeSeries=rep("", nRow), c("", "Ad", "Juv")))
             sim[,1]<- tmp[,1]
             sim[,2]<- apply(tmp[,c(2:4, 6:8)], 1, sum)
             sim[,3]<- apply(tmp[,c(5,9)], 1, sum)
@@ -186,7 +186,7 @@ plotSim<- function(sim, groups=c("habitat", "age", "habitat*age", "all")[1], ...
          },
          `habitat*age`={
             nRow<- nrow(sim)
-            sim<- matrix(nrow=nRow, ncol=5, dimnames=list(timeSeries=rep("", nRow), c("", "AdHab1", "JuvHab1", "AdHab2", "JuvHab2")))
+            sim<- matrix(NA_real_, nrow=nRow, ncol=5, dimnames=list(timeSeries=rep("", nRow), c("", "AdHab1", "JuvHab1", "AdHab2", "JuvHab2")))
             sim[,1]<-  tmp[,1]
             sim[,2]<-  apply(tmp[,2:4], 1, sum)
             sim[,3]<-  tmp[,5]

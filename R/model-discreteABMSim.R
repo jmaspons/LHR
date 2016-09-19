@@ -38,7 +38,7 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
       popABM[,,ti+1]<- transitionsFunc(N=popABM[,,ti], params=params)
       popABM[,,ti+1]<- apply(popABM[,,ti+1], MARGIN=2, function(x) ifelse(x > maxN, maxN, x))
       
-      if (any(is.na(popABM[,,ti+1]))){
+      if (anyNA(popABM[,,ti+1])){
         warning("NAs produced during the simulation of the discreteABMSim model.")
         if (ti < tf) popABM[,,(ti+2):(tf+1)]<- -1
         else popABM[,,tf+1]<- -1

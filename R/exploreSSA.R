@@ -52,14 +52,14 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, maxTf=10, replicates
     x0L<- list(x0L)
   }
 
-  resStats<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=15,
+  resStats<- as.data.frame(matrix(NA_real_, nrow=length(x0L) * nrow(params), ncol=15,
                                   dimnames=list(scenario_N0=paste0(rep(rownames(params), each=length(x0L)), "_N", rep(sapply(x0L, sum), times=nrow(params))),
                                                 stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct",
                                                 "increaseTrans", "decreaseTrans", "stableTrans", "GR", "meanR", "varR", "GL", "meanL", "varL"))))
   
   if (discretePop) resPop<- list()
   if (finalPop){
-    Ntf<- as.data.frame(matrix(nrow=length(x0L) * nrow(params), ncol=2 + replicates,
+    Ntf<- as.data.frame(matrix(NA_real_, nrow=length(x0L) * nrow(params), ncol=2 + replicates,
                                dimnames=list(scenario_N0=dimnames(resStats)[[1]], Nf=c("idScenario", "N0", 1:replicates))))
     Ntf$idScenario<- params$idScenario
     Ntf$N0<- sapply(x0L, sum)

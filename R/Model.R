@@ -211,7 +211,7 @@ runScenario.discretePopSim<- function (scenario, pars, verbose=FALSE){
   stats$N0<- pars$N0
   
   if (pars$Ntf){
-    Ntf<- matrix(nrow=length(pars$N0), ncol=2 + pars$replicates, 
+    Ntf<- matrix(NA_real_, nrow=length(pars$N0), ncol=2 + pars$replicates, 
                  dimnames=list(scenario_N0=paste0(rep(scenario$idScenario, length=length(pars$N0)), "_N", pars$N0), 
                                Ntf=c("idScenario", "N0", 1:pars$replicates)))
     Ntf<- as.data.frame(Ntf)
@@ -608,12 +608,6 @@ setMethod("result",
                   Ntf<- unlist(Ntf, recursive=FALSE)
                   
                   Ntf<- sapply(Ntf, function(x){
-                    # G(x)
-                    # Gmean(x)
-                    # sdistri(x)
-                    # lambda(x, N0, tf)
-                    # r(x, N0, tf)
-                    # x<- cumP(x)
                     quantile(x, na.rm=TRUE, ...)
                   })
                   

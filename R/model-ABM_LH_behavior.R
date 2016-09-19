@@ -134,7 +134,7 @@ plotLH_behavior.discreteABMSim<- function(x, groups=c("all", "habitat", "age", "
            tmp[,2,]<-  apply(x[,grep("2", colnames(x)),], 3, rowSums)
            
            nRow<- nrow(x)
-            tmp<- matrix(nrow=nRow, ncol=3, dimnames=list(timeSeries=rep("", nRow), c("", "Ad", "Juv")))
+            tmp<- matrix(NA_real_, nrow=nRow, ncol=3, dimnames=list(timeSeries=rep("", nRow), c("", "Ad", "Juv")))
             tmp[,1]<- x[,1]
             tmp[,2]<- apply(x[,c(2:4, 6:8)], 1, sum)
             tmp[,3]<- apply(x[,c(5,9)], 1, sum)
@@ -144,7 +144,7 @@ plotLH_behavior.discreteABMSim<- function(x, groups=c("all", "habitat", "age", "
          },
          `habitat*age`={
             nRow<- nrow(x)
-            tmp<- matrix(nrow=nRow, ncol=5, dimnames=list(timeSeries=rep("", nRow), c("", "AdHab1", "JuvHab1", "AdHab2", "JuvHab2")))
+            tmp<- matrix(NA_real_, nrow=nRow, ncol=5, dimnames=list(timeSeries=rep("", nRow), c("", "AdHab1", "JuvHab1", "AdHab2", "JuvHab2")))
             tmp[,1]<-  x[,1]
             tmp[,2]<-  apply(x[,2:4], 1, sum)
             tmp[,3]<-  x[,5]
