@@ -11,7 +11,7 @@ test_that("discrete time models", {
   if (skip_on_cran()){
     res<- run(model)
     expect_is(res, "Model")
-    tmp<- lapply(unlist(res@sim@raw, recursive=FALSE), expect_is, class="discretePopSim")
+    tmp<- lapply(unlist(res@sim@raw, recursive=FALSE), expect_is, class=c("discretePopSim", "logical"))
   
     expect_is(result(res), "data.frame")
     expect_is(result(res, type="Ntf"), "data.frame")

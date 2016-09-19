@@ -281,8 +281,14 @@ mSurvBVSex.t<- function(broods, b, j, a, breedFail, sexRatio=.5, matingSystem=c(
 mFit.tvar<- function(fecundity, j, a, varJ, N0, replicates, tf, maxN=100000){
   pop<- matrix(NA_real_, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
   pop[,1]<- N0
-  betaPars<- fbeta(mean=j, var=varJ)
   
+  betaPars<- fbeta(mean=j, var=varJ)
+  if (anyNA(betaPars)){
+    warning("The combination of juvenile survival and variance fall outside the domain of the Beta distribution.")
+    return (NA)
+  }
+    
+    
   for (t in 1:tf){
     jEnv<- rbeta(replicates, shape1=betaPars$shape1, shape2=betaPars$shape2)
     
@@ -330,10 +336,14 @@ mFit.tvarseason<- function(broods, b, j, a, seasonVar, varJ, N0, replicates, tf,
   
   jindEnv<- j
 
-  betaJind<- fbeta(mean=j, var=varJ)
+  betaParsJind<- fbeta(mean=j, var=varJ)
+  if (anyNA(betaParsJind)){
+    warning("The combination of juvenile survival and variance fall outside the domain of the Beta distribution.")
+    return (NA)
+  }
 
   for (t in 1:tf){
-    jindEnv<- rbeta(replicates, shape1=betaJind$shape1, shape2=betaJind$shape2)
+    jindEnv<- rbeta(replicates, shape1=betaParsJind$shape1, shape2=betaParsJind$shape2)
     
     pop[,t+1]<- 0
     for (k in 1:broods){
@@ -359,8 +369,22 @@ mFit.tvarseason<- function(broods, b, j, a, seasonVar, varJ, N0, replicates, tf,
 mSurvBV.tvar<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, N0, replicates, tf, maxN=100000){
   pop<- matrix(NA_real_, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
   pop[,1]<- N0
-  if (varJ > 0) betaParsJ<- fbeta(mean=j, var=varJ)
-  if (varBreedFail > 0) betaParsBreedFail<- fbeta(mean=breedFail, var=varBreedFail)
+  if (varJ > 0){
+    betaParsJ<- fbeta(mean=j, var=varJ)
+    if (anyNA(betaParsJ)){
+      warning("The combination of juvenile survival and variance fall outside the domain of the Beta distribution.")
+      return (NA)
+    }
+  }
+  
+  if (varBreedFail > 0){
+    betaParsBreedFail<- fbeta(mean=breedFail, var=varBreedFail)
+    if (anyNA(betaParsBreedFail)){
+      warning("The combination of brood failure probability and variance fall outside the domain of the Beta distribution.")
+      return (NA)
+    }
+  }
+  
   jEnv<- j
   breedFailEnv<- breedFail
   
@@ -429,13 +453,25 @@ mSurvBV.tvarseason<- function(broods, b, j, a, breedFail, seasonVar, varJ=0, var
   jindEnv<- j
   breedFailEnv<- breedFail
   
-  if (varJ > 0) betaJind<- fbeta(mean=j, var=varJ)
-  if (varBreedFail > 0) betaParsBreedFail<- fbeta(mean=breedFail, var=varBreedFail)
+  if (varJ > 0){
+    betaParsJind<- fbeta(mean=j, var=varJ)
+    if (anyNA(betaParsJind)){
+      warning("The combination of juvenile survival and variance fall outside the domain of the Beta distribution.")
+      return (NA)
+    }
+  }
+  if (varBreedFail > 0){
+    betaParsBreedFail<- fbeta(mean=breedFail, var=varBreedFail)
+    if (anyNA(betaParsBreedFail)){
+      warning("The combination of brood failure probability and variance fall outside the domain of the Beta distribution.")
+      return (NA)
+    }
+  }
   
   for (t in 1:tf){
     # Environmental stochasticity
     if (varJ > 0){
-      jindEnv<- rbeta(replicates, shape1=betaJind$shape1, shape2=betaJind$shape2)
+      jindEnv<- rbeta(replicates, shape1=betaParsJind$shape1, shape2=betaParsJind$shape2)
     }
     
     if (varBreedFail > 0){
@@ -476,6 +512,10 @@ mFitSex.tvar<- function(fecundity, j, a, varJ=0, sexRatio=.5, matingSystem=c("mo
   popF[,1]<- popM[,1]<- N0
   
   betaPars<- fbeta(mean=j, var=varJ)
+  if (anyNA(betaPars)){
+    warning("The combination of juvenile survival and variance fall outside the domain of the Beta distribution.")
+    return (NA)
+  }
   
   for (t in 1:tf){
     nPairs<- switch(matingSystem, 
@@ -515,8 +555,21 @@ mSurvBVSex.tvar<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, s
   
   popF<- popM<- matrix(NA_real_, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
   popF[,1]<- popM[,1]<- N0
-  if (varJ > 0) betaParsJ<- fbeta(mean=j, var=varJ)
-  if (varBreedFail > 0) betaParsBreedFail<- fbeta(mean=breedFail, var=varBreedFail)
+  if (varJ > 0){
+    betaParsJ<- fbeta(mean=j, var=varJ)
+    if (anyNA(betaParsJ)){
+      warning("The combination of juvenile survival and variance fall outside the domain of the Beta distribution.")
+      return (NA)
+    }
+  }
+  
+  if (varBreedFail > 0){
+    betaParsBreedFail<- fbeta(mean=breedFail, var=varBreedFail)
+    if (anyNA(betaParsBreedFail)){
+      warning("The combination of brood failure probability and variance fall outside the domain of the Beta distribution.")
+      return (NA)
+    }
+  }
   
   jEnv<- j
   breedFailEnv<- breedFail

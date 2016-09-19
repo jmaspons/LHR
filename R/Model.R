@@ -623,8 +623,18 @@ setMethod("result",
                     stop("There are no results yet. Use run(model) to start the simulations. Check that model@sim@params@Ntf is TRUE before running. The function return a model with the results on the @sim@Ntf slot.\n")
                   }
                   
-                  Ntf<- apply(model@sim@Ntf[,-c(1,2)], 1, stats::ecdf)
-                  Ntf<- cbind(model@sim@Ntf[, c(1,2)], t(sapply(Ntf, stats::quantile, ...)))
+                  Ntf<- apply(model@sim@Ntf[,-c(1,2)], 1, function(x){
+                    if (all(is.na(x))){
+                      res<- rep(NA_real_, 5) # TODO: add probs parameter for Ntf -> ifelse(missing(probs), rep(NA_real_, 5), rep(NA_real_, length(probs))) ## 5 quantiles otherwise as many as probs length
+                    } else {
+                      res<- stats::ecdf(x)
+                      res<- stats::quantile(res, ...)
+                    }
+                    res
+                  })
+                  Ntf<- t(Ntf)
+                  colnames(Ntf)<- names(quantile(1, ...))
+                  Ntf<- cbind(model@sim@Ntf[, c(1,2)], Ntf, stringsAsFactors=FALSE)
                 }
                 
                 res<- merge(S3Part(model), Ntf, by="idScenario")
