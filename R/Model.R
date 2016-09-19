@@ -77,7 +77,13 @@ setMethod("combineLH_Env",
 
             scenario<- merge(tmpLH, tmpEnv)
             scenario<- data.frame(idScenario=paste0("LH", scenario$idLH, "_Env", scenario$idEnv), scenario, stringsAsFactors=FALSE)
-            scenario<- scenario[naturalsort::naturalorder(scenario$idScenario),]
+            
+            if ("baseLH" %in% names(scenario)){
+              scenario<- scenario[order(scenario$baseLH, scenario$lambda, scenario$idEnv),]
+            } else {
+              scenario<- scenario[naturalsort::naturalorder(scenario$idScenario),]
+            }
+            
             rownames(scenario)<- scenario$idScenario
             
             ## Brood failure (e.g. nest predation)

@@ -50,8 +50,15 @@ setMethod("LH",
             selCols<- c("idLH", "lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")
             if ("baseLH" %in% names(pars)) selCols<- c("baseLH", selCols)
             
-            pars<- unique(pars[, selCols]) # Sort columns
-            pars<- pars[naturalsort::naturalorder(pars$idLH),]
+            pars<- unique(pars[, selCols])
+            
+            # Sort columns
+            if ("baseLH" %in% names(pars)){
+              pars<- pars[order(pars$baseLH, pars$lambda),]
+            } else {
+              pars<- pars[naturalsort::naturalorder(pars$idLH),]
+            }
+            
             rownames(pars)<- pars$idLH
             
             if (popbio & requireNamespace("popbio", quietly=TRUE)){
@@ -169,7 +176,7 @@ sampleLH<- function(lambda=seq(1, 1.2, by=0.1), broods=2^(0:2), b=c(1, 2, 5, 10)
       
       pars$idLH<- paste0(pars$idLH, "-L", pars$lambda)
       rownames(pars)<- pars$idLH
-      pars<- pars[naturalsort::naturalorder(pars$idLH),]
+      pars<- pars[order(pars$baseLH, pars$lambda),]
     }
     
     return(pars)
