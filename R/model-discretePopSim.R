@@ -33,6 +33,7 @@ extinctNA<- function(pop){
 #' @param breedFail 
 #' @param varJ 
 #' @param varBreedFail 
+#' @param varA
 #' @param seasonVar 
 #' @param sexRatio 
 #' @param matingSystem 
@@ -45,7 +46,7 @@ extinctNA<- function(pop){
 #' @examples discretePopSim(b=2, j=.5, a=.5)
 #'
 #' @export
-setGeneric("discretePopSim", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0, seasonVar=1,
+setGeneric("discretePopSim", function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0, varA=0, seasonVar=1,
                                       sexRatio=.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"), 
                                       N0=10, replicates=100, tf=10, maxN=100000) standardGeneric("discretePopSim"))
 #### Common parameters:
@@ -66,9 +67,9 @@ setGeneric("discretePopSim", function(broods=1, b, j, a, breedFail=0, varJ=0, va
 # if (length(j) > 1 | length(a) > 1) # environmental seasonality:
   
 setMethod("discretePopSim", 
-          signature(broods="ANY", b="ANY", j="numeric", a="numeric", breedFail="ANY", varJ="ANY", varBreedFail="ANY",
+          signature(broods="ANY", b="ANY", j="numeric", a="numeric", breedFail="ANY", varJ="ANY", varBreedFail="ANY", varA="ANY",
                     seasonVar="ANY", sexRatio="ANY", matingSystem="ANY", N0="ANY", replicates="ANY", tf="ANY", maxN="ANY"),
-          function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0, seasonVar=1,
+          function(broods=1, b, j, a, breedFail=0, varJ=0, varBreedFail=0, varA=0, seasonVar=1,
                    sexRatio=.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"),
                    N0=10, replicates=100, tf=10, maxN=100000){
             
@@ -79,7 +80,7 @@ setMethod("discretePopSim",
             broodMortality<- sex<- varEnv<- seasonalEnv<- FALSE
   
             if(any(breedFail != 0)) broodMortality<- TRUE         # differential brood mortality
-            if (varJ != 0 | varBreedFail !=0) varEnv<- TRUE       # environmental variation
+            if (varJ != 0 | varBreedFail !=0 | varA !=0) varEnv<- TRUE       # environmental variation
             if (any(seasonVar !=1) & broods > 1) seasonalEnv<- TRUE # environmental seasonality
             if (!is.na(matingSystem)) sex<- TRUE                  # two sexes
 
@@ -103,13 +104,13 @@ setMethod("discretePopSim",
                       "if there is no broodMortality or only 1 brood seasonality have no effect (always breed on th best period)")
             }
             if (!broodMortality & varEnv  & !seasonalEnv & !sex){
-              out<- mFit.tvar(fecundity=b * broods, j=j, a=a, varJ=varJ, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
+              out<- mFit.tvar(fecundity=b * broods, j=j, a=a, varJ=varJ, varA=varA, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
             }
             if (!broodMortality & varEnv  & !seasonalEnv &  sex){
-              out<- mFitSex.tvar(fecundity=b * broods, j=j, a=a, varJ=varJ, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
+              out<- mFitSex.tvar(fecundity=b * broods, j=j, a=a, varJ=varJ, varA=varA, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
             }
             if (!broodMortality & varEnv  & seasonalEnv  & !sex){
-              out<- mFit.tvarseason(broods=broods, b=b, j=j, a=a, seasonVar=seasonVar, varJ=varJ, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
+              out<- mFit.tvarseason(broods=broods, b=b, j=j, a=a, seasonVar=seasonVar, varJ=varJ, varA=varA, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
               ## NA: if there is no broodMortality or only 1 brood seasonality have no effect (always breed on th best period)
               # warning("## Shouldn't be called: out<- mFit.tvarseason\n",
               #         "if there is no broodMortality or only 1 brood seasonality have no effect (always breed on th best period)")
@@ -133,16 +134,16 @@ setMethod("discretePopSim",
               out<- mSurvBVSex.tseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, seasonVar=seasonVar, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
             }
             if (broodMortality  & varEnv  & !seasonalEnv & !sex){
-              out<- mSurvBV.tvar(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
+              out<- mSurvBV.tvar(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, varA=varA, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
             }
             if (broodMortality  & varEnv  & !seasonalEnv &  sex){
-              out<- mSurvBVSex.tvar(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
+              out<- mSurvBVSex.tvar(broods=broods, b=b, j=j, a=a, breedFail=breedFail, varJ=varJ, varBreedFail=varBreedFail, varA=varA, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
             }
             if (broodMortality  & varEnv  & seasonalEnv  & !sex){
-              out<- mSurvBV.tvarseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, seasonVar=seasonVar, varJ=varJ, varBreedFail=varBreedFail, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
+              out<- mSurvBV.tvarseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, seasonVar=seasonVar, varJ=varJ, varBreedFail=varBreedFail, varA=varA, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
             }
             if (broodMortality  & varEnv  & seasonalEnv  &  sex){
-              out<- mSurvBVSex.tvarseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, seasonVar=seasonVar, varJ=varJ, varBreedFail=varBreedFail, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
+              out<- mSurvBVSex.tvarseason(broods=broods, b=b, j=j, a=a, breedFail=breedFail, seasonVar=seasonVar, varJ=varJ, varBreedFail=varBreedFail, varA=varA, sexRatio=sexRatio, matingSystem=matingSystem, N0=N0, replicates=replicates, tf=tf, maxN=maxN)
             }
             
             return (out)
@@ -278,24 +279,42 @@ mSurvBVSex.t<- function(broods, b, j, a, breedFail, sexRatio=.5, matingSystem=c(
 # N_t+1 = B(n=B(n=N_t, p=a) * fecundity, p=Beta(j, varJ))
 # Juveniles reach adult stage in one time step (age at first reproduction = 1)
 # fecundity = b x broods
-mFit.tvar<- function(fecundity, j, a, varJ, N0, replicates, tf, maxN=100000){
+mFit.tvar<- function(fecundity, j, a, varJ, varA, N0, replicates, tf, maxN=100000){
+  
+  if (varJ > 0){
+    betaParsJ<- fbeta(mean=j, var=varJ)
+    if (anyNA(betaParsJ)){
+      warning("The combination of juvenile survival and variance fall outside the domain of the Beta distribution.")
+      return (NA)
+    }
+  }
+  
+  if (varA > 0){
+    betaParsA<- fbeta(mean=j, var=varJ)
+    if (anyNA(betaParsA)){
+      warning("The combination of adult survival and variance fall outside the domain of the Beta distribution.")
+      return (NA)
+    }
+  }
+  
   pop<- matrix(NA_real_, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
   pop[,1]<- N0
   
-  betaPars<- fbeta(mean=j, var=varJ)
-  if (anyNA(betaPars)){
-    warning("The combination of juvenile survival and variance fall outside the domain of the Beta distribution.")
-    return (NA)
-  }
-    
-    
+  jEnv<- j
+  aEnv<- a
+  
   for (t in 1:tf){
-    jEnv<- rbeta(replicates, shape1=betaPars$shape1, shape2=betaPars$shape2)
-    
     # Juvenile survivors
+    if (varJ > 0)
+      jEnv<- rbeta(replicates, shape1=betaParsJ$shape1, shape2=betaParsJ$shape2)
+
     pop[,t+1]<- rbinom(replicates, pop[,t] * fecundity, jEnv)
+    
     # Add adult survivors
-    pop[,t+1]<- pop[,t+1] + rbinom(replicates, pop[,t], a)
+    if (varA > 0)
+      aEnv<- rbeta(replicates, shape1=betaParsA$shape1, shape2=betaParsA$shape2)
+    
+    pop[,t+1]<- pop[,t+1] + rbinom(replicates, pop[,t], aEnv)
     pop[which(pop[,t+1] > maxN),t+1]<- maxN
   }
   
@@ -330,29 +349,45 @@ mFit.tseason<- function(broods, b, j, a, seasonVar, N0, replicates, tf, maxN=100
   return(pop)
 }
 
-mFit.tvarseason<- function(broods, b, j, a, seasonVar, varJ, N0, replicates, tf, maxN=100000){
+mFit.tvarseason<- function(broods, b, j, a, seasonVar, varJ=0, varA=0, N0, replicates, tf, maxN=100000){
+  
+  if (varJ > 0){
+    betaParsJ<- fbeta(mean=j, var=varJ)
+    if (anyNA(betaParsJ)){
+      warning("The combination of juvenile survival and variance fall outside the domain of the Beta distribution.")
+      return (NA)
+    }
+  }
+
+  if (varA > 0){
+    betaParsA<- fbeta(mean=j, var=varJ)
+    if (anyNA(betaParsA)){
+      warning("The combination of adult survival and variance fall outside the domain of the Beta distribution.")
+      return (NA)
+    }
+  }
+  
   pop<- matrix(NA_real_, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
   pop[,1]<- N0
   
-  jindEnv<- j
-
-  betaParsJind<- fbeta(mean=j, var=varJ)
-  if (anyNA(betaParsJind)){
-    warning("The combination of juvenile survival and variance fall outside the domain of the Beta distribution.")
-    return (NA)
-  }
-
+  jEnv<- j
+  aEnv<- a
+  
   for (t in 1:tf){
-    jindEnv<- rbeta(replicates, shape1=betaParsJind$shape1, shape2=betaParsJind$shape2)
+    if (varJ > 0)
+      jEnv<- rbeta(replicates, shape1=betaParsJ$shape1, shape2=betaParsJ$shape2)
     
     pop[,t+1]<- 0
     for (k in 1:broods){
       # Juvenile survivors
-      pop[,t+1]<- pop[, t+1] + rbinom(replicates, b, jindEnv * seasonVar[k])
+      pop[,t+1]<- pop[, t+1] + rbinom(replicates, b, jEnv * seasonVar[k])
     }
     
     # Add adult survivors
-    pop[, t+1]<- pop[, t+1] + rbinom(replicates, pop[,t], a)
+    if (varA > 0)
+      aEnv<- rbeta(replicates, shape1=betaParsA$shape1, shape2=betaParsA$shape2)
+    
+    pop[, t+1]<- pop[, t+1] + rbinom(replicates, pop[,t], aEnv)
     pop[which(pop[, t+1] > maxN), t+1]<- maxN
   }
   
@@ -366,9 +401,8 @@ mFit.tvarseason<- function(broods, b, j, a, seasonVar, varJ, N0, replicates, tf,
 # Adult mortality + Brood mortality + offspring mortality
 # N_t+1 = B(n=B(n=B(n=N_t, p=a) * broods, p=1-breedFail) * b, p=Beta(j, varJ))
 # Juveniles reach adult stage in one time step (age at first reproduction = 1)
-mSurvBV.tvar<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, N0, replicates, tf, maxN=100000){
-  pop<- matrix(NA_real_, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
-  pop[,1]<- N0
+mSurvBV.tvar<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, varA=0, N0, replicates, tf, maxN=100000){
+  
   if (varJ > 0){
     betaParsJ<- fbeta(mean=j, var=varJ)
     if (anyNA(betaParsJ)){
@@ -385,8 +419,20 @@ mSurvBV.tvar<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, N0, 
     }
   }
   
+  if (varA > 0){
+    betaParsA<- fbeta(mean=j, var=varJ)
+    if (anyNA(betaParsA)){
+      warning("The combination of adult survival and variance fall outside the domain of the Beta distribution.")
+      return (NA)
+    }
+  }
+  
+  pop<- matrix(NA_real_, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
+  pop[,1]<- N0
+  
   jEnv<- j
   breedFailEnv<- breedFail
+  aEnv<- a
   
   for (t in 1:tf){
     # Environmental stochasticity
@@ -402,7 +448,10 @@ mSurvBV.tvar<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, N0, 
     pop[,t+1]<- rbinom(replicates, b * succeedingBroods, jEnv)
     
     # Add adult survivors
-    pop[,t+1]<- pop[,t+1] + rbinom(replicates, pop[,t], a)
+    if (varA > 0){
+      aEnv<- rbeta(replicates, shape1=betaParsA$shape1, shape2=betaParsA$shape2)
+    }
+    pop[,t+1]<- pop[,t+1] + rbinom(replicates, pop[,t], aEnv)
     pop[which(pop[,t+1] > maxN),t+1]<- maxN
   }
   pop<- pop[order(pop[,ncol(pop)]),]
@@ -446,13 +495,8 @@ mSurvBV.tseason<- function(broods, b, j, a, breedFail, seasonVar, N0, replicates
 # N_t+1 = B(n=B(n=B(n=N_t, p=a) * broods, p=1-breedFail) * b, p=Beta(j, varJ))
 # Juveniles reach adult stage in one time step (age at first reproduction = 1)
 ## TODO
-mSurvBV.tvarseason<- function(broods, b, j, a, breedFail, seasonVar, varJ=0, varBreedFail=0, N0, replicates, tf, maxN=100000){
-  pop<- matrix(NA_real_, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
-  pop[,1]<- N0
-  
-  jindEnv<- j
-  breedFailEnv<- breedFail
-  
+mSurvBV.tvarseason<- function(broods, b, j, a, breedFail, seasonVar, varJ=0, varBreedFail=0, varA=0, N0, replicates, tf, maxN=100000){
+
   if (varJ > 0){
     betaParsJind<- fbeta(mean=j, var=varJ)
     if (anyNA(betaParsJind)){
@@ -460,6 +504,7 @@ mSurvBV.tvarseason<- function(broods, b, j, a, breedFail, seasonVar, varJ=0, var
       return (NA)
     }
   }
+  
   if (varBreedFail > 0){
     betaParsBreedFail<- fbeta(mean=breedFail, var=varBreedFail)
     if (anyNA(betaParsBreedFail)){
@@ -467,6 +512,21 @@ mSurvBV.tvarseason<- function(broods, b, j, a, breedFail, seasonVar, varJ=0, var
       return (NA)
     }
   }
+  
+  if (varA > 0){
+    betaParsA<- fbeta(mean=j, var=varJ)
+    if (anyNA(betaParsA)){
+      warning("The combination of adult survival and variance fall outside the domain of the Beta distribution.")
+      return (NA)
+    }
+  }
+  
+  pop<- matrix(NA_real_, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
+  pop[,1]<- N0
+  
+  jindEnv<- j
+  breedFailEnv<- breedFail
+  aEnv<- a
   
   for (t in 1:tf){
     # Environmental stochasticity
@@ -488,7 +548,10 @@ mSurvBV.tvarseason<- function(broods, b, j, a, breedFail, seasonVar, varJ=0, var
     }
       
     # Add adult survivors
-    pop[,t+1]<- pop[,t+1] + rbinom(replicates, pop[,t], a)
+    if (varA > 0)
+      aEnv<- rbeta(replicates, shape1=betaParsA$shape1, shape2=betaParsA$shape2)
+    
+    pop[,t+1]<- pop[,t+1] + rbinom(replicates, pop[,t], aEnv)
     pop[which(pop[,t+1] > maxN),t+1]<- maxN
   }
   
@@ -504,7 +567,7 @@ mSurvBV.tvarseason<- function(broods, b, j, a, breedFail, seasonVar, varJ=0, var
 # Juveniles reach adult stage in one time step (age at first reproduction = 1)
 # fecundity = b x broods
 ## TODO:
-mFitSex.tvar<- function(fecundity, j, a, varJ=0, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, replicates, tf, maxN=100000){
+mFitSex.tvar<- function(fecundity, j, a, varJ=0, varA=0, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry")[1], N0, replicates, tf, maxN=100000){
   ## TODO
   warning("Model not implemented?: mFitSex.tvar")
 
@@ -550,7 +613,7 @@ mFitSex.tvar<- function(fecundity, j, a, varJ=0, sexRatio=.5, matingSystem=c("mo
 # Adult mortality + Brood mortality + offspring mortality + sex ratio
 # N_t+1 = B(n=B(n=B(n=B(n=N_t, p=a) * broods, p=1-breedFail) * b, p=Beta(j, varJ), p=sexRatio)
 # Juveniles reach adult stage in one time step (age at first reproduction = 1)
-mSurvBVSex.tvar<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry"), N0, replicates, tf, maxN=100000){
+mSurvBVSex.tvar<- function(broods, b, j, a, breedFail, varJ=0, varBreedFail=0, varA=0, sexRatio=.5, matingSystem=c("monogamy", "polygyny", "polyandry"), N0, replicates, tf, maxN=100000){
   matingSystem<- match.arg(matingSystem)
   
   popF<- popM<- matrix(NA_real_, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
@@ -645,7 +708,7 @@ mSurvBVSex.tseason<- function(broods, b, j, a, breedFail, seasonVar, N0, sexRati
 # Adult mortality + Brood mortality + offspring mortality + sex ratio
 # N_t+1 = B(B(n=B(n=B(n=N_t, p=a) * broods, p=1-breedFail) * b, p=Beta(j, varJ)), p=sexRatio)
 # Juveniles reach adult stage in one time step (age at first reproduction = 1)
-mSurvBVSex.tvarseason<- function(broods, b, j, a, breedFail, seasonVar, varJ=0, varBreedFail=0, sexRatio=0.5, matingSystem=c("monogamy", "polygyny", "polyandry"), N0, replicates, tf, maxN=100000){
+mSurvBVSex.tvarseason<- function(broods, b, j, a, breedFail, seasonVar, varJ=0, varBreedFail=0, varA=0, sexRatio=0.5, matingSystem=c("monogamy", "polygyny", "polyandry"), N0, replicates, tf, maxN=100000){
   matingSystem<- match.arg(matingSystem)
   
   jindSeason<- j * seasonVar

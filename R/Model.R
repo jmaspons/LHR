@@ -94,7 +94,7 @@ setMethod("combineLH_Env",
             scenario$jbr<- scenario$breedFail * (scenario$j-1) + 1
 
             ## Seasonality
-            seasonBroods<- data.frame(scenario[,c("seasonMean", "seasonAmplitude", "broods", "interval")], var=0, breedFail=0) # var necessary for Env(seasonBroods)
+            seasonBroods<- data.frame(scenario[,c("seasonMean", "seasonAmplitude", "broods", "interval")], varJ=0, varA=0, breedFail=0) # varJ & varA necessary for Env(seasonBroods)
             seasonVar<- seasonOptimCal(env=seasonBroods, resolution=resolution, nSteps=seasonBroods$broods, interval=seasonBroods$interval, criterion=criterion)
             
             return (list(scenario=scenario, seasonBroodEnv=list(parsBroodEnv=seasonBroods, broodEnv=seasonVar))) #, breedFail=breedFail))
@@ -227,8 +227,8 @@ runScenario.discretePopSim<- function (scenario, pars, verbose=FALSE){
     N0<- pars$N0[n]
     
     pop<- with(scenario, discretePopSim(broods=broods, b=b, j=jind, a=a, breedFail=1 - jbr,
-               varJ=ifelse(pars$envVar$j, scenario$var, 0), varBreedFail=ifelse(pars$envVar$breedFail, scenario$var, 0),
-               seasonVar=seasonVar,
+               varJ=ifelse(pars$envVar$j, scenario$varJ, 0), varBreedFail=ifelse(pars$envVar$breedFail, scenario$varJ, 0),
+               varA=varA, seasonVar=seasonVar,
                sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, replicates=pars$replicates, tf=pars$tf, maxN=pars$maxN))
     
     if (is.null(pop) | all(is.na(pop)) | is.list(pop)){ ## TODO: pop<- list(popF, popM) when mating system != NA -> 2 sexes
@@ -330,7 +330,7 @@ runScenario.numericDistri<- function(scenario, pars, verbose=FALSE){
     # only happens on run(model), not when calling mSurvBV.distri with the same parameters!!
     # maybe var collide with var()?? It seems is not the case...
     distri<- with(scenario, tDistri(broods=broods, b=b, j=jind, a=a, breedFail=1 - jbr,
-                                   varJ=ifelse(pars$envVar$j, var, 0), varBreedFail=ifelse(pars$envVar$breedFail, var, 0),
+                                   varJ=ifelse(pars$envVar$j, scenario$varJ, 0), varBreedFail=ifelse(pars$envVar$breedFail, scenario$varJ, 0),
                                    seasonVar=seasonVar,
                                    sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, tf=pars$tf)) #TODO: add , maxN=pars$maxN
     if (is.null(distri) | all(is.na(distri))){
@@ -826,7 +826,7 @@ plotPest_N0<- function(x, ...){
 
   ggplot2::ggplot(data=x, ggplot2::aes(x=N0, y=Pest, group=idScenario, color=colorLH)) + 
     ggplot2::geom_line(mapping=ggplot2::aes(size=lambda), alpha=0.5) + ggplot2::geom_point() +
-    ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=ggplot2::label_both) +
+    ggplot2::facet_grid(breedFail~seasonAmplitude + varJ, labeller=ggplot2::label_both) +
     ggplot2::scale_size(breaks=unique(x$lambda), range=c(0.5, 2))
 }
 
@@ -834,14 +834,14 @@ plotG<- function(x, ...){
   ggplot2::ggplot(data=x, ggplot2::aes(x=N0, y=GL, group=idScenario, color=colorLH)) + 
     ggplot2::geom_hline(yintercept=1) + ggplot2::geom_line(mapping=ggplot2::aes(size=lambda), alpha=0.5) + # ggplot2::geom_point() +
     ggplot2::geom_line(mapping=ggplot2::aes(y=meanL, size=lambda), linetype=2) +
-    ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=ggplot2::label_both) +
+    ggplot2::facet_grid(breedFail~seasonAmplitude + varJ, labeller=ggplot2::label_both) +
     ggplot2::labs(x=expression(N[0]), y=expression(lambda * " geometric mean and mean (dashed) for all transitions")) +
     ggplot2::scale_size(breaks=unique(x$lambda), range=c(0.5, 2))
 }
 
 plotN0_Pest<- function(x, ...){
   ggplot2::ggplot(data=x, ggplot2::aes(x=lambda, y=N0interpoled, group=colorLH, color=colorLH)) + ggplot2::scale_y_log10() +
-    ggplot2::geom_point() + ggplot2::geom_line(size=0.5) + ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=ggplot2::label_both)  
+    ggplot2::geom_point() + ggplot2::geom_line(size=0.5) + ggplot2::facet_grid(breedFail~seasonAmplitude + varJ, labeller=ggplot2::label_both)  
 }
 
 plotNtf<- function(x, ...){
@@ -850,7 +850,7 @@ plotNtf<- function(x, ...){
   
   ggplot2::ggplot(data=x, ggplot2::aes(x=N0, color=colorLH, fill=colorLH, group=idScenario)) + ggplot2::scale_y_log10() + 
     ggplot2::geom_ribbon(mapping=ggplot2::aes(ymin=`25%`, ymax=`75%`), alpha=.4, linetype=0) + ggplot2::geom_line(mapping=ggplot2::aes(y=`50%`, size=lambda)) + 
-    ggplot2::facet_grid(breedFail~seasonAmplitude + var, labeller=ggplot2::label_both) + ggplot2::labs(x=expression(N[0]), y=expression(N[tf] * " (mean and 50%)")) +
+    ggplot2::facet_grid(breedFail~seasonAmplitude + varJ, labeller=ggplot2::label_both) + ggplot2::labs(x=expression(N[0]), y=expression(N[tf] * " (mean and 50%)")) +
     ggplot2::scale_size(breaks=unique(x$lambda), range=c(0.5, 2)) + ggplot2::geom_line(mapping=ggplot2::aes(x, y), data=abline, inherit.aes=FALSE, show.legend=FALSE, lty=2)
 }
 
@@ -877,8 +877,8 @@ hist.Model<- function(x, ...){
   
   N<- merge(N, xd, by="idScenario")
   N$idScenario<- factor(res$idScenario)
-  N<- reshape2::melt(N, id.vars=c("idScenario", "N0", "seasonAmplitude", "var", "breedFail"), value.name="Ntf")
+  N<- reshape2::melt(N, id.vars=c("idScenario", "N0", "seasonAmplitude", "varJ", "varA", "breedFail"), value.name="Ntf")
   
   ggplot2::ggplot(N, ggplot2::aes(x=Ntf, group=idScenario, color=idScenario)) + 
-    ggplot2::geom_histogram() + ggplot2::facet_grid(N0 + breedFail~seasonAmplitude + var, labeller=ggplot2::label_both)
+    ggplot2::geom_histogram() + ggplot2::facet_grid(N0 + breedFail~seasonAmplitude + varJ, labeller=ggplot2::label_both)
 }

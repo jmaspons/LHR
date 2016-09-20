@@ -9,23 +9,24 @@ NULL
 #' @param pars 
 #' @param seasonAmplitude 
 #' @param seasonRange 
-#' @param var 
+#' @param varJ 
+#' @param varA
 #' @param breedFail 
 #'
 #' @return a Env class object
 #' @export
-setGeneric("Env", function(pars, seasonAmplitude=c(0,1), seasonRange, var=c(0, 0.1), breedFail=c(0, 0.5, 0.9)) standardGeneric("Env"))
+setGeneric("Env", function(pars, seasonAmplitude=c(0,1), seasonRange, varJ=c(0, 0.1), varA=c(0, 0.1), breedFail=c(0, 0.5, 0.9)) standardGeneric("Env"))
 
 setMethod("Env",
-          signature(pars="missing", seasonAmplitude="ANY", seasonRange="missing", var="ANY", breedFail="ANY"),
-          function(seasonAmplitude=c(0,1), var=c(0, 0.1), breedFail=c(0, 0.5, 0.9)){
+          signature(pars="missing", seasonAmplitude="ANY", seasonRange="missing", varJ="ANY", varA="ANY", breedFail="ANY"),
+          function(seasonAmplitude=c(0,1), varJ=c(0, 0.1), varA=c(0, 0.1), breedFail=c(0, 0.5, 0.9)){
             season<- getSeasonalParams(seasonAmplitude=seasonAmplitude, envMax=1)
             
             ## If seasonAmplitude == 0 there is no seasonality and the environment is constant (P_I(env) = P_i * env$seasonalMean)
             # season$seasonalMean[season$seasonAmplitude == 0]<- 1
             # season<- unique(season)
             
-            comb<- expand.grid(var=var, breedFail=breedFail)
+            comb<- expand.grid(varJ=varJ, varA=varA, breedFail=breedFail)
             comb<- merge(season, comb)
             
             comb<- unique(comb)
@@ -44,23 +45,23 @@ setMethod("Env",
 )
 
 setMethod("Env",
-          signature(pars="missing", seasonAmplitude="missing", seasonRange="matrix", var="ANY", breedFail="ANY"),
-          function(seasonRange, var=c(0, 0.1), breedFail=c(0, 0.5, 0.9)){
+          signature(pars="missing", seasonAmplitude="missing", seasonRange="matrix", varJ="ANY", varA="ANY", breedFail="ANY"),
+          function(seasonRange, varJ=c(0, 0.1), varA=c(0, 0.1), breedFail=c(0, 0.5, 0.9)){
             mat<- matrix(seasonRange, ncol=2)
             seasonPars<- getSeasonalParams(seasonRange=mat)
             
-            env<- Env(var=var, seasonAmplitude=seasonPars$seasonAmplitude, breedFail=breedFail)
+            env<- Env(varJ=varJ, varA=varA, seasonAmplitude=seasonPars$seasonAmplitude, breedFail=breedFail)
             return (env)
           }
 )  
 
 setMethod("Env",
-          signature(pars="data.frame", seasonAmplitude="ANY", seasonRange="ANY", var="ANY", breedFail="ANY"),
+          signature(pars="data.frame", seasonAmplitude="missing", seasonRange="missing", varJ="missing", varA="missing", breedFail="missing"),
           function(pars){
             if (inherits(pars, "Model")) pars<- data.frame(pars, stringsAsFactors=FALSE)
             if (!"idEnv" %in% names(pars)) pars$idEnv<- rownames(pars)
             
-            pars<- unique(pars[,c("idEnv", "seasonAmplitude", "seasonMean", "var", "breedFail")])
+            pars<- unique(pars[,c("idEnv", "seasonAmplitude", "seasonMean", "varJ", "varA", "breedFail")])
             pars<- pars[naturalsort::naturalorder(pars$idEnv),]
             rownames(pars)<- pars$idEnv
             

@@ -15,7 +15,7 @@
 #' @export
 #'
 #' @examples
-getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, var=0),
+getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=0, varA=0),
                                        habDiffScenario=c("identicalHab", "mortalHab2", "nestPredHab2"),
                                        behavior=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2")){
   habDiffScenario<- match.arg(habDiffScenario, several.ok=TRUE)

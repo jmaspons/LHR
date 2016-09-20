@@ -44,8 +44,7 @@ context("Run numericDistri models")
 
 test_that("compound distribution", {
   sim<- Sim.numericDistri()
-  env<- Env()
-  env<- env[env$var == 0,] ## Errors if var != 0
+  env<- Env(varJ=0, varA=0) ## Errors if var != 0
   lh<- LH(method="LH axes")
   
   model<- Model(lh=lh, env=env, sim=sim)
@@ -71,7 +70,7 @@ test_that("compound distribution", {
 test_that("compound distribution with environmental variation", {
   sim<- Sim.numericDistri()
   env<- Env()
-  env<- env[env$var != 0,] ## Errors if var != 0
+  env<- env[env$varJ != 0,] ## Errors if var != 0
   lh<- LH(method="LH axes")
   
   model<- Model(lh=lh, env=env, sim=sim)
@@ -100,7 +99,7 @@ context("Run discreteABMSim models")
 
 test_that("ABM LH-behavior", { 
   lh<- LH(method="LH axes")
-  env<- Env(seasonAmplitude=0, var=0)
+  env<- Env(seasonAmplitude=0, varJ=0, varA=0)
   sim<- Sim.ABM()
   pars<- getParamsCombination.LH_Beh(lh=lh, env=env, habDiffScenario="nestPredHab2", behavior="learnExploreBreed")
   model<- Model(sim=sim, pars=pars)

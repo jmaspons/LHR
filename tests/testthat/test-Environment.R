@@ -2,11 +2,11 @@ context("Class Environment")
 
 test_that("constructor", {
   expect_is(Env(), "Env")
-  expect_is(Env(var=.1), "Env")
+  expect_is(Env(varJ=.1), "Env")
   expect_is(Env(seasonAmplitude=.3), "Env")
   expect_is(Env(seasonRange=matrix(c(0,1, .4,1, .8,1, 1, 1), 2, 2, byrow=TRUE)), "Env") ## ERROR
-  expect_is(Env(var=.1, seasonAmplitude=.3), "Env")
-  expect_is(Env(var=1), "Env") # parameters out of the Beta distribution domain
+  expect_is(Env(varJ=.1, seasonAmplitude=.3), "Env")
+  expect_is(Env(varJ=1), "Env") # parameters out of the Beta distribution domain
   expect_error(Env(seasonRange=c(0,1)), "Env") # mean and range are redundant parameters on a sinusoidal function
   
   obj<- Env()
