@@ -92,6 +92,41 @@ setMethod("combineLH_Env",
             # death:    P(-j) = P(-jbr OR P(-jind | jbr))
             scenario$jind<- scenario$j / (scenario$breedFail * (scenario$j-1) + 1)     # juvenile mortality is divided in brood mortality and individual mortality
             scenario$jbr<- scenario$breedFail * (scenario$j-1) + 1
+            
+            ## Check combinations of mean and variance falling outside the domain of the Beta distribution
+            betaParsJind<- fbeta(mean=scenario$jind, var=scenario$varJ)
+            betaParsJbr<- suppressWarnings(fbeta(mean=scenario$jbr, var=scenario$varJ)) # breedFail == 0 -> jbr == 1: error
+            betaParsA<- fbeta(mean=scenario$a, var=scenario$varA)
+            
+            if (any(errJind<- !is.finite(betaParsJind$shape1) & scenario$varJ != 0) |
+                any(errJbr<- !is.finite(betaParsJbr$shape1)  & scenario$varJ != 0 & scenario$breedFail > 0) |
+                any(errA<- !is.finite(betaParsA$shape1)    & scenario$varA != 0) ){
+              err<- errJind | errJbr | errA
+              scenario$errorBeta<- err
+              
+              if (any(errJind)){
+                scenario$maxVarJind<- NA
+                betaPars<- fbeta(mean=scenario$jind[errJind], var="max")
+                scenario$maxVarJind[errJind]<- sbeta(betaPars$shape1, betaPars$shape2)$var
+              }
+              if (any(errJbr)){
+                scenario$maxVarJbr<- NA
+                betaPars<- fbeta(mean=scenario$jbr[errJbr], var="max")
+                scenario$maxVarJbr[errJbr]<- sbeta(betaPars$shape1, betaPars$shape2)$var
+              }
+              if (any(errA)){
+                scenario$maxVarA<- NA
+                betaPars<- fbeta(mean=scenario$a[errA], var="max")
+                scenario$maxVarA[errA]<- sbeta(betaPars$shape1, betaPars$shape2)$var
+              }
+              
+              errJ<- any(errJind | errJbr) 
+              errA<- any(errA)
+              w<- ""
+              if (errJ) w<- "varJ"
+              if (errA) w<- paste0(w, "varA", sep=" and ")
+              warning("Some combinations of ",  w, " with the mean survival fall outside the parameter space of the Beta distribution. Check errorBeta and maxVar column.")
+            }
 
             ## Seasonality
             seasonBroods<- data.frame(scenario[,c("seasonMean", "seasonAmplitude", "broods", "interval")], varJ=0, varA=0, breedFail=0) # varJ & varA necessary for Env(seasonBroods)

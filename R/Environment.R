@@ -15,11 +15,11 @@ NULL
 #'
 #' @return a Env class object
 #' @export
-setGeneric("Env", function(pars, seasonAmplitude=c(0,1), seasonRange, varJ=c(0, 0.1), varA=c(0, 0.1), breedFail=c(0, 0.5, 0.9)) standardGeneric("Env"))
+setGeneric("Env", function(pars, seasonAmplitude=c(0,1), seasonRange, varJ=c(0, 0.05), varA=c(0, 0.05), breedFail=c(0, 0.5, 0.9)) standardGeneric("Env"))
 
 setMethod("Env",
           signature(pars="missing", seasonAmplitude="ANY", seasonRange="missing", varJ="ANY", varA="ANY", breedFail="ANY"),
-          function(seasonAmplitude=c(0,1), varJ=c(0, 0.1), varA=c(0, 0.1), breedFail=c(0, 0.5, 0.9)){
+          function(seasonAmplitude=c(0,1), varJ=c(0, 0.05), varA=c(0, 0.05), breedFail=c(0, 0.5, 0.9)){
             season<- getSeasonalParams(seasonAmplitude=seasonAmplitude, envMax=1)
             
             ## If seasonAmplitude == 0 there is no seasonality and the environment is constant (P_I(env) = P_i * env$seasonalMean)
@@ -32,21 +32,13 @@ setMethod("Env",
             comb<- unique(comb)
             comb<- data.frame(idEnv=rownames(comb), comb, stringsAsFactors=FALSE)
             
-            ## Remove combinations of mean and var out of the domain of the Beta distribution
-            # betaPars<- fbeta(mean=comb$seasonalMean, var=comb$var)
-            # 
-            # if (any(!is.finite(betaPars$shape1) & comb$var != 0)){
-            #     comb<- comb[is.finite(betaPars$shape1) | comb$var == 0,]
-            #     warning("Some combinations of mean and var fall outside the parameter space of the beta distribution.")
-            # }
-             
             new("Env", comb, seasonRange=getSeasonalRange(seasonMean=comb$seasonMean, seasonAmplitude=comb$seasonAmplitude))
           }
 )
 
 setMethod("Env",
           signature(pars="missing", seasonAmplitude="missing", seasonRange="matrix", varJ="ANY", varA="ANY", breedFail="ANY"),
-          function(seasonRange, varJ=c(0, 0.1), varA=c(0, 0.1), breedFail=c(0, 0.5, 0.9)){
+          function(seasonRange, varJ=c(0, 0.05), varA=c(0, 0.05), breedFail=c(0, 0.5, 0.9)){
             mat<- matrix(seasonRange, ncol=2)
             seasonPars<- getSeasonalParams(seasonRange=mat)
             

@@ -14,7 +14,7 @@ test_that("constructor", {
 
 test_that("subsetting", {
   obj<- LH()
-  expect_is(obj[c(1,4,8),], "LH")
+  expect_is(obj[c(1,3,5),], "LH")
   expect_is(head(obj), "LH")
   expect_is(obj[1:5,], "LH")
   
