@@ -280,9 +280,9 @@ plotLH_behavior.data.frame<- function(x, resultType=c("Pest_N0", "G", "N0_Pest",
   resultType<- match.arg(resultType)
   
   
-  stats<- all(c("idScenario", "N0", "GL", "colorLH", "lambda", "seasonAmplitude", "var", "breedFail") %in% names(x))
-  N0_Pest<- all(c("idScenario", "N0interpoled", "colorLH", "lambda", "seasonAmplitude", "var", "breedFail") %in% names(x))
-  Ntf<- all(c("idScenario", "N0", "25%", "50%", "75%", "colorLH", "lambda", "seasonAmplitude", "var", "breedFail") %in% names(x))
+  stats<- all(c("idScenario", "N0", "GL", "colorLH", "lambda", "seasonAmplitude", "varJ", "varA", "breedFail") %in% names(x))
+  N0_Pest<- all(c("idScenario", "N0interpoled", "colorLH", "lambda", "seasonAmplitude", "varJ", "varA", "breedFail") %in% names(x))
+  Ntf<- all(c("idScenario", "N0", "25%", "50%", "75%", "colorLH", "lambda", "seasonAmplitude", "varJ", "varA", "breedFail") %in% names(x))
   
   # if no type is specified select a existing one with precedence stats > N0_Pest > Ntf
   if (noType){
@@ -293,6 +293,8 @@ plotLH_behavior.data.frame<- function(x, resultType=c("Pest_N0", "G", "N0_Pest",
       invisible(plot(x))
     }
   }
+  
+  out<- NA
   
   if (stats & resultType == "Pest_N0"){
     x$Pest<- 1 - x$extinct
