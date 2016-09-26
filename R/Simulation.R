@@ -26,16 +26,33 @@ setMethod("Sim",
 )
 
 setMethod("Sim",
+          signature(params="list", type="character"),
+          function(params, type=c("discretePopSim", "numericDistri", "ABM", "ssa")){
+            type<- match.arg(type)
+            
+            sim<- switch(type,
+                   discretePopSim=Sim.discretePopSim(params=params),
+                   numericDistri=Sim.numericDistri(params=params),
+                   ABM=Sim.ABM(params=params),
+                   ssa=Sim.ssa(params=params))
+
+            return (sim)
+          }
+)
+
+setMethod("Sim",
           signature(params="Model", type="missing"),
           function(params){
+            
+            type<- class(params@sim)
             simPars<- params@sim@params
-
-            sim<- switch(class(params@sim),
-                   Sim.discretePopSim=Sim.discretePopSim(params=simPars),
-                   Sim.numericDistri=Sim.numericDistri(params=simPars),
-                   Sim.ABM=Sim.ABM(params=simPars),
-                   Sim.ssa=Sim.ssa(params=simPars))
-
+            
+            sim<- switch(type,
+                         Sim.discretePopSim=Sim.discretePopSim(params=simPars),
+                         Sim.numericDistri=Sim.numericDistri(params=simPars),
+                         Sim.ABM=Sim.ABM(params=simPars),
+                         Sim.ssa=Sim.ssa(params=simPars))
+            
             return (sim)
           }
 )

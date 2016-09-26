@@ -48,7 +48,7 @@ setClass("Sim", slots=list(params="list", raw="ANY", N0_Pest="data.frame"),
 #'
 #' @seealso \code{\link{Sim}}
 #' @export
-setClass("Sim.discretePopSim", slots=list(discretePopSim="ANY", Ntf="data.frame"), contains="Sim")
+setClass("Sim.discretePopSim", slots=list(discretePopSim="list", Ntf="data.frame"), contains="Sim")
 # TODO: , slots=list(discretePopSim="discretePopSim"), prototype=prototype(discretePopSim=discretePopSim())
 
 

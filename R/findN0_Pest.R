@@ -42,7 +42,8 @@ findN0_Pest<- function(model=Model(), cl=parallel::detectCores(), Pobjective=.5,
   simRes<- model@sim
   simRes@N0_Pest<- N0_Pest
   
-  out<- Model(pars=S3Part(model), sim=simRes)
+  out<- Model(pars=S3Part(model), sim=simRes) # constructor removes results
+  out@sim<- simRes
 
   if (numericCL) parallel::stopCluster(cl)
   

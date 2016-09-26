@@ -47,8 +47,9 @@ setMethod("Model",
 setMethod("Model",
           signature(lh="missing", env="missing", sim="ANY", pars="data.frame", type="ANY"),
           function(sim=Sim(type=match.arg(type)), pars, type=c("discretePopSim", "numericDistri", "ABM", "ssa")){
-            modelClass<- gsub("Sim.", "Model.", class(sim))
-            new(modelClass, pars, sim=sim)
+            modelClass<- gsub("Sim\\.", "Model.", class(sim))
+            type<- gsub("Sim\\.", "", class(sim))
+            new(modelClass, pars, sim=Sim(params=sim@params, type=type)) # omit all results
           }
 )
 
@@ -768,7 +769,39 @@ setMethod("show", signature(object="Model"),
 #' @export
 `[.Model`<- function(x, ...){
   xSel<- data.frame(x)[...]
-  Model(lh=LH(xSel), env=Env(xSel), sim=Sim(x))
+  scenarioIdSel<- xSel$idScenario
+  
+  sim<- x@sim
+  
+  if (nrow(sim) > 0){
+    stats<- data.frame(sim)
+    stats<- stats[stats$idScenario %in% scenarioIdSel,]
+    S3Part(sim)<- stats
+  }
+  
+  if (length(sim@raw) > 0){
+    sim@raw<- sim@raw[which(names(sim@raw) %in% scenarioIdSel)]
+  }
+  
+  if (nrow(sim@N0_Pest) > 0){
+    N0_Pest<- sim@N0_Pest
+    sim@N0_Pest<- N0_Pest[N0_Pest$idScenario %in% scenarioIdSel,]
+  }
+  
+  
+  if (inherits(sim, "Sim.discretePopSim")){
+    if (nrow(sim@Ntf) > 0){
+      Ntf<- sim@Ntf
+      sim@Ntf<- Ntf[Ntf$idScenario %in% scenarioIdSel,]
+    }
+    
+    if (length(sim@discretePopSim) > 0){
+      pop<- sim@discretePopSim
+      sim@discretePopSim<- pop[names(pop) %in% scenarioIdSel]
+    }
+  }
+
+  Model(pars=xSel, sim=sim)
 }
 
 #' Plot Model
