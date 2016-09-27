@@ -44,7 +44,7 @@ ssa.deterministic<- function(init.values=rep(1, nrow(transitions)), transitions,
 
 
 ## Explore SSA ----
-exploreSSA<- function(x0L, params, transitionMat, rateFunc, maxTf=10, replicates=100,
+exploreSSA<- function(x0L, params, transitionMat, rateFunc, maxTf=10, replicates=100, raw=TRUE,
                       discretePop=FALSE, finalPop=TRUE, burnin=-1, dtDiscretize=NULL, 
                       cl=parallel::detectCores(),
                       verbose=FALSE, ...){
@@ -56,7 +56,7 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, maxTf=10, replicates
                                   dimnames=list(scenario_N0=paste0(rep(rownames(params), each=length(x0L)), "_N", rep(sapply(x0L, sum), times=nrow(params))),
                                                 stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct",
                                                 "increaseTrans", "decreaseTrans", "stableTrans", "GR", "meanR", "varR", "GL", "meanL", "varL"))))
-  
+  if (raw) resSSA<- list()
   if (discretePop) resPop<- list()
   if (finalPop){
     Ntf<- as.data.frame(matrix(NA_real_, nrow=length(x0L) * nrow(params), ncol=2 + replicates,
@@ -77,6 +77,7 @@ exploreSSA<- function(x0L, params, transitionMat, rateFunc, maxTf=10, replicates
     message(i, "/", nrow(params), "\t", rownames(params)[i])
     transitions<- transitionMat(params[i,])
     
+    if (raw) resSSA[[i]]<- list()
     if (discretePop) resPop[[i]]<- list()
 
     for (j in seq_along(x0L)){
@@ -117,6 +118,7 @@ if(paste0(rownames(params)[i], "_N", sum(x0L[[j]])) != rownames(resStats)[k]) st
 
       if (verbose) print(tmp, row.names=FALSE)
 
+      if (raw) resSSA[[i]][[j]]<- simL
       if (discretePop) resPop[[i]][[j]]<- pop
       if (finalPop){
         popTf<- pop[,ncol(pop)]
@@ -127,6 +129,7 @@ if(paste0(rownames(params)[i], "_N", sum(x0L[[j]])) != rownames(resStats)[k]) st
       k<- k +1
     }# End N0 loop
 
+    if (raw) names(resSSA[[i]])<- paste0("N", sapply(x0L, sum))
     if (discretePop) names(resPop[[i]])<- paste0("N", sapply(x0L, sum))
   }# End parameters loop
 
@@ -136,6 +139,10 @@ if(paste0(rownames(params)[i], "_N", sum(x0L[[j]])) != rownames(resStats)[k]) st
   res<- c(res, list(params=params))
   res<- c(res, list(simParams=list(x0L=x0L, tf=maxTf, replicates=replicates, burnin=burnin, dtDiscretize=dtDiscretize)))
 
+  if (raw){
+    names(resSSA)<- rownames(params)
+    res<- c(res, list(raw=resSSA))
+  }
   if (discretePop){
     names(resPop)<- rownames(params)
     res<- c(res, list(pop=resPop))

@@ -547,7 +547,8 @@ run.ssa<- function(model, cl=parallel::detectCores(), ...){
   rateFunc<- model@sim@params$rateFunc
   tf<- model@sim@params$tf
   replicates<- model@sim@params$replicates
-  discretePop<- model@sim@params$raw
+  raw<- model@sim@params$raw
+  discretePop<- model@sim@params$discretePop
   finalPop<- model@sim@params$Ntf
   #   burnin=-1
   #   dtDiscretize=NULL
@@ -561,9 +562,9 @@ run.ssa<- function(model, cl=parallel::detectCores(), ...){
   }
   
   res<- exploreSSA(x0L=x0L, params=params, transitionMat=transitionMat, rateFunc=rateFunc, 
-                   maxTf=tf, replicates=replicates, discretePop=discretePop, finalPop=finalPop, cl=cl, ...)
+                   maxTf=tf, replicates=replicates, raw=raw, discretePop=discretePop, finalPop=finalPop, cl=cl, ...)
 
-  res<- new("Sim.ssa", res$stats, Ntf=res$Ntf, params=model@sim@params, raw=res, N0_Pest=model@sim@N0_Pest)
+  res<- new("Sim.ssa", res$stats, Ntf=res$Ntf, params=model@sim@params, raw=res$raw, N0_Pest=model@sim@N0_Pest)
   # simRes<- model@sim
   # S3Part(simRes)<- res$stats
   # 

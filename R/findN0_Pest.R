@@ -222,7 +222,7 @@ Pestablishment.ssa<- function(N0, scenario, parsSim){
   N0class[which(N0class > 0)[1]]<- N0class[which(N0class > 0)[1]] + N0 %% sum(N0class) # add the remaining to the first class with N0 != 0
   
   res<- exploreSSA(x0L=N0class, params=scenario, transitionMat=parsSim$transitionMat, rateFunc=parsSim$rateFunc, maxTf=parsSim$tf, replicates=parsSim$replicates,
-                   discretePop=FALSE, finalPop=FALSE) # cl= TODO: pass as parameter
+                   raw=FALSE, discretePop=FALSE, finalPop=FALSE) # cl= TODO: pass as parameter
   
   Pest<- 1 - res$stats[,"extinct"]
   

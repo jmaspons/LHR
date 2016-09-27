@@ -217,17 +217,17 @@ setMethod("Sim.ABM",
 #' 
 #' @export
 setGeneric("Sim.ssa", function(params, N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, 
-                               tf=10, replicates=15, maxN=10000, raw=TRUE, Ntf=TRUE, stats=TRUE, ...) standardGeneric("Sim.ssa"))
+                               tf=10, replicates=15, maxN=10000, raw=FALSE, discretePop=TRUE, Ntf=TRUE, stats=TRUE, ...) standardGeneric("Sim.ssa"))
 setMethod("Sim.ssa",
-          signature(params="missing", N0="ANY", transitionMat="ANY", rateFunc="ANY", tf="ANY", replicates="ANY", maxN="ANY", raw="ANY", Ntf="ANY", stats="ANY"),
-          function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, tf=10, replicates=15, maxN=10000, raw=TRUE, Ntf=TRUE, stats=TRUE, ...){
+          signature(params="missing", N0="ANY", transitionMat="ANY", rateFunc="ANY", tf="ANY", replicates="ANY", maxN="ANY", raw="ANY", discretePop="ANY", Ntf="ANY", stats="ANY"),
+          function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, tf=10, replicates=15, maxN=10000, raw=FALSE, discretePop=TRUE, Ntf=TRUE, stats=TRUE, ...){
             if (missing(N0)){
               N0<- c(N1s=0, N1b=1, N1bF=0, N1j=0, N2s=0, N2b=1, N2bF=0, N2j=0)
               N0<- lapply(2^(0:5), function(x) N0 * x)
               names(N0)<- paste0("N", sapply(N0, sum))
             }
             
-            params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, maxN=maxN, raw=raw, Ntf=Ntf, stats=stats)
+            params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, maxN=maxN, raw=raw, discretePop=discretePop, Ntf=Ntf, stats=stats)
             
             dots<- list(...)
             params<- c(params, dots)
@@ -239,7 +239,7 @@ setMethod("Sim.ssa",
 )
 
 setMethod("Sim.ssa",
-          signature(params="list", N0="missing", transitionMat="missing", rateFunc="missing", tf="missing", replicates="missing", maxN="missing", raw="missing", Ntf="missing", stats="missing"),
+          signature(params="list", N0="missing", transitionMat="missing", rateFunc="missing", tf="missing", replicates="missing", maxN="missing", raw="missing", discretePop="missing", Ntf="missing", stats="missing"),
           function(params){
             sim<- new("Sim.ssa", params=params)
             return (sim)
