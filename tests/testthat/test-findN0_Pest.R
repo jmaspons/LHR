@@ -11,6 +11,11 @@ if (skip_on_cran()){
   expect_is(N0_Pest<- findN0_Pest(model=model, Pobjective=.5), "Model")
   expect_is(N0_Pest@sim@N0_Pest, "data.frame")
   expect_is(result(N0_Pest, type="N0_Pest"), "data.frame")
+  
+  ## Test subsetting
+  expect_identical(nrow(N0_Pest@sim@N0_Pest), 3L)
+  expect_identical(nrow(N0_Pest[1,]@sim@N0_Pest), 1L)
+  expect_identical(nrow(N0_Pest[c(1,3),]@sim@N0_Pest), 2L)
 }
 })
 
@@ -25,6 +30,11 @@ if (skip_on_cran()){
   expect_is(N0_Pest<- findN0_Pest(model=model, Pobjective=.5), "Model")
   expect_is(N0_Pest@sim@N0_Pest, "data.frame")
   expect_is(result(N0_Pest, type="N0_Pest"), "data.frame")
+  
+  ## Test subsetting
+  expect_identical(nrow(N0_Pest@sim@N0_Pest), 3L)
+  expect_identical(nrow(N0_Pest[1,]@sim@N0_Pest), 1L)
+  expect_identical(nrow(N0_Pest[c(1,3),]@sim@N0_Pest), 2L)
 }
 })
 
@@ -39,6 +49,11 @@ if (skip_on_cran()){
   expect_is(N0_Pest<- findN0_Pest(model=model, Pobjective=.5), "Model")
   expect_is(N0_Pest@sim@N0_Pest, "data.frame")
   expect_is(result(N0_Pest, type="N0_Pest"), "data.frame")
+  
+  ## Test subsetting
+  expect_identical(nrow(N0_Pest@sim@N0_Pest), 3L)
+  expect_identical(nrow(N0_Pest[1,]@sim@N0_Pest), 1L)
+  expect_identical(nrow(N0_Pest[c(1,3),]@sim@N0_Pest), 2L)
 }
 })
 

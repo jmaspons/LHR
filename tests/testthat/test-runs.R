@@ -15,6 +15,15 @@ test_that("discrete time models", {
   
     expect_is(result(res), "data.frame")
     expect_is(result(res, type="Ntf"), "data.frame")
+    
+    ## Test subsetting
+    expect_identical(length(res@sim@raw), nrow(res))
+    expect_identical(length(res[1,]@sim@raw), nrow(res[1,]))
+    expect_identical(length(res[c(1,3),]@sim@raw), nrow(res[c(1,3),]))
+    
+    expect_equal(nrow(res@sim@Ntf) / length(res@sim@params$N0), nrow(res))
+    expect_equal(nrow(res[1,]@sim@Ntf) / length(res@sim@params$N0), nrow(res[1,]))
+    expect_equal(nrow(res[c(1,3),]@sim@Ntf) / length(res@sim@params$N0), nrow(res[c(1,3),]))
   }
 })
 
@@ -36,6 +45,15 @@ test_that("discrete models with 2 sexes", {
     popList<- popList[sapply(popList, function(x) !all(is.na(x)))]
     
     tmp<- lapply(popList, expect_is, class="discretePopSim")
+    
+    ## Test subsetting
+    expect_identical(length(res@sim@raw), nrow(res))
+    expect_identical(length(res[1,]@sim@raw), nrow(res[1,]))
+    expect_identical(length(res[c(1,3),]@sim@raw), nrow(res[c(1,3),]))
+    
+    expect_equal(nrow(res@sim@Ntf) / length(res@sim@params$N0), nrow(res))
+    expect_equal(nrow(res[1,]@sim@Ntf) / length(res@sim@params$N0), nrow(res[1,]))
+    expect_equal(nrow(res[c(1,3),]@sim@Ntf) / length(res@sim@params$N0), nrow(res[c(1,3),]))
   }
 })
 
@@ -64,6 +82,16 @@ test_that("compound distribution", {
     # Not available for numericDistri expect_is(result(res, type="Ntf"), "data.frame")
     
     tmp<- lapply(distriList, function(x) expect_gt(abs(sum(x$p)), 0.95))
+    
+    ## Test subsetting
+    expect_identical(length(res@sim@raw), nrow(res))
+    expect_identical(length(res[1,]@sim@raw), nrow(res[1,]))
+    expect_identical(length(res[c(1,3),]@sim@raw), nrow(res[c(1,3),]))
+    
+    # Ntf<- result(res, type="Ntf")
+    expect_equal(nrow(result(res, type="Ntf")) / length(res@sim@params$N0), nrow(res))
+    expect_equal(nrow(result(res[1,], type="Ntf")) / length(res@sim@params$N0), nrow(res[1,]))
+    expect_equal(nrow(result(res[c(1,3),], type="Ntf")) / length(res@sim@params$N0), nrow(res[c(1,3),]))
   }
 })
 
@@ -74,6 +102,7 @@ test_that("compound distribution with environmental variation", {
   lh<- LH(method="LH axes")
   
   model<- Model(lh=lh, env=env, sim=sim)
+  
   if (skip_on_cran()){
     res<- run(model)
     expect_is(res, "Model")
@@ -92,6 +121,16 @@ test_that("compound distribution with environmental variation", {
     ## Fails for seasonAmplitude=1 & var=0.1 and when breedFail=1
     distriList<- distriList[sapply(distriList, function(x) !all(is.na(x$p)))] ## TODO: fix it! remove some results where probability is NA
     tmp<- sapply(distriList, function(x) expect_gt(abs(sum(x$p)), 0.95))
+    
+    ## Test subsetting
+    expect_identical(length(res@sim@raw), nrow(res))
+    expect_identical(length(res[1,]@sim@raw), nrow(res[1,]))
+    expect_identical(length(res[c(1,3),]@sim@raw), nrow(res[c(1,3),]))
+    
+    # Ntf<- result(res, type="Ntf")
+    expect_equal(nrow(result(res, type="Ntf")) / length(res@sim@params$N0), nrow(res))
+    expect_equal(nrow(result(res[1,], type="Ntf")) / length(res@sim@params$N0), nrow(res[1,]))
+    expect_equal(nrow(result(res[c(1,3),], type="Ntf")) / length(res@sim@params$N0), nrow(res[c(1,3),]))
   }
 })
 
@@ -117,6 +156,15 @@ test_that("ABM LH-behavior", {
     
     expect_is(result(res), "data.frame")
     expect_is(result(res, type="Ntf"), "data.frame")
+    
+    ## Test subsetting
+    expect_identical(length(res@sim@raw), nrow(res))
+    expect_identical(length(res[1,]@sim@raw), nrow(res[1,]))
+    expect_identical(length(res[c(1,3),]@sim@raw), nrow(res[c(1,3),]))
+    
+    expect_equal(nrow(res@sim@Ntf) / length(res@sim@params$N0), nrow(res))
+    expect_equal(nrow(res[1,]@sim@Ntf) / length(res@sim@params$N0), nrow(res[1,]))
+    expect_equal(nrow(res[c(1,3),]@sim@Ntf) / length(res@sim@params$N0), nrow(res[c(1,3),]))
   }
 })
 
@@ -134,7 +182,7 @@ test_that("IBM LH-behavior", {
   rateFunc<- rateFunc.LH_Beh
     
   sim<- Sim.ssa(N0=x0L, transitionMat=transitionMat, rateFunc=rateFunc, 
-                tf=tf, replicates=replicates, raw=FALSE, Ntf=TRUE, stats=TRUE)
+                tf=tf, replicates=replicates, raw=TRUE, discretePop=TRUE, Ntf=TRUE, stats=TRUE)
   model<- Model(pars=params, sim=sim)
 
   if (skip_on_cran()){
@@ -143,5 +191,14 @@ test_that("IBM LH-behavior", {
     expect_is(resD<- result(res), "data.frame")
     # plot(resD[,-1])
     expect_is(result(res, type="Ntf"), "data.frame")
+    
+    ## Test subsetting
+    expect_identical(length(res@sim@raw), nrow(res))
+    expect_identical(length(res[1,]@sim@raw), nrow(res[1,]))
+    expect_identical(length(res[c(1,3),]@sim@raw), nrow(res[c(1,3),]))
+    
+    expect_equal(nrow(res@sim@Ntf) / length(res@sim@params$N0), nrow(res))
+    expect_equal(nrow(res[1,]@sim@Ntf) / length(res@sim@params$N0), nrow(res[1,]))
+    expect_equal(nrow(res[c(1,3),]@sim@Ntf) / length(res@sim@params$N0), nrow(res[c(1,3),]))
   }
 })

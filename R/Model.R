@@ -801,7 +801,10 @@ setMethod("show", signature(object="Model"),
     }
   }
 
-  Model(pars=xSel, sim=sim)
+  out<- Model(pars=xSel, sim=sim) # Constructor removes results
+  out@sim<- sim
+  
+  return(out)
 }
 
 #' Plot Model
