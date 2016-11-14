@@ -31,7 +31,6 @@ Collate:
     'Model.R'
     'Model.ssa.R'
     'Simulation.R'
-    'autocorrEnvironment.R'
     'betabinomial.R'
     'betanegativebinomial.R'
     'cohortModel.R'
@@ -39,7 +38,6 @@ Collate:
     'environmentaltemporalAutocorrelation.R'
     'exploreCohortModel.R'
     'exploreSSA.R'
-    'exploreStructures.R'
     'findN0_Pest.R'
     'model-ABM_LH_behavior.R'
     'model-IBM-ssa_LH_behavior.R'
@@ -53,5 +51,4 @@ Collate:
     'populationDynamicsStats.R'
     'probabilityDistributions.R'
     'sampleParameters.R'
-    'seasonalEnvironment.R'
 VignetteBuilder: knitr

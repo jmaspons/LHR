@@ -43,7 +43,7 @@ setMethod("tDistri",
             
             tf1<- broodMortality<- sex<- varEnv<- seasonalEnv<- FALSE
 
-            tf1<- TRUE                               # only one time step TODO add tf loop 
+            if (tf == 1) tf1<- TRUE                               # only one time step
             if(any(breedFail != 0)) broodMortality<- TRUE         # differential brood mortality
             if (varJ != 0 | varBreedFail !=0) varEnv<- TRUE       # environmental variation
             if (length(j) > 1 | length(a) > 1) seasonalEnv<- TRUE # environmental seasonality

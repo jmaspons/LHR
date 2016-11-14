@@ -31,7 +31,7 @@ findN0_Pest<- function(model=Model(), cl=parallel::detectCores(), Pobjective=.5,
   N0_Pest<- parallel::parLapply(cl=cl, scenario, findN0_Pest.scenario, sim=sim, Pobjective=Pobjective, verbose=verbose)
 
   # N0_Pest<- lapply(scenario, findN0_Pest.scenario, sim=sim, Pobjective=Pobjective, verbose=verbose)
-  # 
+  
   # N0_Pest<- list()
   # for (i in seq_along(scenario)){
   #   N0_Pest[[i]]<- findN0_Pest.scenario(scenario=scenario[[i]], sim=sim, Pobjective=Pobjective, verbose=verbose)
@@ -59,8 +59,8 @@ findN0_Pest<- function(model=Model(), cl=parallel::detectCores(), Pobjective=.5,
 #' @export
 #'
 #' @examples
-findN0_Pest.scenario<- function(scenario=data.frame(Model(lh=LH(lambda=1))[1,]), sim=Sim.discretePopSim(replicates=10000),
-                Pobjective=.5, verbose=FALSE){
+findN0_Pest.scenario<- function(scenario=data.frame(Model(lh=LH(lambda=1))[1,]),
+                                sim=Sim.discretePopSim(replicates=10000), Pobjective=.5, verbose=FALSE){
   parsSim<- sim@params
   fun<- switch(class(sim),
               Sim.discretePopSim=Pestablishment.discretePopSim,
@@ -99,12 +99,12 @@ findN0_Pest.scenario<- function(scenario=data.frame(Model(lh=LH(lambda=1))[1,]),
     if (N0 < 1) {N0<- 1}
     
     if (N0 > parsSim$maxN){ # Evita passar Inf com a N0 (important per lambdes baixes)
-      N0<- parsSim$maxN -1
+      N0<- parsSim$maxN - 1
       maxN<- parsSim$maxN
       Pmax<- 1
     } 
     
-    if (N0 == N0anterior) {N0<- N0-1}
+    if (N0 == N0anterior) {N0<- N0 - 1}
     
     # cat("N0=", N0, "\tNmin=", minN, "\tNp50max=", maxN, "\tPmin=", Pmin, "\tPmax=", Pmax, "\n")
     Pest<- fun(N0=N0, scenario=scenario, parsSim=parsSim)
@@ -152,12 +152,20 @@ findN0_Pest.scenario<- function(scenario=data.frame(Model(lh=LH(lambda=1))[1,]),
     }
     N0anterior<- N0
     i<- i+1
-  }
+  } # End find N0 loop
+  
   N0interpoled<- interpole(Pobjective, minN, maxN, Pmin, Pmax)
   
-  if (is.na(N0interpoled) & maxN == 1 & minN == 1){
+  if (is.na(N0interpoled)){
+    if (maxN == 1 & minN == 1){
       ## N0_Pest < 1
       N0interpoled<- interpole(Pobjective, 0, maxN, 0, Pmax)
+    }else if (minN == maxN){
+      N0interpoled<- minN
+      Pest<- mean(Pmin, Pmax)
+    }else{
+      browser()
+    }
   }
   
   return (data.frame(idScenario=scenario$idScenario, N0_Pest=N0, Pest, N0interpoled=N0interpoled, Pobjective, stringsAsFactors=FALSE))

@@ -9,6 +9,7 @@ NULL
 #' @param lh 
 #' @param env 
 #' @param sim 
+#'
 #' @return a \code{Model} object.
 #' @examples model<- Model()
 #' @export
@@ -220,7 +221,7 @@ run.discretePopSim<- function(model, cl=parallel::detectCores()){
   if (pars$Ntf){
     Ntf<- lapply(sim, function(x) x$Ntf)
     Ntf<- do.call("rbind", Ntf)
-    Ntf<- as.data.frame(Ntf)
+    Ntf<- as.data.frame(Ntf, stringsAsFactors=FALSE)
     rownames(Ntf)<- paste0(Ntf$idScenario, "_N", Ntf$N0)
     # Ntf[,-1]<- apply(Ntf[,2:ncol(Ntf)], 2, as.numeric)
     simRes@Ntf<- Ntf
@@ -242,7 +243,7 @@ runScenario.discretePopSim<- function (scenario, pars, verbose=FALSE){
                dimnames=list(scenario_N0=paste0(rep(scenario$idScenario, length=length(pars$N0)), "_N", pars$N0),
                              stats=c("idScenario", "N0", "increase", "decrease", "stable","extinct", 
                              "increaseTrans", "decreaseTrans", "stableTrans", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 15 = ncol(summary(pop)) + 2 (id,
-  stats<- as.data.frame(stats)
+  stats<- as.data.frame(stats, stringsAsFactors=FALSE)
   stats$idScenario<- scenario$idScenario
   stats$N0<- pars$N0
   
@@ -250,7 +251,7 @@ runScenario.discretePopSim<- function (scenario, pars, verbose=FALSE){
     Ntf<- matrix(NA_real_, nrow=length(pars$N0), ncol=2 + pars$replicates, 
                  dimnames=list(scenario_N0=paste0(rep(scenario$idScenario, length=length(pars$N0)), "_N", pars$N0), 
                                Ntf=c("idScenario", "N0", 1:pars$replicates)))
-    Ntf<- as.data.frame(Ntf)
+    Ntf<- as.data.frame(Ntf, stringsAsFactors=FALSE)
     Ntf$idScenario<- scenario$idScenario
     Ntf$N0<- pars$N0
   }
@@ -325,7 +326,7 @@ run.numericDistri<- function(model, cl=parallel::detectCores()){
   
   stats<- lapply(sim, function(x) x$stats)
   stats<- do.call("rbind", stats)
-  stats<- as.data.frame(stats)
+  stats<- as.data.frame(stats, stringsAsFactors=FALSE)
   stats<- stats[naturalsort::naturalorder(paste0(stats$idScenario, "|", stats$N0)),]
   
   simRes<- model@sim
@@ -351,7 +352,7 @@ runScenario.numericDistri<- function(scenario, pars, verbose=FALSE){
   stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=12, 
                dimnames=list(scenario_N0=paste0(rep(scenario$idScenario, length=length(pars$N0)), "_N", pars$N0),
                              stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
-  stats<- as.data.frame(stats)
+  stats<- as.data.frame(stats, stringsAsFactors=FALSE)
   stats$idScenario<- scenario$idScenario
   stats$N0<- pars$N0
   
@@ -432,8 +433,9 @@ run.ABM<- function(model, cl=parallel::detectCores(), raw, ...){
   
   
   stats<- lapply(sim, function(x) x$stats)
+  names(stats)<- NULL
   stats<- do.call("rbind", stats)
-  stats<- as.data.frame(stats)
+  stats<- as.data.frame(stats, stringsAsFactors=FALSE)
 
   simRes<- model@sim
   S3Part(simRes)<- stats
@@ -448,7 +450,7 @@ run.ABM<- function(model, cl=parallel::detectCores(), raw, ...){
   if (pars$Ntf){
     Ntf<- lapply(sim, function(x) x$Ntf)
     Ntf<- do.call("rbind", Ntf)
-    Ntf<- as.data.frame(Ntf)
+    Ntf<- as.data.frame(Ntf, stringsAsFactors=FALSE)
     rownames(Ntf)<- paste0(Ntf$idScenario, "_N", Ntf$N0)
     # Ntf[,-1]<- apply(Ntf[,2:ncol(Ntf)], 2, as.numeric)
     simRes@Ntf<- Ntf
@@ -470,7 +472,7 @@ runScenario.ABM<- function (scenario, pars, verbose=FALSE){
                dimnames=list(scenario_N0=paste0(rep(scenario$idScenario, length=length(pars$N0)), "_N", sapply(pars$N0, sum)),
                              stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct",
                              "increaseTrans", "decreaseTrans", "stableTrans", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 15 = ncol(summary(pop)) + 2 (id, N0)
-  stats<- as.data.frame(stats)
+  stats<- as.data.frame(stats, stringsAsFactors=FALSE)
   stats$idScenario<- scenario$idScenario
   stats$N0<- sapply(pars$N0, sum)
   
@@ -478,7 +480,7 @@ runScenario.ABM<- function (scenario, pars, verbose=FALSE){
     Ntf<- matrix(NA_real_, nrow=length(pars$N0), ncol=2 + pars$replicates, 
                  dimnames=list(scenario_N0=paste0(rep(scenario$idScenario, length=length(pars$N0)), "_N", sapply(pars$N0, sum)), 
                                Ntf=c("idScenario", "N0", 1:pars$replicates)))
-    Ntf<- as.data.frame(Ntf)
+    Ntf<- as.data.frame(Ntf, stringsAsFactors=FALSE)
     Ntf$idScenario<- scenario$idScenario
     Ntf$N0<- sapply(pars$N0, sum)
   }
@@ -577,7 +579,7 @@ run.ssa<- function(model, cl=parallel::detectCores(), ...){
   # if (finalPop){
   #   Ntf<- lapply(res, function(x) x$Ntf)
   #   Ntf<- do.call("rbind", Ntf)
-  #   Ntf<- as.data.frame(Ntf)
+  #   Ntf<- as.data.frame(Ntf, stringsAsFactors=FALSE)
   #   rownames(Ntf)<- paste0(Ntf[,"idScenario"], "_N", Ntf[,"N0"])
   #   # Ntf[,-1]<- apply(Ntf[,2:ncol(Ntf)], 2, as.numeric)
   #   simRes@Ntf<- Ntf

@@ -62,7 +62,7 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=
 # Warning: clutch have no effect on the simulation. It's necessary to modify the reaction channels (getReactionChannels(clutch1, clutch2))
 # @params nonBreedingSurv increase factor on survival for non breeding adults.
 getParams.LH_Beh<- function(params=data.frame(b=1, broods=1, a=0.7, j=0.3, AFR=1, breedFail=0.5, jind=0.4615385, jbr=0.65),
-                            diffHab2, nonBreedingSurv=1.5,
+                            diffHab2, nonBreedingSurv=2,
                             habDiffScenario=c("identicalHab", "mortalHab2", "nestPredHab2"),
                             behavior=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2")){
 

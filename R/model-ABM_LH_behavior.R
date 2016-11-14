@@ -228,6 +228,8 @@ plotLH_behavior.Model<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf
     }
   }
   
+  out<- NA
+  
   if (stats & resultType == "Pest_N0"){
     res<- result(x, type="stats")
 
@@ -342,13 +344,16 @@ plotG.LH_behavior<- function(x, ...){
 }
 
 plotN0_Pest.LH_behavior<- function(x, ...){
-  ggplot2::ggplot(data=x, ggplot2::aes(x=lambda, y=N0interpoled, group=idScenario, color=colorLH)) + ggplot2::scale_y_log10() +
-    ggplot2::geom_point() + ggplot2::facet_grid(facet_grid, labeller=ggplot2::label_both)  
+  ggplot2::ggplot(data=x, ggplot2::aes(x=lambda, y=N0interpoled, group=colorLH, color=colorLH)) + ggplot2::scale_y_log10() +
+    ggplot2::geom_point() + ggplot2::geom_line(size=0.5) + ggplot2::facet_grid(facet_grid, labeller=ggplot2::label_both)  
 }
 
 plotNtf.LH_behavior<- function(x, ...){
+  abline<- 1:max(x$N0)
+  abline<- data.frame(x=abline, y=abline)
+  
   ggplot2::ggplot(data=x, ggplot2::aes(x=N0, color=colorLH, fill=colorLH, group=idScenario)) + ggplot2::scale_y_log10() + 
     ggplot2::geom_ribbon(mapping=ggplot2::aes(ymin=`25%`, ymax=`75%`), alpha=.4, linetype=0) + ggplot2::geom_line(mapping=ggplot2::aes(y=`50%`, size=lambda)) + 
     ggplot2::facet_grid(facet_grid, labeller=ggplot2::label_both) + ggplot2::labs(x=expression(N[0]), y=expression(N[tf] * " (mean and 50%)")) +
-    ggplot2::scale_size(breaks=unique(x$lambda), range=c(0.5, 2))
+    ggplot2::scale_size(breaks=unique(x$lambda), range=c(0.5, 2)) + ggplot2::geom_line(mapping=ggplot2::aes(x, y), data=abline, inherit.aes=FALSE, show.legend=FALSE, lty=2)
 }

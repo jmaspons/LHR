@@ -11,3 +11,5 @@ src/test.*
 ^src/CMakeLists\.txt$
 ^data/
 ^vignettes/.*_cache
+^vignettes/.*\.html$
+
