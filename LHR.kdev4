@@ -1,0 +1,4 @@
+[Project]
+Manager=KDevCMakeManager
+Name=LHR
+VersionControl=kdevgit
