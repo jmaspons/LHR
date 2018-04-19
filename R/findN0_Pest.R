@@ -65,12 +65,11 @@ findN0_Pest.scenario<- function(scenario=data.frame(Model(lh=LH(lambda=1))[1,]),
   fun<- switch(class(sim),
               Sim.discretePopSim=Pestablishment.discretePopSim,
               Sim.numericDistri=Pestablishment.numericDistri,
-              Sim.ABM=Pestablishment.ABM,
-              Sim.ssa=Pestablishment.ssa)
+              Sim.ABM=Pestablishment.ABM)
   minN<- 1
   Pmin<- fun(N0=minN, scenario=scenario, parsSim=parsSim)
   
-  if (inherits(sim, c("Sim.ABM", "Sim.ssa"))){
+  if (inherits(sim, "Sim.ABM")){
     if (!is.list(parsSim$N0)) parsSim$N0<- list(parsSim$N0)
     maxN<- max(sapply(parsSim$N0, sum))
     
@@ -223,16 +222,3 @@ Pestablishment.ABM<- function(N0, scenario, parsSim){
   return(Pest)
 }
 
-Pestablishment.ssa<- function(N0, scenario, parsSim){
-  if (N0 == 0) return(0)
-  
-  N0class<- parsSim$N0[[1]] * N0 %/% sum(parsSim$N0[[1]]) # split N0 between classes with N0 != 0
-  N0class[which(N0class > 0)[1]]<- N0class[which(N0class > 0)[1]] + N0 %% sum(N0class) # add the remaining to the first class with N0 != 0
-  
-  res<- exploreSSA(x0L=N0class, params=scenario, transitionMat=parsSim$transitionMat, rateFunc=parsSim$rateFunc, maxTf=parsSim$tf, replicates=parsSim$replicates,
-                   raw=FALSE, discretePop=FALSE, finalPop=FALSE) # cl= TODO: pass as parameter
-  
-  Pest<- 1 - res$stats[,"extinct"]
-  
-  return(Pest)
-}

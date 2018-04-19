@@ -1,4 +1,4 @@
-# Parameters in probabilities. Check model-IBM-ssa_LH_behavior.R for ssa parameters.
+# Parameters in probabilities.
 # (get|set)(Params|Scenario|Behavior)
 
 # Parameters ----

@@ -9,9 +9,7 @@ test_that("constructor", {
   expect_is(Sim.numericDistri(), "Sim.numericDistri")
   expect_is(Sim.ABM(), "Sim")
   expect_is(Sim.ABM(), "Sim.ABM")
-  expect_is(Sim.ssa(), "Sim")
-  expect_is(Sim.ssa(), "Sim.ssa")
-  
+
   expect_is(Sim(Model()), "Sim")
 })
 

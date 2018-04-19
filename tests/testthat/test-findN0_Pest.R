@@ -58,18 +58,3 @@ if (skip_on_cran()){
 })
 
 
-## Not ready
-# test_that("ssa", {
-# if (skip_on_cran()){
-#   sim<- Sim.ssa(replicates=1000)
-#   lh<- LH(lambda=1.1, broods=2)[1,]
-#   env<- Env(seasonAmplitude=0, varJ=0, varA=0, breedFail=.3)
-#   model<- Model(lh=lh, env=env, sim=sim, habDiffScenario="nestPredHab2", behavior="learnExploreBreed")
-#   
-#   expect_is(findN0_Pest.scenario(scenario=data.frame(model)[1,], sim=sim, Pobjective=.5), "data.frame")
-#   expect_is(N0_Pest<- findN0_Pest(model=model, Pobjective=.5), "Model")
-#   expect_is(N0_Pest@sim@N0_Pest, "data.frame")
-#   expect_is(result(N0_Pest, type="N0_Pest"), "data.frame")
-# }
-# })
-

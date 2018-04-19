@@ -169,36 +169,3 @@ test_that("ABM LH-behavior", {
 })
 
 
-context("Run ssa models")
-
-test_that("IBM LH-behavior", {
-  tf <- 2 # Final time
-  replicates<- 10
-  x0<- c(N1s=0, N1b=1, N1bF=0, N1j=0, N2s=0, N2b=1, N2bF=0, N2j=0)
-  x0L<- lapply(c(2,10), function(x) x0 * x)
-  
-  params<- getParams.LH_Beh.ssa()
-  transitionMat<- transitionMat.LH_Beh
-  rateFunc<- rateFunc.LH_Beh
-    
-  sim<- Sim.ssa(N0=x0L, transitionMat=transitionMat, rateFunc=rateFunc, 
-                tf=tf, replicates=replicates, raw=TRUE, discretePop=TRUE, Ntf=TRUE, stats=TRUE)
-  model<- Model(pars=params, sim=sim)
-
-  if (skip_on_cran()){
-    system.time(res<- run(model, dt=0.5))
-    
-    expect_is(resD<- result(res), "data.frame")
-    # plot(resD[,-1])
-    expect_is(result(res, type="Ntf"), "data.frame")
-    
-    ## Test subsetting
-    expect_identical(length(res@sim@raw), nrow(res))
-    expect_identical(length(res[1,]@sim@raw), nrow(res[1,]))
-    expect_identical(length(res[c(1,3),]@sim@raw), nrow(res[c(1,3),]))
-    
-    expect_equal(nrow(res@sim@Ntf) / length(res@sim@params$N0), nrow(res))
-    expect_equal(nrow(res[1,]@sim@Ntf) / length(res@sim@params$N0), nrow(res[1,]))
-    expect_equal(nrow(res[c(1,3),]@sim@Ntf) / length(res@sim@params$N0), nrow(res[c(1,3),]))
-  }
-})

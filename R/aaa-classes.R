@@ -3,7 +3,6 @@
 #' @exportClass discreteABMSim
 #' @exportClass distriPopSim
 #' @exportClass numericDistri
-#' @exportClass ssa
 #' @exportClass leslieMatrix
 NULL
 
@@ -11,7 +10,6 @@ setOldClass("discretePopSim")
 setOldClass("discreteABMSim")
 setOldClass("distriPopSim")
 setOldClass("numericDistri")
-setOldClass("ssa")
 setOldClass("leslieMatrix")
 
 
@@ -74,16 +72,6 @@ setClass("Sim.numericDistri", contains="Sim")
 #' @export
 setClass("Sim.ABM", slots=list(deterministic="data.frame"), contains="Sim.discretePopSim")
 
-#' SSA Simulation Class
-#' 
-#' @name Sim.ssa
-#'
-#' @slot Ntf data.frame. 
-#'
-#' @seealso \code{\link{Sim}}
-#' @export
-setClass("Sim.ssa", slots=list(deterministic="data.frame"), contains="Sim.discretePopSim")
-
 
 ## Environment class ----
 
@@ -131,14 +119,7 @@ setClass("Model.numericDistri", contains="Model")
 #' @export
 setClass("Model.ABM", contains="Model")
 
-#' Model.ssa
-#' 
-#' @name Model.ssa
-#'
-#' @export
-setClass("Model.ssa", contains="Model")
 
 ## Check and overview ----
-# getClass("ssa")
 # getClass("Sim")
 

@@ -1,8 +1,8 @@
 Package: LHR
 Type: Package
 Title: Tools for Life History Modeling
-Version: 0.3
-Date: 2016-09-19
+Version: 0.4
+Date: 2018-04-19
 Authors@R: person("Joan", "Maspons", email = "j.maspons@creaf.uab.cat", role = c("aut", "cre"))
 Description: Implements stochastic demographic models. Compound distributions
     (Beta binomial, Beta negative binomial and binomial with random size parameter
@@ -10,7 +10,6 @@ Description: Implements stochastic demographic models. Compound distributions
 License: GPL (>= 2)
 Imports:
     methods,
-    adaptivetau,
     parallel,
     reshape2,
     ggplot2,
@@ -21,7 +20,7 @@ Suggests:
     knitr,
     rmarkdown
 Packaged: 2013-01-07 11:06:19 UTC; joan
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
 Collate:
     'aaa-classes.R'
     'Environment.R'
@@ -29,7 +28,6 @@ Collate:
     'LH.R'
     'LHR-package.r'
     'Model.R'
-    'Model.ssa.R'
     'Simulation.R'
     'betabinomial.R'
     'betanegativebinomial.R'
@@ -37,16 +35,13 @@ Collate:
     'distributionOperators.R'
     'environmentaltemporalAutocorrelation.R'
     'exploreCohortModel.R'
-    'exploreSSA.R'
     'findN0_Pest.R'
     'model-ABM_LH_behavior.R'
-    'model-IBM-ssa_LH_behavior.R'
     'model-deterministic.R'
     'model-discreteABMSim.R'
     'model-discretePopSim.R'
     'numericDistri.R'
     'model-numericDistri.R'
-    'model-ssa_LH.R'
     'parameters-LH-behavior.R'
     'populationDynamicsStats.R'
     'probabilityDistributions.R'

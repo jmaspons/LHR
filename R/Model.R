@@ -13,21 +13,18 @@ NULL
 #' @return a \code{Model} object.
 #' @examples model<- Model()
 #' @export
-setGeneric("Model", function(lh=LH(method="LH axes"), env=Env(), sim=Sim(type=match.arg(type)), pars, type=c("discretePopSim", "numericDistri", "ABM", "ssa"), ...) standardGeneric("Model"))
+setGeneric("Model", function(lh=LH(method="LH axes"), env=Env(), sim=Sim(type=match.arg(type)), pars, type=c("discretePopSim", "numericDistri", "ABM"), ...) standardGeneric("Model"))
 
-# c("discretePopSim", "numericDistri", "ABM", "ssa")
+# c("discretePopSim", "numericDistri", "ABM")
 setMethod("Model",
           signature(lh="ANY", env="ANY", sim="ANY", pars="missing", type="ANY"),
-          function(lh=LH(method="LH axes"), env=Env(), sim=Sim(type=match.arg(type)), type=c("discretePopSim", "numericDistri", "ABM", "ssa"), ...){
+          function(lh=LH(method="LH axes"), env=Env(), sim=Sim(type=match.arg(type)), type=c("discretePopSim", "numericDistri", "ABM"), ...){
             
             if (inherits(sim, "Sim.ABM")){
               pars<- getParamsCombination.LH_Beh(lh=lh, env=env, ...)
               model<- new("Model.ABM", pars, sim=sim)
-            }else if (inherits(sim, "Sim.ssa")){
-              pars<- getParamsCombination.LH_Beh.ssa(...)
-              model<- new("Model.ssa", pars, sim=sim)
             } else if (inherits(sim, c("Sim.discretePopSim", "Sim.numericDistri"))){
-              ## WARNING: Sim.ABM and Sim.ssa inherits from Sim.discretePopSim. Exclude from here
+              ## WARNING: Sim.ABM inherits from Sim.discretePopSim. Exclude from here
               lhEnv<- combineLH_Env(lh=lh, env=env)
               
               scenario<- lhEnv$scenario
@@ -47,7 +44,7 @@ setMethod("Model",
 
 setMethod("Model",
           signature(lh="missing", env="missing", sim="ANY", pars="data.frame", type="ANY"),
-          function(sim=Sim(type=match.arg(type)), pars, type=c("discretePopSim", "numericDistri", "ABM", "ssa")){
+          function(sim=Sim(type=match.arg(type)), pars, type=c("discretePopSim", "numericDistri", "ABM")){
             modelClass<- gsub("Sim\\.", "Model.", class(sim))
             type<- gsub("Sim\\.", "", class(sim))
             new(modelClass, pars, sim=Sim(params=sim@params, type=type)) # omit all results
@@ -165,8 +162,7 @@ setMethod("run",
             simRes<- switch(class(model@sim),
                                Sim.discretePopSim=run.discretePopSim(model, cl=cl),
                                Sim.numericDistri=run.numericDistri(model, cl=cl),
-                               Sim.ABM=run.ABM(model, cl=cl, ...),
-                               Sim.ssa=run.ssa(model, cl=cl, ...))
+                               Sim.ABM=run.ABM(model, cl=cl, ...))
 
             modelRes<- new(class(model), 
                         S3Part(model),
@@ -408,7 +404,6 @@ runScenario.numericDistri<- function(scenario, pars, verbose=FALSE){
 run.ABM<- function(model, cl=parallel::detectCores(), raw, ...){
   scenario<- S3Part(model)
   scenario<- split(scenario, scenario$idScenario)
-
   pars<- model@sim@params
 
   if (is.numeric(cl)){
@@ -542,64 +537,12 @@ runScenario.ABM<- function (scenario, pars, verbose=FALSE){
 
 
 
-run.ssa<- function(model, cl=parallel::detectCores(), ...){
-  x0L<- model@sim@params$N0
-  params<- S3Part(model)
-  transitionMat<- model@sim@params$transitionMat
-  rateFunc<- model@sim@params$rateFunc
-  tf<- model@sim@params$tf
-  replicates<- model@sim@params$replicates
-  raw<- model@sim@params$raw
-  discretePop<- model@sim@params$discretePop
-  finalPop<- model@sim@params$Ntf
-  #   burnin=-1
-  #   dtDiscretize=NULL
-  #   cl=1
-  
-  if (is.numeric(cl)){
-    numericCL<- TRUE
-    cl<- parallel::makeCluster(cl)
-  } else {
-    numericCL<- FALSE
-  }
-  
-  res<- exploreSSA(x0L=x0L, params=params, transitionMat=transitionMat, rateFunc=rateFunc, 
-                   maxTf=tf, replicates=replicates, raw=raw, discretePop=discretePop, finalPop=finalPop, cl=cl, ...)
-
-  res<- new("Sim.ssa", res$stats, Ntf=res$Ntf, params=model@sim@params, raw=res$raw, N0_Pest=model@sim@N0_Pest)
-  # simRes<- model@sim
-  # S3Part(simRes)<- res$stats
-  # 
-  # # if (pars$raw){
-  # #   simRes@raw<- lapply(res, function(x) x$raw)
-  # # }
-  # if (discretePop){
-  #   simRes@discretePopSim<- lapply(res$pop, function(x) x$pop)
-  # }
-  # if (finalPop){
-  #   Ntf<- lapply(res, function(x) x$Ntf)
-  #   Ntf<- do.call("rbind", Ntf)
-  #   Ntf<- as.data.frame(Ntf, stringsAsFactors=FALSE)
-  #   rownames(Ntf)<- paste0(Ntf[,"idScenario"], "_N", Ntf[,"N0"])
-  #   # Ntf[,-1]<- apply(Ntf[,2:ncol(Ntf)], 2, as.numeric)
-  #   simRes@Ntf<- Ntf
-  # }
-  # 
-  
-  if (numericCL) parallel::stopCluster(cl)
-  
-  return (res)
-}
-
-
-
-
 ## result(): Post process result ----
 #' @rdname Model
 #'
 #' @param model 
 #' @param type 
-#' @details TODO: type="Ntf" doesn't work for Model.ssa. Check it and standardize model@sim@Ntf
+#' @details 
 #'
 #' @return a data frame with the aggregated results and parameters of a simulation.
 #' @examples result(res) 

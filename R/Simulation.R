@@ -9,32 +9,30 @@ NULL
 #' @return a \code{Sim} object.
 #' @examples Sim()
 #' @export
-setGeneric("Sim", function(params, type=c("discretePopSim", "numericDistri", "ABM", "ssa")) standardGeneric("Sim"))
+setGeneric("Sim", function(params, type=c("discretePopSim", "numericDistri", "ABM")) standardGeneric("Sim"))
 
 setMethod("Sim",
           signature(params="missing", type="ANY"),
-          function(params, type=c("discretePopSim", "numericDistri", "ABM", "ssa")){
+          function(params, type=c("discretePopSim", "numericDistri", "ABM")){
             type<- match.arg(type)
             
             sim<- switch(type,
                          discretePopSim=Sim.discretePopSim(),
                          numericDistri=Sim.numericDistri(),
-                         ABM=Sim.ABM(),
-                         ssa=Sim.ssa())
+                         ABM=Sim.ABM())
             return (sim)
           }
 )
 
 setMethod("Sim",
           signature(params="list", type="character"),
-          function(params, type=c("discretePopSim", "numericDistri", "ABM", "ssa")){
+          function(params, type=c("discretePopSim", "numericDistri", "ABM")){
             type<- match.arg(type)
             
             sim<- switch(type,
                    discretePopSim=Sim.discretePopSim(params=params),
                    numericDistri=Sim.numericDistri(params=params),
-                   ABM=Sim.ABM(params=params),
-                   ssa=Sim.ssa(params=params))
+                   ABM=Sim.ABM(params=params))
 
             return (sim)
           }
@@ -50,8 +48,7 @@ setMethod("Sim",
             sim<- switch(type,
                          Sim.discretePopSim=Sim.discretePopSim(params=simPars),
                          Sim.numericDistri=Sim.numericDistri(params=simPars),
-                         Sim.ABM=Sim.ABM(params=simPars),
-                         Sim.ssa=Sim.ssa(params=simPars))
+                         Sim.ABM=Sim.ABM(params=simPars))
             
             return (sim)
           }
@@ -199,54 +196,6 @@ setMethod("Sim.ABM",
 )
 
 
-## Sim.ssa Class ----
-
-#' @rdname Sim.ssa
-#'
-#' @param N0 
-#' @param transitionMat 
-#' @param rateFunc 
-#' @param tf 
-#' @param replicates 
-#' @param raw 
-#' @param Ntf 
-#' @param stats 
-#'
-#' @return a \code{Sim.ssa} object.
-#' @examples Sim.ssa()
-#' 
-#' @export
-setGeneric("Sim.ssa", function(params, N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, 
-                               tf=10, replicates=15, maxN=10000, raw=FALSE, discretePop=TRUE, Ntf=TRUE, stats=TRUE, ...) standardGeneric("Sim.ssa"))
-setMethod("Sim.ssa",
-          signature(params="missing", N0="ANY", transitionMat="ANY", rateFunc="ANY", tf="ANY", replicates="ANY", maxN="ANY", raw="ANY", discretePop="ANY", Ntf="ANY", stats="ANY"),
-          function(N0, transitionMat=transitionMat.LH_Beh, rateFunc=rateFunc.LH_Beh, tf=10, replicates=15, maxN=10000, raw=FALSE, discretePop=TRUE, Ntf=TRUE, stats=TRUE, ...){
-            if (missing(N0)){
-              N0<- c(N1s=0, N1b=1, N1bF=0, N1j=0, N2s=0, N2b=1, N2bF=0, N2j=0)
-              N0<- lapply(2^(0:5), function(x) N0 * x)
-              names(N0)<- paste0("N", sapply(N0, sum))
-            }
-            
-            params<- list(N0=N0, transitionMat=transitionMat, rateFunc=rateFunc, tf=tf, replicates=replicates, maxN=maxN, raw=raw, discretePop=discretePop, Ntf=Ntf, stats=stats)
-            
-            dots<- list(...)
-            params<- c(params, dots)
-            
-            sim<- Sim.ssa(params=params)
-            
-            return (sim)
-          }
-)
-
-setMethod("Sim.ssa",
-          signature(params="list", N0="missing", transitionMat="missing", rateFunc="missing", tf="missing", replicates="missing", maxN="missing", raw="missing", discretePop="missing", Ntf="missing", stats="missing"),
-          function(params){
-            sim<- new("Sim.ssa", params=params)
-            return (sim)
-          }
-)
-
-
 ## Generic ----
 
 #' @export
@@ -280,7 +229,7 @@ setMethod("show", signature(object="Sim"),
 
 
 # Only allowed to subset by rows but $ and [[i]] works for columns
-## Sim with results is ot useful without the complete Model. Use Model[] instead
+## Sim with results is not useful without the complete Model. Use Model[] instead
 # @rdname Sim
 # @export
 `[.Sim`<- function(x, ...){
