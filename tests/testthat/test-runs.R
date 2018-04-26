@@ -24,6 +24,10 @@ test_that("discrete time models", {
     expect_equal(nrow(res@sim@Ntf) / length(res@sim@params$N0), nrow(res))
     expect_equal(nrow(res[1,]@sim@Ntf) / length(res@sim@params$N0), nrow(res[1,]))
     expect_equal(nrow(res[c(1,3),]@sim@Ntf) / length(res@sim@params$N0), nrow(res[c(1,3),]))
+    
+    ## Test rbind
+    expect_is(rbind(res[1:3,], res[4:6,]), "Model")
+    expect_identical(rbind(res[1:3,], res[4:6,]), res[1:6,])
   }
 })
 
@@ -54,6 +58,10 @@ test_that("discrete models with 2 sexes", {
     expect_equal(nrow(res@sim@Ntf) / length(res@sim@params$N0), nrow(res))
     expect_equal(nrow(res[1,]@sim@Ntf) / length(res@sim@params$N0), nrow(res[1,]))
     expect_equal(nrow(res[c(1,3),]@sim@Ntf) / length(res@sim@params$N0), nrow(res[c(1,3),]))
+    
+    ## Test rbind
+    expect_is(rbind(res[1:3,], res[4:6,]), "Model")
+    expect_identical(rbind(res[1:3,], res[4:6,]), res[1:6,])
   }
 })
 
@@ -92,6 +100,10 @@ test_that("compound distribution", {
     expect_equal(nrow(result(res, type="Ntf")) / length(res@sim@params$N0), nrow(res))
     expect_equal(nrow(result(res[1,], type="Ntf")) / length(res@sim@params$N0), nrow(res[1,]))
     expect_equal(nrow(result(res[c(1,3),], type="Ntf")) / length(res@sim@params$N0), nrow(res[c(1,3),]))
+    
+    ## Test rbind
+    expect_is(rbind(res[1:3,], res[4:6,]), "Model")
+    expect_identical(rbind(res[1:3,], res[4:6,]), res[1:6,])
   }
 })
 
@@ -131,6 +143,10 @@ test_that("compound distribution with environmental variation", {
     expect_equal(nrow(result(res, type="Ntf")) / length(res@sim@params$N0), nrow(res))
     expect_equal(nrow(result(res[1,], type="Ntf")) / length(res@sim@params$N0), nrow(res[1,]))
     expect_equal(nrow(result(res[c(1,3),], type="Ntf")) / length(res@sim@params$N0), nrow(res[c(1,3),]))
+    
+    ## Test rbind
+    expect_is(rbind(res[1:3,], res[4:6,]), "Model")
+    expect_identical(rbind(res[1:3,], res[4:6,]), res[1:6,])
   }
 })
 
@@ -165,6 +181,14 @@ test_that("ABM LH-behavior", {
     expect_equal(nrow(res@sim@Ntf) / length(res@sim@params$N0), nrow(res))
     expect_equal(nrow(res[1,]@sim@Ntf) / length(res@sim@params$N0), nrow(res[1,]))
     expect_equal(nrow(res[c(1,3),]@sim@Ntf) / length(res@sim@params$N0), nrow(res[c(1,3),]))
+    
+    ## Test rbind
+    expect_is(rbind(res[1:3,], res[4:6,]), "Model")
+    expect_identical(rbind(res[1:3,], res[4:6,]), res[1:6,])
+    # TODO: differences in row sorting
+    # a<- res[1:6,]
+    # b<- rbind(res[1:3,], res[4:6,])
+    # all.equal(a@Ntf[order(a@Ntf$idScenario),], b@Ntf[order(b@Ntf$idScenario),])
   }
 })
 

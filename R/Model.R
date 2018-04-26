@@ -47,7 +47,7 @@ setMethod("Model",
           function(sim=Sim(type=match.arg(type)), pars, type=c("discretePopSim", "numericDistri", "ABM")){
             modelClass<- gsub("Sim\\.", "Model.", class(sim))
             type<- gsub("Sim\\.", "", class(sim))
-            new(modelClass, pars, sim=Sim(params=sim@params, type=type)) # omit all results
+            new(modelClass, pars, sim=sim)
           }
 )
 
@@ -714,7 +714,7 @@ setMethod("show", signature(object="Model"),
 #' @rdname Model
 #' @export
 `[.Model`<- function(x, ...){
-  xSel<- data.frame(x)[...]
+  xSel<- data.frame(x, stringsAsFactors=FALSE)[...]
   scenarioIdSel<- xSel$idScenario
   
   sim<- x@sim
@@ -747,11 +747,66 @@ setMethod("show", signature(object="Model"),
     }
   }
 
-  out<- Model(pars=xSel, sim=sim) # Constructor removes results
-  out@sim<- sim
+  out<- Model(pars=xSel, sim=sim)
   
   return(out)
 }
+
+
+#' @rdname Model
+#' @export
+rbind.Model<- function(...){
+  models<- list(...)
+  sims<- lapply(models, function(x) x@sim)
+  
+  classModels<- sapply(models, class)
+  if (length(unique(classModels)) > 1){
+    stop("All model objects must inherit from the same class. There are models inherithing ",
+         paste(unique(classModels), collapse=" & "), ".")
+  }
+
+  params<- lapply(sims, function(x) x@params)
+  params<- unique(params)
+  if (length(params) > 1){
+    stop("Ensambling models with different simulation parameters is not supported.")
+  }else{
+    params<- params[[1]]
+  }
+  
+  scenario<- do.call(rbind, lapply(models, S3Part))
+  if (any(duplicated(scenario))) 
+    warning("Duplicated scenarios. Don't trust id* columns nor row names. It is recommended to not proceed until this problem is fixed.")
+  # TODO: rebuild id*columns
+  
+  sim<- Sim(params=params, type=gsub("Sim\\.", "", class(sims[[1]])))
+  
+  # If nrow == 0, data.frame change from S4 to S3 and some tests fail
+  sel<- which(sapply(sims, function(x) nrow(S3Part(x)) > 0))
+  if (length(sel) > 0){
+    stats<- do.call(rbind, lapply(sims[sel], S3Part))
+    S3Part(sim)<- stats
+  }
+  
+  sel<- which(sapply(sims, function(x) nrow(x@N0_Pest) > 0))
+  if (length(sel) > 0){
+    sim@N0_Pest<- do.call(rbind, lapply(sims[sel], function(x) x@N0_Pest))
+  }
+  
+  sim@raw<- do.call(c, lapply(sims, function(x) x@raw))
+
+  
+  if (inherits(sim, "Sim.discretePopSim")){
+    sel<- which(sapply(sims, function(x) nrow(x@Ntf) > 0))
+    if (length(sel) > 0){
+      sim@Ntf<- do.call(rbind, lapply(sims[sel], function(x) x@Ntf))
+    }
+
+    sim@discretePopSim<- do.call(c, lapply(sims, function(x) x@discretePopSim))
+  }
+  
+  return(Model(pars=scenario, sim=sim))
+}
+
 
 #' Plot Model
 #'

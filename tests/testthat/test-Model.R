@@ -35,7 +35,7 @@ test_that("Model subclasses constructors", {
   expect_is(Model(sim=Sim.ABM(), env=Env(seasonAmplitude=0)), "Model.ABM")
 })
 
-test_that("subsetting", {
+test_that("subsetting and rbind", {
   obj<- Model()
   expect_is(obj[c(1,4,8),], "Model")
   expect_is(head(obj), "Model")
@@ -43,4 +43,8 @@ test_that("subsetting", {
 
   expect_is(obj$lambda[2], "numeric")
   expect_is(obj[[1]], "character")
+  
+  expect_is(rbind(obj[1:3,], obj[4:6,]), "Model")
+  expect_warning(rbind(obj, obj))
+  expect_identical(rbind(obj[1:3,], obj[4:6,]), obj[1:6,])
 })
