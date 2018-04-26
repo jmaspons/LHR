@@ -34,8 +34,7 @@ setClass("LH", contains="data.frame")
 #' @slot N0_Pest.
 #'
 #' @export
-setClass("Sim", slots=list(params="list", raw="ANY", N0_Pest="data.frame"), 
-         contains="data.frame")
+setClass("Sim", slots=list(params="list", raw="ANY", N0_Pest="data.frame"), contains="data.frame")
 
 
 #' Discrete Simulation Class
@@ -50,6 +49,16 @@ setClass("Sim.discretePopSim", slots=list(discretePopSim="list", Ntf="data.frame
 # TODO: , slots=list(discretePopSim="discretePopSim"), prototype=prototype(discretePopSim=discretePopSim())
 
 
+#' Agent Based Model Simulation Class
+#' 
+#' @name Sim.ABM
+#'
+#' @slot Ntf data.frame. 
+#'
+#' @seealso \code{\link{Sim}}
+#' @export
+setClass("Sim.ABM", slots=list(deterministic="data.frame"), contains="Sim.discretePopSim")
+
 
 #TODO: sexRatio
 #' Numeric Distribution Simulation Class
@@ -62,15 +71,7 @@ setClass("Sim.discretePopSim", slots=list(discretePopSim="list", Ntf="data.frame
 #' @export
 setClass("Sim.numericDistri", contains="Sim")
 
-#' Agent Based Model Simulation Class
-#' 
-#' @name Sim.ABM
-#'
-#' @slot Ntf data.frame. 
-#'
-#' @seealso \code{\link{Sim}}
-#' @export
-setClass("Sim.ABM", slots=list(deterministic="data.frame"), contains="Sim.discretePopSim")
+
 
 
 ## Environment class ----
