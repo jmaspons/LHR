@@ -16,12 +16,13 @@ Imports:
     naturalsort
 Suggests:
     popbio,
+    rslurm,
     testthat,
     knitr,
     rmarkdown
 Packaged: 2013-01-07 11:06:19 UTC; joan
 RoxygenNote: 6.0.1
-Collate:
+Collate: 
     'aaa-classes.R'
     'Environment.R'
     'Gmean.R'
@@ -46,4 +47,5 @@ Collate:
     'populationDynamicsStats.R'
     'probabilityDistributions.R'
     'sampleParameters.R'
+    'slurm.R'
 VignetteBuilder: knitr
