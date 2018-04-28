@@ -34,6 +34,10 @@ setMethod("run.slurm",
                           Sim.numericDistri="run.numericDistri(model[splitScenarios[[i]],], cl=cpus_per_node)",
                           Sim.ABM="run.ABM(model[splitScenarios[[i]],], cl=cpus_per_node, ...)")
             
+            s_call<- function(i){
+              eval(parse(text=call))
+            }
+            
             sjob<- rslurm::slurm_apply(f=s_call, params=params,
                                   add_objects=c("model", "splitScenarios", "call", "cpus_per_node"),
                                   nodes=nodes, cpus_per_node=cpus_per_node, ...)
@@ -77,6 +81,10 @@ findN0_Pest.slurm<- function(model=Model(), nodes, cpus_per_node, Pobjective=.5,
   
   call<- "findN0_Pest(model=model[splitScenarios[[i]],], cl=cpus_per_node, Pobjective=Pobjective, verbose=verbose)"
   
+  s_call<- function(i){
+    eval(parse(text=call))
+  }
+  
   sjob<- rslurm::slurm_apply(f=s_call, params=params,  
                      add_objects=c("model", "splitScenarios", "call", "cpus_per_node", "Pobjective", "verbose"),
                      nodes=nodes, cpus_per_node=cpus_per_node, ...)
@@ -108,13 +116,7 @@ ensembleModel.slurm<- function(sjob, wait=TRUE){
 }
 
 
-## helpers ----
-
-s_call<- function(i){
-  eval(parse(text=call))
-}
-
-## TRUENO
+## Slurm commands ----
 # sopt<- list(partition="q-express", mem=100) # https://slurm.schedmd.com/sbatch.html
 
 ## After sending jobs
