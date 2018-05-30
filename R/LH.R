@@ -20,7 +20,7 @@ NULL
 #' @param a adult survival
 #' @param s subadult survival
 #' @param j juvenile survival
-#' @param AFR 
+#' @param AFR Age at first reproduction
 #' @param free which parameter is free to vary ("lambda", "j" or "a").
 #' @param ... parameters passed to \code{\link{sampleLH}}.
 #' 
@@ -38,7 +38,7 @@ setMethod("LH",
           signature(pars="data.frame", lambda="missing", fecundity="missing", broods="missing", b="missing",
                     a="missing", j="missing", s="missing", AFR="missing", free="missing", popbio="ANY"),
           function(pars, popbio=FALSE){
-            if (inherits(pars, "Model")) pars<- data.frame(pars, stringsAsFactors=TRUE)
+            if (inherits(pars, "Model")) pars<- data.frame(pars, stringsAsFactors=FALSE)
             
             # if not defined, subadult survival is equal to adult survival. Only useful for AFR > 1
             if (!"s" %in% names(pars)){
@@ -63,7 +63,7 @@ setMethod("LH",
             
             if (popbio & requireNamespace("popbio", quietly=TRUE)){
               # If one column is a character, makes x a character vector
-              popbio<- apply(pars[,sapply(pars, function(x) inherits(x, "numeric"))], 1, function(x){
+              popbio<- apply(pars[, sapply(pars, is.numeric)], 1, function(x){
                 mat<- with(as.list(x), LefkovitchPre(a=a, s=s, bj=fecundity * j, AFR=AFR))
                 return(eigen.analisys2df(mat))
               })
@@ -168,7 +168,7 @@ sampleLH<- function(lambda=seq(1, 1.2, by=0.1), broods=2^(0:2), b=c(1, 2, 5, 10)
     pars<- examplesLH()
     
     if (!missing(lambda)){
-      comb<- expand.grid(lambda=lambda, idLH=pars$idLH)
+      comb<- expand.grid(lambda=lambda, idLH=pars$idLH, stringsAsFactors=FALSE)
       pars<- merge(pars[,-grep("lambda", names(pars))], comb, by="idLH")
       
       # Euler-Lotka corresponds to a pre-breding census matrix
@@ -251,7 +251,7 @@ sampleLH<- function(lambda=seq(1, 1.2, by=0.1), broods=2^(0:2), b=c(1, 2, 5, 10)
   # Sort columns
   pars<- pars[order(pars$lambda, pars$a, pars$fecundity), c("lambda", "fecundity", "broods", "b", "a", "j", "AFR")]
   rownames(pars)<- NULL
-  pars<- cbind(idLH=rownames(pars), pars)
+  pars<- cbind(idLH=rownames(pars), pars, stringsAsFactors=FALSE)
   
   return (pars)
 }
