@@ -5,13 +5,15 @@
 #' @param Pobjective the probability that a given population still exists at the end of the simulations.
 #' @param cl
 #' @param verbose
+#' @param pb if \code{TRUE} and \link[pbapply]{pbapply} package is installed, show a progress bar.
+#' 
 #' @return for \code{findN0_Pest.scenario} a \code{data.frame} with N0, the probability to survive, 
 #'   N0interpoled and objectiveprobability. For \code{findN0_Pest} a \code{Model} object containing the same 
 #'   data.frame in the \code{model@sim@N0_Pest} slot.
 #' @export
 #'
 #' @examples
-findN0_Pest<- function(model=Model(), cl=parallel::detectCores(), Pobjective=.5, verbose=FALSE){
+findN0_Pest<- function(model=Model(), cl=parallel::detectCores(), Pobjective=.5, verbose=FALSE, pb=TRUE){
   scenario<- S3Part(model)
   scenario<- split(scenario, rownames(scenario))
   pars<- model@sim@params
@@ -28,10 +30,12 @@ findN0_Pest<- function(model=Model(), cl=parallel::detectCores(), Pobjective=.5,
   parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
   parallel::clusterEvalQ(cl, library(LHR))
 
-  N0_Pest<- parallel::parLapply(cl=cl, scenario, findN0_Pest.scenario, sim=sim, Pobjective=Pobjective, verbose=verbose)
+  if (pb & requireNamespace("pbapply", quietly=TRUE)){
+    N0_Pest<- pbapply::pblapply(scenario, findN0_Pest.scenario, sim=sim, Pobjective=Pobjective, verbose=verbose, cl=cl)
+  }else{
+    N0_Pest<- parallel::parLapply(cl=cl, scenario, findN0_Pest.scenario, sim=sim, Pobjective=Pobjective, verbose=verbose)
+  }
 
-  # N0_Pest<- lapply(scenario, findN0_Pest.scenario, sim=sim, Pobjective=Pobjective, verbose=verbose)
-  
   # N0_Pest<- list()
   # for (i in seq_along(scenario)){
   #   N0_Pest[[i]]<- findN0_Pest.scenario(scenario=scenario[[i]], sim=sim, Pobjective=Pobjective, verbose=verbose)

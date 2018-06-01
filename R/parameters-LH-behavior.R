@@ -10,6 +10,8 @@
 #' @param strategies 
 #' @param habDiffScenario
 #' @param behavior 
+#' @param cl 
+#' @param pb if \code{TRUE} and \link[pbapply]{pbapply} package is installed, show a progress bar.
 #'
 #' @return
 #' @export
@@ -17,7 +19,8 @@
 #' @examples
 getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=0, varA=0),
                                        habDiffScenario=c("identicalHab", "mortalHab2", "nestPredHab2"),
-                                       behavior=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2")){
+                                       behavior=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2"),
+                                       cl=parallel::detectCores(), pb=TRUE){
   habDiffScenario<- match.arg(habDiffScenario, several.ok=TRUE)
   behavior<- match.arg(behavior, several.ok=TRUE)
   
@@ -25,6 +28,18 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=
     warning("Seasonality not implemented for this model. Scenarios discarded!")
     env<- env[env$seasonAmplitude == 0,]
   }
+  
+  if (is.numeric(cl)){
+    numericCL<- TRUE
+    if (.Platform$OS.type == "windows"){
+      cl<- parallel::makePSOCKcluster(cl)
+    }else{
+      cl<- parallel::makeForkCluster(cl)
+    }
+  } else {
+    numericCL<- FALSE
+  }
+  
   
   lhEnv<- combineLH_Env(lh=lh, env=env)
   LH_Env<- lhEnv$scenario
@@ -35,12 +50,26 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=
   
   combL<- split(comb, rownames(comb))
   
-  params<- lapply(combL, function (x){
-    out<- getParams.LH_Beh(x, habDiffScenario=x$habDiffScenario, behavior=x$behavior)
-    out<- data.frame(idScenario=x$idScenario, habDiff=x$habDiffScenario, behavior=x$behavior, out, stringsAsFactors=FALSE)
-    
-    out
-  })
+  message("Applying scenarios and behaviors to the LH and Env parameters...")
+  
+  if (pb & requireNamespace("pbapply", quietly=TRUE)){
+    params<- pbapply::pblapply(combL, function (x){
+      out<- getParams.LH_Beh(x, habDiffScenario=x$habDiffScenario, behavior=x$behavior)
+      out<- data.frame(idScenario=x$idScenario, habDiff=x$habDiffScenario, behavior=x$behavior, out, stringsAsFactors=FALSE)
+      
+      out
+    }, cl=cl)
+  }else{
+    params<- parallel::parLapply(cl=cl, combL, function (x){
+      out<- getParams.LH_Beh(x, habDiffScenario=x$habDiffScenario, behavior=x$behavior)
+      out<- data.frame(idScenario=x$idScenario, habDiff=x$habDiffScenario, behavior=x$behavior, out, stringsAsFactors=FALSE)
+      
+      out
+    })
+  }
+
+  if (numericCL) parallel::stopCluster(cl)
+  
   params<- do.call(rbind, params)
 
   params<- merge(params, LH_Env[,c("idScenario", setdiff(names(LH_Env), names(params)))], by="idScenario")
@@ -161,7 +190,7 @@ setScenario<- function(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.
 
 
 setBehavior<- function(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=.1,ab1=.25,j1=.25,  a2=.1,ab2=.25,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
-                       behavior=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2")){
+                       behavior=c("neutral", "skip", "learnBreed", "learnExploreBreed", "static", "preferHab1", "preferHab2")){
   behavior<- match.arg(behavior, several.ok=TRUE)
   
   if ("neutral" %in% behavior){

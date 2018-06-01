@@ -19,10 +19,11 @@ Suggests:
     rslurm,
     testthat,
     knitr,
-    rmarkdown
+    rmarkdown,
+    pbapply
 Packaged: 2013-01-07 11:06:19 UTC; joan
 RoxygenNote: 6.0.1
-Collate: 
+Collate:
     'aaa-classes.R'
     'Environment.R'
     'Gmean.R'

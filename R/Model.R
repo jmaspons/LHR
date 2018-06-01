@@ -142,16 +142,17 @@ setMethod("combineLH_Env",
 #'
 #' @param model 
 #' @param cl 
+#' @param pb if \code{TRUE} and \link[pbapply]{pbapply} package is installed, show a progress bar.
 #' @param ... 
 #'
 #' @return a \code{Model} object with the result of the simulation.
 #' @examples res<- run(model, cl=2)
 #' @export
-setGeneric("run", function(model, cl=parallel::detectCores(), ...) standardGeneric("run"))
+setGeneric("run", function(model, cl=parallel::detectCores(), pb=TRUE, ...) standardGeneric("run"))
 
 setMethod("run", 
-          signature(model="Model", cl="ANY"),
-          function(model, cl=parallel::detectCores(), ...){
+          signature(model="Model", cl="ANY", pb="ANY"),
+          function(model, cl=parallel::detectCores(), pb=TRUE, ...){
             if (is.numeric(cl)){
               numericCL<- TRUE
               cl<- parallel::makeCluster(cl)
@@ -160,9 +161,9 @@ setMethod("run",
             }
             
             simRes<- switch(class(model@sim),
-                               Sim.discretePopSim=run.discretePopSim(model, cl=cl),
-                               Sim.numericDistri=run.numericDistri(model, cl=cl),
-                               Sim.ABM=run.ABM(model, cl=cl, ...))
+                               Sim.discretePopSim=run.discretePopSim(model, cl=cl, pb=pb, ...),
+                               Sim.numericDistri=run.numericDistri(model, cl=cl, pb=pb, ...),
+                               Sim.ABM=run.ABM(model, cl=cl, pb=pb, ...))
 
             modelRes<- new(class(model), 
                         S3Part(model),
@@ -177,7 +178,7 @@ setMethod("run",
 )
 
 
-run.discretePopSim<- function(model, cl=parallel::detectCores()){
+run.discretePopSim<- function(model, cl=parallel::detectCores(), pb=TRUE){
   scenario<- S3Part(model)
   scenario<- split(scenario, scenario$idScenario)
   pars<- model@sim@params
@@ -193,10 +194,12 @@ run.discretePopSim<- function(model, cl=parallel::detectCores()){
   parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
   parallel::clusterEvalQ(cl, library(LHR))
   
-  sim<- parallel::parLapply(cl=cl, scenario, runScenario.discretePopSim, pars=pars)
-
-  # sim<- lapply(scenario, LHR:::runScenario.discretePopSim, pars=pars)
-  # 
+  if (pb & requireNamespace("pbapply", quietly=TRUE)){
+    sim<- pbapply::pblapply(scenario, runScenario.discretePopSim, pars=pars, cl=cl)
+  }else{
+    sim<- parallel::parLapply(cl=cl, scenario, runScenario.discretePopSim, pars=pars)
+  }
+  
   # sim<- list()
   # for (i in seq_along(scenario)){
   #   sim[[i]]<- runScenario.discretePopSim(scenario=scenario[[i]], pars=pars)
@@ -295,7 +298,7 @@ runScenario.discretePopSim<- function (scenario, pars, verbose=FALSE){
 
 
 
-run.numericDistri<- function(model, cl=parallel::detectCores()){
+run.numericDistri<- function(model, cl=parallel::detectCores(), pb=TRUE){
   scenario<- S3Part(model)
   scenario<- split(scenario, scenario$idScenario)
   pars<- model@sim@params
@@ -310,10 +313,12 @@ run.numericDistri<- function(model, cl=parallel::detectCores()){
   parallel::clusterExport(cl=cl, "pars", envir=environment())
   parallel::clusterEvalQ(cl, library(LHR))
 
-  sim<- parallel::parLapply(cl=cl, scenario, runScenario.numericDistri, pars=pars)
+  if (pb & requireNamespace("pbapply", quietly=TRUE)){
+    sim<- pbapply::pblapply(scenario, runScenario.numericDistri, pars=pars, cl=cl)
+  }else{
+    sim<- parallel::parLapply(cl=cl, scenario, runScenario.numericDistri, pars=pars)
+  }
   
-  # sim<- lapply(scenario, runScenario.numericDistri, pars=pars)
-  #   
   # sim<- list()
   # for (i in seq_along(scenario)){
   #   sim[[i]]<- runScenario.numericDistri(scenario=scenario[[i]], pars=pars)
@@ -401,7 +406,7 @@ runScenario.numericDistri<- function(scenario, pars, verbose=FALSE){
 }
 
 
-run.ABM<- function(model, cl=parallel::detectCores(), raw, ...){
+run.ABM<- function(model, cl=parallel::detectCores(), raw, pb=TRUE, ...){
   scenario<- S3Part(model)
   scenario<- split(scenario, scenario$idScenario)
   pars<- model@sim@params
@@ -417,10 +422,12 @@ run.ABM<- function(model, cl=parallel::detectCores(), raw, ...){
   parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
   parallel::clusterEvalQ(cl, library(LHR))
   
-  sim<- parallel::parLapply(cl=cl, scenario, runScenario.ABM, pars=pars)
-
-  # sim<- lapply(scenario, LHR:::runScenario.ABM, pars=pars)
-  # 
+  if (pb & requireNamespace("pbapply", quietly=TRUE)){
+    sim<- pbapply::pblapply(scenario, runScenario.ABM, pars=pars, cl=cl)
+  }else{
+    sim<- parallel::parLapply(cl=cl, scenario, runScenario.ABM, pars=pars)
+  }
+  
   # sim<- list()
   # for (i in seq_along(scenario)){
   #   sim[[i]]<- runScenario.discretePopSim(scenario=scenario[[i]], pars=pars)
