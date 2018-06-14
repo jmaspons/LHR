@@ -35,7 +35,14 @@ test_that("subsetting", {
 
 
 test_that("popbio", {
-  expect_is(LH(method="LH axes", popbio=TRUE), "LH")
-  expect_is(LH(method="regular", popbio=TRUE), "LH")
+  expect_is(lh<- LH(method="LH axes", popbio=TRUE), "LH")
+  expect_is(LH(pars=S3Part(lh), popbio=TRUE), "LH") ## test reusing popbio columns
+  expect_is(LH(pars=S3Part(lh), popbio=FALSE), "LH") ## test reusing popbio columns
+  
+  expect_is(lh<- LH(method="regular", popbio=TRUE), "LH")
+  expect_is(LH(pars=S3Part(lh), popbio=TRUE), "LH") ## test reusing popbio columns
+  
   expect_is(LH(lambda=lambda, broods=broods, b=b, a=a, AFR=AFR, method="regular", popbio=TRUE), "LH")
+  
+  
 })

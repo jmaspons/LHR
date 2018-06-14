@@ -41,18 +41,24 @@ setMethod("LH",
             if (inherits(pars, "Model")) pars<- data.frame(pars, stringsAsFactors=FALSE)
             
             # if not defined, subadult survival is equal to adult survival. Only useful for AFR > 1
-            if (!"s" %in% names(pars)){
+            if (!"s" %in% colnames(pars) & any(pars$AFR > 1)){
               pars$s<- pars$a
             }
             
-            if (!"idLH" %in% names(pars)) pars$idLH<- rownames(pars)
+            cols<- c("baseLH", "idLH", "lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")
+            colsPopbio<- c("elasFecundity", "elasSurvRepro", "elasSurvNonRepro", "generation.time", "net.reproductive.rate", "matureLifeExpectancy", "damping.ratio")
             
-            selCols<- c("idLH", "lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")
-            if ("baseLH" %in% names(pars)) selCols<- c("baseLH", selCols)
+            if (popbio){
+              cols<- c(cols, colsPopbio)
+            }
             
+            selCols<- intersect(cols, colnames(pars))
             pars<- unique(pars[, selCols])
             
-            # Sort columns
+            if (!"idLH" %in% colnames(pars)) pars<- data.frame(idLH=rownames(pars), pars, stringsAsFactors=FALSE)
+            
+            
+            # Sort rows
             if ("baseLH" %in% names(pars)){
               pars<- pars[order(pars$baseLH, pars$lambda),]
             } else {
@@ -61,15 +67,21 @@ setMethod("LH",
             
             rownames(pars)<- pars$idLH
             
-            if (popbio & requireNamespace("popbio", quietly=TRUE)){
-              # If one column is a character, makes x a character vector
-              popbio<- apply(pars[, sapply(pars, is.numeric)], 1, function(x){
-                mat<- with(as.list(x), LefkovitchPre(a=a, s=s, bj=fecundity * j, AFR=AFR))
-                return(eigen.analisys2df(mat))
-              })
+            if (popbio){
+              if (all(colsPopbio %in% colnames(pars))){
+                reuse<- TRUE
+              } else { reuse<- FALSE }
               
-              popbio<- do.call(rbind, popbio)
-              pars<- cbind(pars, popbio)
+              if (!reuse & requireNamespace("popbio", quietly=TRUE)){
+                # If one column is a character, makes x a character vector
+                popbio<- apply(pars[, sapply(pars, is.numeric)], 1, function(x){
+                  mat<- with(as.list(x), LefkovitchPre(a=a, s=s, bj=fecundity * j, AFR=AFR))
+                  return(eigen.analisys2df(mat))
+                })
+                
+                popbio<- do.call(rbind, popbio)
+                pars<- cbind(pars, popbio)
+              }
             }
             
             return (new("LH", pars))
