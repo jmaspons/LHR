@@ -23,7 +23,11 @@ findN0_Pest<- function(model=Model(), cl=parallel::detectCores(), Pobjective=.5,
   
   if (is.numeric(cl)){
     numericCL<- TRUE
-    cl<- parallel::makeCluster(cl)
+    if (.Platform$OS.type == "windows"){
+      cl<- parallel::makePSOCKcluster(cl)
+    }else{
+      cl<- parallel::makeForkCluster(cl)
+    }
   } else {
     numericCL<- FALSE
   }
