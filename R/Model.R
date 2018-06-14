@@ -148,11 +148,11 @@ setMethod("combineLH_Env",
 #' @return a \code{Model} object with the result of the simulation.
 #' @examples res<- run(model, cl=2)
 #' @export
-setGeneric("run", function(model, cl=parallel::detectCores(), pb=TRUE, ...) standardGeneric("run"))
+setGeneric("run", function(model, cl=parallel::detectCores(), pb=FALSE, ...) standardGeneric("run"))
 
 setMethod("run", 
           signature(model="Model", cl="ANY", pb="ANY"),
-          function(model, cl=parallel::detectCores(), pb=TRUE, ...){
+          function(model, cl=parallel::detectCores(), pb=FALSE, ...){
             if (is.numeric(cl)){
               numericCL<- TRUE
               cl<- parallel::makeCluster(cl)
@@ -178,7 +178,7 @@ setMethod("run",
 )
 
 
-run.discretePopSim<- function(model, cl=parallel::detectCores(), pb=TRUE){
+run.discretePopSim<- function(model, cl=parallel::detectCores(), pb=FALSE){
   scenario<- S3Part(model)
   scenario<- split(scenario, scenario$idScenario)
   pars<- model@sim@params
@@ -298,7 +298,7 @@ runScenario.discretePopSim<- function (scenario, pars, verbose=FALSE){
 
 
 
-run.numericDistri<- function(model, cl=parallel::detectCores(), pb=TRUE){
+run.numericDistri<- function(model, cl=parallel::detectCores(), pb=FALSE){
   scenario<- S3Part(model)
   scenario<- split(scenario, scenario$idScenario)
   pars<- model@sim@params
@@ -406,7 +406,7 @@ runScenario.numericDistri<- function(scenario, pars, verbose=FALSE){
 }
 
 
-run.ABM<- function(model, cl=parallel::detectCores(), raw, pb=TRUE, ...){
+run.ABM<- function(model, cl=parallel::detectCores(), raw, pb=FALSE, ...){
   scenario<- S3Part(model)
   scenario<- split(scenario, scenario$idScenario)
   pars<- model@sim@params
@@ -686,7 +686,7 @@ setMethod("show", signature(object="Model"),
             
             if (nrow(object@sim) == 0 & nrow(object@sim@N0_Pest) == 0){
               print(S3Part(object)) # S3Part(x)[,1:12]
-              cat("There are no results yet. Use run(model) to start the simulations for all scenarios and N0 or findN0_Pest(model) to find the N0 giving a fixed extinction probability.\n")
+              cat("There are no results yet. Use run(model) to start the simulations for all scenarios and N0 or findN0_Pest(model) to find the N0 giving a fixed probability of extinction.\n")
             } else {
             
               if(nrow(object@sim) > 0) {

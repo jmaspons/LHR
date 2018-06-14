@@ -5,7 +5,9 @@
 #' @param Pobjective the probability that a given population still exists at the end of the simulations.
 #' @param cl
 #' @param verbose
-#' @param pb if \code{TRUE} and \link[pbapply]{pbapply} package is installed, show a progress bar.
+#' @param pb if \code{TRUE} and \link[pbapply]{pbapply} package is installed, show a progress bar. It 
+#' increases the communication overhead between the main process and nodes / child processes. In most cases,
+#' using \code{pbobtions(use_lb=TRUE)} improves the concurrency.
 #' 
 #' @return for \code{findN0_Pest.scenario} a \code{data.frame} with N0, the probability to survive, 
 #'   N0interpoled and objectiveprobability. For \code{findN0_Pest} a \code{Model} object containing the same 
@@ -13,7 +15,7 @@
 #' @export
 #'
 #' @examples
-findN0_Pest<- function(model=Model(), cl=parallel::detectCores(), Pobjective=.5, verbose=FALSE, pb=TRUE){
+findN0_Pest<- function(model=Model(), cl=parallel::detectCores(), Pobjective=.5, verbose=FALSE, pb=FALSE){
   scenario<- S3Part(model)
   scenario<- split(scenario, rownames(scenario))
   pars<- model@sim@params

@@ -20,7 +20,7 @@
 getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=0, varA=0),
                                        habDiffScenario=c("identicalHab", "mortalHab2", "nestPredHab2"),
                                        behavior=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2"),
-                                       cl=parallel::detectCores(), pb=TRUE){
+                                       cl=parallel::detectCores(), pb=FALSE){
   habDiffScenario<- match.arg(habDiffScenario, several.ok=TRUE)
   behavior<- match.arg(behavior, several.ok=TRUE)
   
@@ -168,6 +168,7 @@ setParams2diff1<- function(params,
   return (params)
 }
 
+
 # params<- getParams.LH_Beh()
 # setParams2diff1(params, diff=c(PbFDiff=.5, dDiff=-.3, gDiff=-.2))
 getScenario<- function(habDiffScenario=c("identicalHab", "mortalHab2", "nestPredHab2")){
@@ -180,6 +181,7 @@ getScenario<- function(habDiffScenario=c("identicalHab", "mortalHab2", "nestPred
   )
   return (diff)
 }
+
 
 setScenario<- function(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=.1,ab1=.25,j1=.25,  a2=.1,ab2=.25,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
                        habDiffScenario="identicalHab", type="probabilityMultiplicative"){
@@ -221,7 +223,6 @@ setBehavior<- function(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.
   if ("preferHab2" %in% behavior){
     params[c("P1s","P1b","P1j")]<- c(.2,.2,.2)
   }
-
   
   return (params)
 }
