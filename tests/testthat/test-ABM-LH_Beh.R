@@ -5,14 +5,14 @@ test_that("discreteABMSim", {
   expect_is(obj, "discreteABMSim")
   obj<- discreteABMSim(Ntf=TRUE)
   expect_is(obj, "discreteABMSim")
-  expect_is(summary(obj), "data.frame")
+  expect_is(summary(obj), "numeric")
   
   pop<- discreteABMSim2discretePopSim(obj)
   expect_is(pop, "discretePopSim")
-  expect_is(summary(pop, dt = 1), "data.frame")
+  expect_is(summary(pop, dt = 1), "numeric")
   expect_is(r(pop, dt = 1), "matrix")
   expect_is(lambda(pop, dt = 1), "matrix")
-  expect_is(trendsProp(pop, dt = 1), "data.frame")
+  expect_is(trendsProp(pop, dt = 1), "numeric")
   
   expect_is(G(pop), "numeric")
   expect_is(Gmean(pop), "numeric")

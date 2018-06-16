@@ -280,7 +280,7 @@ runScenario.discretePopSim<- function (scenario, pars, verbose=FALSE){
       next
     }
     
-    stats[n, -c(1:2)]<- as.numeric(summary(pop))
+    stats[n, -c(1:2)]<- summary(pop)
     
     if (pars$raw){
       rawSim[[n]]<- pop
@@ -356,7 +356,7 @@ runScenario.numericDistri<- function(scenario, pars, verbose=FALSE){
   
   stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=12, 
                dimnames=list(scenario_N0=paste0(rep(scenario$idScenario, length=length(pars$N0)), "_N", pars$N0),
-                             stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = ncol(summary(pop)) + 1 (N0)
+                             stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = lenght(summary(pop)) + 2 (idScenario + N0)
   stats<- as.data.frame(stats, stringsAsFactors=FALSE)
   stats$idScenario<- scenario$idScenario
   stats$N0<- pars$N0

@@ -19,8 +19,9 @@ summary.discretePopSim<- function(object, dt=1, ...){
   GR<- G(meanR, varR)
   GL<- G(meanL, varL)
   trends<- trendsProp(object)
-  res<- data.frame(trends, GR, meanR, varR, GL, meanL, varL)
-  
+
+  res<- c(trends, GR=GR, meanR=meanR, varR=varR, GL=GL, meanL=meanL, varL=varL)
+
   return(res)
 }
 
@@ -99,8 +100,9 @@ trendsProp.discretePopSim<- function(x, dt=1, ...){
   decrease<- length(which(popF < pop0)) / replicates
   stable<- length(which(popF == pop0)) / replicates
   extinct<- length(which(popF == 0)) / replicates
-  
-  return (data.frame(increase, decrease, stable, extinct, increaseTrans, decreaseTrans, stableTrans))
+  res<- structure(c(increase, decrease, stable, extinct, increaseTrans, decreaseTrans, stableTrans),
+                  names=c("increase", "decrease", "stable", "extinct", "increaseTrans", "decreaseTrans", "stableTrans"))
+  return (res)
 }
 
 #' @rdname numericDistri
@@ -110,8 +112,9 @@ trendsProp.numericDistri<- function(x, N0, ...){
   decrease<- sum(x$p[1:which(x$x == (N0 - 1))])
   stable<- x$p[x$x == N0]
   extinct<- x$p[x$x == 0]
-  
-  return(data.frame(increase, decrease, stable, extinct))
+  res<- structure(c(increase, decrease, stable, extinct),
+                  names=c("increase", "decrease", "stable", "extinct"))
+  return(res)
 }
 
 ## Graphics ----

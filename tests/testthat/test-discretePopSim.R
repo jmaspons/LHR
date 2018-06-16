@@ -5,10 +5,10 @@ test_that("discretePopSim generics", {
                        varJ=0, varBreedFail=0, seasonVar=1,
                        sexRatio=NA, matingSystem=NA, N0=2, replicates=15, tf=10)
 
-  expect_is(summary(pop, dt = 1), "data.frame")
+  expect_is(summary(pop, dt = 1), "numeric")
   expect_is(r(pop, dt = 1), "matrix")
   expect_is(lambda(pop, dt = 1), "matrix")
-  expect_is(trendsProp(pop, dt = 1), "data.frame")
+  expect_is(trendsProp(pop, dt = 1), "numeric")
   
   expect_is(G(pop), "numeric")
   expect_is(Gmean(pop), "numeric")
