@@ -11,14 +11,20 @@
 #' @importFrom stats rbinom rbeta
 NULL
 
-# When the population gets extinct it fills results with NAs.
+# Fill results with NAs when the population gets extinct.
 extinctNA<- function(pop){
   extT<- apply(pop, 1, function(x) match(0, x))
-  extT[extT == ncol(pop)]<- NA 
+  extT[which(extT == ncol(pop))]<- NA 
   extPop<- which(!is.na(extT))
-  for (i in extPop){
-    pop[i,(extT[i]+1):ncol(pop)]<- NA
-  }
+  
+  tmp<- cbind(extT=extT[extPop], pop[extPop, , drop=FALSE])
+  
+  tmp<- apply(tmp, 1, function(x){
+    x[(x[1]+1):ncol(pop) + 1]<- NA
+    x[-1]
+  })
+  pop[extPop, ]<- t(tmp)
+  
   return(pop)
 }
 
