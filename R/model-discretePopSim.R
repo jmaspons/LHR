@@ -814,32 +814,47 @@ mSurvBVSex.tvar<- function(broods, b, j, s, a, AFR, breedFail, varJ=0, varBreedF
 # Adult mortality + Brood mortality + offspring mortality + sex ratio
 # N_t+1 = B(B(n=B(n=B(n=N_t, p=a) * broods, p=1-breedFail) * b, p=j), p=sexRatio)
 # Juveniles reach adult stage in one time step (age at first reproduction = 1)
-mSurvBVSex.tseason<- function(broods, b, j, a, breedFail, seasonVar, N0, sexRatio=0.5, matingSystem=c("monogamy", "polygyny", "polyandry"), replicates, tf, maxN=100000){
+# TODO: add subadults
+mSurvBVSex.tseason<- function(broods, b, j, s, a, AFR, breedFail, seasonVar, N0, sexRatio=0.5, matingSystem=c("monogamy", "polygyny", "polyandry"), replicates, tf, maxN=100000){
   matingSystem<- match.arg(matingSystem)
 
   jindSeason<- j * seasonVar
   jbrSeason<- (1 - breedFail) * seasonVar
   
-  pop<- matrix(NA_real_, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
-  pop[,1]<- N0
+  popF<- popM<- matrix(NA_real_, replicates, tf+1, dimnames=list(replicate=NULL, t=0:tf))
+  popF[,1]<- popM[,1]<- N0
   
   for (t in 1:tf){
+    nPairs<- switch(matingSystem, 
+                    monogamy=min(popF[,t], popM[,t]),
+                    polygyny=popF[,t],
+                    polyandry=popM[,t])
+    
     for (k in seq_along(broods)){
-      succeedingBroods<- rbinom(replicates, pop[,t], jbrSeason[k])
+      succeedingBroods<- rbinom(replicates, nPairs, jbrSeason[k])
       # Juvenile survivors
-      pop[,t+1]<- pop[,t+1] + rbinom(1, b * succeedingBroods, jindSeason[k])
+      reclutes<- rbinom(1, succeedingBroods * b * 2, jindSeason[k])
+      # Sex ratio
+      popF[,t+1]<- rbinom(replicates, reclutes, sexRatio)
+      popM[,t+1]<- reclutes - popF[,t+1]
     }
     
     # Add adult survivors
-    pop[,t+1]<- pop[,t+1] + rbinom(replicates, pop[,t], a)
-    pop[which(pop[,t+1] > maxN),t+1]<- maxN
+    popF[,t+1]<- popF[,t+1] + rbinom(replicates, popF[,t], a)
+    popM[,t+1]<- popM[,t+1] + rbinom(replicates, popM[,t], a)
+    popF[which(popF[,t+1] > maxN),t+1]<- maxN
+    popM[which(popM[,t+1] > maxN),t+1]<- maxN
   }
   
-  pop<- pop[order(pop[,ncol(pop)]),]
-  pop<- extinctNA(pop)
-  class(pop)<- c("discretePopSim", "matrix")
+  popF<- popF[order(popF[,ncol(popF)]),]
+  popM<- popM[order(popM[,ncol(popM)]),]
+  popF<- extinctNA(popF)
+  popM<- extinctNA(popM)
+  class(popF)<- class(popM)<- c("discretePopSim", "matrix")
   
-  return(pop)
+  pops<- list(females=popF, males=popM)
+  
+  return(pops)
 }
 
 # Adult mortality + Brood mortality + offspring mortality + sex ratio
