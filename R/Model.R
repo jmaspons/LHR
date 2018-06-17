@@ -266,7 +266,7 @@ runScenario.discretePopSim<- function (scenario, pars, verbose=FALSE){
   for (n in 1:length(pars$N0)){
     N0<- pars$N0[n]
     
-    pop<- with(scenario, discretePopSim(broods=broods, b=b, j=jind, a=a, breedFail=1 - jbr,
+    pop<- with(scenario, discretePopSim(broods=broods, b=b, j=jind, s=s, a=a, AFR=AFR, breedFail=1 - jbr,
                varJ=ifelse(pars$envVar$j, scenario$varJ, 0), varBreedFail=ifelse(pars$envVar$breedFail, scenario$varJ, 0),
                varA=varA, seasonVar=seasonVar,
                sexRatio=pars$sexRatio, matingSystem=pars$matingSystem, N0=N0, replicates=pars$replicates, tf=pars$tf, maxN=pars$maxN))

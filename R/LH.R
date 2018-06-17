@@ -40,8 +40,8 @@ setMethod("LH",
           function(pars, popbio=FALSE){
             if (inherits(pars, "Model")) pars<- data.frame(pars, stringsAsFactors=FALSE)
             
-            # if not defined, subadult survival is equal to adult survival. Only useful for AFR > 1
-            if (!"s" %in% colnames(pars) & any(pars$AFR > 1)){
+            # if not defined, subadult survival is equal to adult survival. Effects for AFR > 1
+            if (!"s" %in% colnames(pars)){
               pars$s<- pars$a
             }
             
