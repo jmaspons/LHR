@@ -74,7 +74,7 @@ setMethod("Sim",
 #' @export
 setGeneric("Sim.discretePopSim", function(params, N0=c(2, 10), envVar=list(j=TRUE, breedFail=TRUE),
                                           sexRatio=0.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"),
-                                          tf=10, replicates=15, maxN=10000, raw=TRUE, Ntf=TRUE) standardGeneric("Sim.discretePopSim"))
+                                          tf=10, replicates=100, maxN=10000, raw=TRUE, Ntf=TRUE) standardGeneric("Sim.discretePopSim"))
 
 setMethod("Sim.discretePopSim",
           signature(params="list", N0="missing", envVar="missing", sexRatio="missing", matingSystem="missing", tf="missing", replicates="missing", maxN="missing", raw="missing", Ntf="missing"),
@@ -89,7 +89,7 @@ setMethod("Sim.discretePopSim",
           signature(params="missing", N0="ANY", envVar="ANY", sexRatio="ANY", matingSystem="ANY",
                     tf="ANY", replicates="ANY", maxN="ANY", raw="ANY", Ntf="ANY"),
           function(N0=c(2, 10), envVar=list(j=TRUE, breedFail=TRUE), sexRatio=0.5, matingSystem=c(NA, "monogamy", "polygyny", "polyandry"),
-                   tf=10, replicates=15, maxN=10000, raw=TRUE, Ntf=TRUE){
+                   tf=10, replicates=100, maxN=10000, raw=TRUE, Ntf=TRUE){
             
             if (!all(is.na(matingSystem))){
               matingSystem<- match.arg(matingSystem)
@@ -177,7 +177,7 @@ setMethod("Sim.ABM",
 
 setMethod("Sim.ABM",
           signature(params="missing", N0="ANY", transitionsFunc="ANY", tf="ANY", replicates="ANY", maxN="ANY", raw="ANY", discretePopSim="ANY", Ntf="ANY", stats="ANY"),
-          function(N0, transitionsFunc=transitionABM.LH_Beh, tf=10, replicates=15, maxN=10000, raw=TRUE, discretePopSim=TRUE, Ntf=TRUE, stats=TRUE, ...){
+          function(N0, transitionsFunc=transitionABM.LH_Beh, tf=10, replicates=100, maxN=10000, raw=TRUE, discretePopSim=TRUE, Ntf=TRUE, stats=TRUE, ...){
             if (missing(N0)){
               N0<- c(N1s=0, N1b=1, N1bF=0, N1sa=0, N2s=0, N2b=1, N2bF=0, N2sa=0)
               N0<- lapply(2^(0:5), function(x) N0 * x)
