@@ -130,10 +130,10 @@ examplesLH<- function(){
   idLH<- c("fast", "slow", "freqRepro")
   lambda<- c(1.2, 1.05, 1.1)
   broods<- c(1, 1, 4)
-  b<- c(10, 1, 1)
+  b<- c(10, 2, 1)
   a<- c(.4, .85, .6)
-  s<- a
-  AFR<- c(1, 1, 1) # ABM LH_behavior doesn't implement Age at First Reproduction
+  s<- c(.4, .85, .6) # only used in AFR > 1
+  AFR<- c(1, 4, 1)
   
   fecundity<- broods * b
   
