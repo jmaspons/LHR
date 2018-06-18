@@ -88,9 +88,8 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=
 # returns a different strategies.and scenarios
 ### TODO: rename scenario -> lh. fix code
 # diffHab2: named vector with the differences in the parameters at habitat 2 respect habitat 1
-# Warning: clutch have no effect on the simulation. It's necessary to modify the reaction channels (getReactionChannels(clutch1, clutch2))
 # @params nonBreedingSurv increase factor on survival for non breeding adults.
-getParams.LH_Beh<- function(params=data.frame(b=1, broods=1, a=0.7, j=0.3, AFR=1, breedFail=0.5, jind=0.4615385, jbr=0.65),
+getParams.LH_Beh<- function(params=data.frame(b=1, broods=1, a=0.7, s=.6, j=0.3, AFR=1, breedFail=0.5, jind=0.4615385, jbr=0.65),
                             diffHab2, nonBreedingSurv=2,
                             habDiffScenario=c("identicalHab", "mortalHab2", "nestPredHab2"),
                             behavior=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2")){
@@ -100,7 +99,7 @@ getParams.LH_Beh<- function(params=data.frame(b=1, broods=1, a=0.7, j=0.3, AFR=1
   
   aNonBreed<- 1 - (1 - params$a)^nonBreedingSurv
   
-  out<- with(params, data.frame(b1=b, b2=b,   broods=broods, PbF1=1 - jbr, PbF2=1 - jbr,  a1=aNonBreed,ab1=a,j1=jind,  a2=aNonBreed,ab2=a,j2=jind, AFR=AFR))
+  out<- with(params, data.frame(b1=b, b2=b,   broods=broods, PbF1=1 - jbr, PbF2=1 - jbr,  a1=aNonBreed,ab1=a,sa1=s,j1=jind,  a2=aNonBreed,ab2=a,sa2=s,j2=jind, AFR=AFR))
   
   # Add extra parameters for neutral behavior and density dependence
   out$K<- -1 # densodependence not implemented
@@ -111,6 +110,7 @@ getParams.LH_Beh<- function(params=data.frame(b=1, broods=1, a=0.7, j=0.3, AFR=1
   out$cF=1
   out$P1s=.5
   out$P1b=.5
+  out$P1sa=.5
   out$P1j=.5
   
   out<- split(out, rownames(out))
@@ -175,15 +175,15 @@ getScenario<- function(habDiffScenario=c("identicalHab", "mortalHab2", "nestPred
   habDiffScenario<- match.arg(habDiffScenario)
   
   diff<- switch(habDiffScenario,
-                `identicalHab`= c(bDiff=1, PbFDiff=1, aDiff=1, abDiff=1, jDiff=1),
-                `mortalHab2`=   c(bDiff=1, PbFDiff=1, aDiff=0.5, abDiff=0.5, jDiff=0.5),
-                `nestPredHab2`= c(bDiff=1, PbFDiff=2, aDiff=1, abDiff=1, jDiff=1)
+                `identicalHab`= c(bDiff=1, PbFDiff=1, aDiff=1, abDiff=1, saDiff=1, jDiff=1),
+                `mortalHab2`=   c(bDiff=1, PbFDiff=1, aDiff=0.5, abDiff=0.5, saDiff=.5, jDiff=0.5),
+                `nestPredHab2`= c(bDiff=1, PbFDiff=2, aDiff=1, abDiff=1, saDiff=1, jDiff=1)
   )
   return (diff)
 }
 
 
-setScenario<- function(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=.1,ab1=.25,j1=.25,  a2=.1,ab2=.25,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
+setScenario<- function(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=.8,ab1=.7,sa1=.6,j1=.25,  a2=.8,ab2=.7,sa2=.6,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
                        habDiffScenario="identicalHab", type="probabilityMultiplicative"){
   params<- setParams2diff1(params=params, diff=getScenario(habDiffScenario), type=type)
   
@@ -191,12 +191,12 @@ setScenario<- function(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.
 }
 
 
-setBehavior<- function(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=.1,ab1=.25,j1=.25,  a2=.1,ab2=.25,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
+setBehavior<- function(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=.8,ab1=.7,sa1=.6,j1=.25,  a2=.8,ab2=.7,sa2=.6,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
                        behavior=c("neutral", "skip", "learnBreed", "learnExploreBreed", "static", "preferHab1", "preferHab2")){
   behavior<- match.arg(behavior, several.ok=TRUE)
   
   if ("neutral" %in% behavior){
-    params[c("Pb1","Pb2",  "c1", "c2", "cF",  "P1s","P1b","P1j")]<- c(1,1, 1,1,1, .5,.5,.5)
+    params[c("Pb1","Pb2",  "c1", "c2", "cF",  "P1s","P1b","P1sa","P1j")]<- c(1,1, 1,1,1, .5,.5,.5,.5)
   }
   
   if ("skip" %in% behavior){ ## Increase breeding costs or better habitat selection
@@ -217,11 +217,11 @@ setBehavior<- function(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.
   }
   
   if ("preferHab1" %in% behavior){
-    params[c("P1s","P1b","P1j")]<- c(.8,.8,.8)
+    params[c("P1s","P1b","P1sa","P1j")]<- c(.8,.8,.8,.8)
   }
   
   if ("preferHab2" %in% behavior){
-    params[c("P1s","P1b","P1j")]<- c(.2,.2,.2)
+    params[c("P1s","P1b","P1sa","P1j")]<- c(.2,.2,.2,.2)
   }
   
   return (params)

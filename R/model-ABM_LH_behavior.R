@@ -1,21 +1,20 @@
 
 ## Discrete time transitions with a probability model ----
+# Stage based subadult class. 
+# TODO: Add age based subadults class?
 # params<- slow=c(clutch1=1, clutch2=1,   b=1, PbF1=.4, PbF2=.4,  d1=.1,db1=.25,dj1=.25,  d2=.1,db2=.25,dj2=.25, g1=1, g2=1, K=500)
 # params<- c(params, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5) # add neutral behavior
 #' @importFrom stats rbinom 
-transitionABM.LH_Beh<- function(N=matrix(rep(5, 8), nrow=4, ncol=8, dimnames=list(replicates=NULL, state=c("N1s", "N1b", "N1bF", "N2s", "N2b", "N2bF"))),
-                         params=list(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=.1,ab1=.25,j1=.25,  a2=.1,ab2=.25,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
-                         t){
+transitionABM.LH_Beh<- function(N=matrix(rep(5, 8), nrow=4, ncol=8, dimnames=list(replicates=NULL, state=c("N1s", "N1b", "N1bF", "N1sa", "N2s", "N2b", "N2bF", "N2sa"))),
+                         params=list(b1=1, b2=1,  broods=1, PbF1=.4, PbF2=.4,  a1=.25,ab1=.1,sa1=.25,j1=.1,  a2=.25,ab2=.1,sa2=.25,j2=.1, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5)){
   N0<- N
   nRep<- nrow(N)
   
-  ## Growth TODO: non adult survival for AFR > 1
-
   N1j<- N2j<- numeric(nRep) # Juveniles
   
   ## Breeding
   for (i in 1:params$broods){
-    ## Recruitment including juvenile survival (AFR = 1) and reproductive state change
+    ## Recruitment including juvenile survival and reproductive state change
     adultN1<- rowSums(N[,c("N1b", "N1bF", "N1s")])
     adultN2<- rowSums(N[,c("N2b", "N2bF", "N2s")])
     
@@ -50,7 +49,7 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 8), nrow=4, ncol=8, dimnames=lis
     hab1_2NbF<-  with(params, rbinom(nRep, size=N[,"N1bF"], prob=cF * (1 - P1b)))
 #     hab2_1Nj<-  with(params, rbinom(nRep, size=N2j, prob=c2 * P1j))
 #     hab1_2Nj<-  with(params, rbinom(nRep, size=N1j, prob=c1 * (1 - P1j)))
-    
+
     ## Apply movements
     N[,"N1b"]<-  N[,"N1b"]  + hab2_1Nb  - hab1_2Nb
     N[,"N2b"]<-  N[,"N2b"]  + hab1_2Nb  - hab2_1Nb
@@ -60,6 +59,13 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 8), nrow=4, ncol=8, dimnames=lis
     N[,"N2bF"]<- N[,"N2bF"] + hab1_2NbF - hab2_1NbF
 #     N1j<-  N1j + hab2_1Nj  - hab1_2Nj
 #     N2j<-  N2j + hab1_2Nj  - hab2_1Nj
+    
+    if (params$AFR > 1){
+      hab2_1Nsa<-  with(params, rbinom(nRep, size=N[,"N2s"], prob=c2 * P1sa))
+      hab1_2Nsa<-  with(params, rbinom(nRep, size=N[,"N1s"], prob=c1 * (1 - P1sa)))
+      N[,"N1sa"]<-  N[,"N1sa"]  + hab2_1Nsa  - hab1_2Nsa
+      N[,"N2sa"]<-  N[,"N2sa"]  + hab1_2Nsa  - hab2_1Nsa
+    }
   }
   
   ## Survival
@@ -75,9 +81,25 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 8), nrow=4, ncol=8, dimnames=lis
   N[,"N1s"]<-  with(params, rbinom(nRep, size=N[,"N1s"], prob=a1))
   N[,"N2s"]<-  with(params, rbinom(nRep, size=N[,"N2s"], prob=a2))
   
-  ## Juveniles grow to Nxb classes
-  N[,"N1b"]<- N[,"N1b"] + N1j
-  N[,"N2b"]<- N[,"N2b"] + N2j
+  if (params$AFR > 1){
+    N[,"N1sa"]<-  with(params, rbinom(nRep, size=N[,"N1sa"], prob=sa1))
+    N[,"N2sa"]<-  with(params, rbinom(nRep, size=N[,"N2sa"], prob=sa2))
+  }
+  
+  ## Growth
+  if (params$AFR > 1){
+    # Subadults -> adults prob=sa^(AFR-1) # Juvenile survival already applied for the first year (AFR-1)
+    N1sa.a<- with(params, rbinom(nRep, size=N[,"N1sa"], prob=sa1^(AFR-1)))
+    N2sa.a<- with(params, rbinom(nRep, size=N[,"N2sa"], prob=sa2^(AFR-1)))
+    N[,"N1b"]<- N[,"N1b"] + N1sa.a
+    N[,"N2b"]<- N[,"N2b"] + N2sa.a
+    # Add juveniles -> subadults and remove subadults -> adults
+    N[,"N1sa"]<- N[,"N1sa"] + N1j - N1sa.a
+    N[,"N2sa"]<- N[,"N2sa"] + N2j - N2sa.a
+  } else { # Juveniles grow to N*b
+    N[,"N1b"]<- N[,"N1b"] + N1j
+    N[,"N2b"]<- N[,"N2b"] + N2j
+  }
   
   return(N)
 }
@@ -207,7 +229,7 @@ plotLH_behavior.discreteABMSim<- function(x, groups=c("all", "habitat", "age", "
 #' @export
 #'
 #' @examples
-plotLH_behavior.Model<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf"), facet_grid=breedFail~habDiff + behavior, ...){
+plotLH_behavior.Model<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf"), facet_grid=breedFail ~ habDiff + behavior, ...){
   
   if (missing(resultType)) noType<- TRUE else noType<- FALSE
   
