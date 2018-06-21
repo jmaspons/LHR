@@ -124,6 +124,34 @@ setMethod("show", signature(object="LH"),
             LH(pars=data.frame(x)[...])
 }
 
+
+#' Plot LH
+#'
+#' @rdname LH
+#' @param x 
+#' @param ... 
+#'
+#' @return
+#' @export
+#' @importFrom graphics plot
+plot.LH<- function(x, ...){
+  x<- S3Part(x)
+  if ("baseLH" %in% names(x)){
+    x$colorLH<- factor(x$baseLH)
+  } else {
+    x$colorLH<- 1
+  }
+  
+  cols<- intersect(names(x), c("lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR", "colorLH"))
+  x<- unique(x[, cols])
+  out<- graphics::plot(x[, sapply(x, is.numeric)], col=x$colorLH, ...) # All selected columns except colorLH
+  # graphics::legend("topright", legend=levels(res$colorLH), bty = "y", pch = 19, col=res$colorLH)
+  
+  return(invisible(out))
+}
+
+
+
 ## Sample LH ----
 
 examplesLH<- function(){

@@ -434,7 +434,7 @@ run.ABM<- function(model, cl=parallel::detectCores(), raw, pb=FALSE, ...){
   
   # sim<- list()
   # for (i in seq_along(scenario)){
-  #   sim[[i]]<- runScenario.discretePopSim(scenario=scenario[[i]], pars=pars)
+  #   sim[[i]]<- runScenario.ABM(scenario=scenario[[i]], pars=pars)
   # }
   
   
@@ -645,14 +645,6 @@ setMethod("result",
               }
             )
             
-            # Continuous color
-            # lh<- data.frame(LH(res))
-            # lh$color<- scale(lh$a * 10 + (lh$lambda - 1) * 8)
-            
-            # Pick strategy name and remove lambda info (rowname scheme from sampleLH(method="LH axes", lambda=1)
-            
-            # TODO: workaround for ssa models DEPRECATED
-            if (!"idLH" %in% names(res)) res$idLH<- res$idScenario
             
             idLH<- unique(res$idLH)
             lh<- strsplit(idLH, "-")
@@ -850,21 +842,20 @@ plot.Model<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf"), ...){
     else if (Ntf) resultType<- "Ntf"
     else {
       message("No results found. Plotting the parameter space.\n\trun(model) or findN0_Pest(model) to simulate.")
+      x<- S3Part(x)
+      if ("baseLH" %in% names(x)){
+        x$colorLH<- factor(x$baseLH)
+      } else {
+        x$colorLH<- 1
+      }
       
-      idLH<- unique(res$idLH)
-      lh<- strsplit(idLH, "-")
-      lh<- sapply(lh, function(y) y[[1]])
-      lh<- data.frame(idLH=res$idLH, colorLH=lh, stringsAsFactors=FALSE)
-
-      res<- merge(S3Part(x), lh, by="idLH")
-      res$colorLH<- factor(res$colorLH)
-      
-      selNum<- sapply(res, is.numeric)
-      
-      out<- graphics::plot(res[, selNum], col=res$colorLH)
+      cols<- intersect(names(x), c("lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR",
+                "interval", "seasonAmplitude", "seasonMean", "varJ", "varA", "breedFail", "jind", "jbr", "colorLH"))
+      x<- unique(x[, cols])
+      out<- graphics::plot(x[, sapply(x, is.numeric)], col=x$colorLH, ...) # All selected columns except colorLH
       # graphics::legend("topright", legend=levels(res$colorLH), bty = "y", pch = 19, col=res$colorLH)
       
-      invisible(out)
+      return(invisible(out))
     }
   }
   
@@ -938,7 +929,7 @@ plotNtf<- function(x, ...){
 }
 
 
-#' Histogram
+#' Plot a histogram with the final population size of each replicate
 #'
 #' @rdname Model
 #' @param x 
@@ -951,17 +942,16 @@ plotNtf<- function(x, ...){
 hist.Model<- function(x, ...){
   if (nrow(x@sim) == 0){
     stop("No results found.\n\trun(model) to simulate.")
-    selNum<- sapply(S3Part(x), is.numeric)
-    return(graphics::hist(S3Part(x)[, selNum]))
   }
   
-  N<- x@sim@Ntf
-  xd<- data.frame(x)
+  Ntf<- x@sim@Ntf
+  xd<- data.frame(x, stringsAsFactors=FALSE)
   
-  N<- merge(N, xd, by="idScenario")
-  N$idScenario<- factor(res$idScenario)
-  N<- reshape2::melt(N, id.vars=c("idScenario", "N0", "seasonAmplitude", "varJ", "varA", "breedFail"), value.name="Ntf")
+  Ntf<- merge(Ntf, xd[, c("idScenario", "seasonAmplitude", "varJ", "varA", "breedFail")], by="idScenario")
+  N<- reshape2::melt(Ntf, id.vars=c("idScenario", "N0", "seasonAmplitude", "varJ", "varA", "breedFail"), value.name="Ntf")
   
   ggplot2::ggplot(N, ggplot2::aes(x=Ntf, group=idScenario, color=idScenario)) + 
-    ggplot2::geom_histogram() + ggplot2::facet_grid(N0 + seasonAmplitude + breedFail ~ varA + varJ, labeller=ggplot2::label_both)
+    # ggplot2::geom_histogram() + 
+    ggplot2::geom_freqpoly(show.legend=FALSE) + # ggplot2::scale_x_log10() +
+    ggplot2::facet_grid(seasonAmplitude + breedFail ~ N0 + varA + varJ, labeller=ggplot2::label_both)
 }

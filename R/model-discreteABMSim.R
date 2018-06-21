@@ -144,7 +144,8 @@ hist.discreteABMSim<- function(x, main, xlab="N", ...){
   if (missing(main))
     main<- as.expression(bquote("N"[t] == .(dim(x)[3] - 1) * " for " * .(dim(x)[1]) * " replicates", where=environment()))
   
-  x<- rowSums(x[,,dim(x)[3]])
+  x<- x[,,dim(x)[3]]
+  x<- rowSums(x, na.rm=TRUE)
   
   graphics::hist(x, main=main, xlab=xlab, ...)
 }

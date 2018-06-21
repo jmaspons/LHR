@@ -28,6 +28,14 @@ test_that("discrete time models", {
     ## Test rbind
     expect_is(rbind(res[1:3,], res[4:6,]), "Model")
     expect_identical(rbind(res[1:3,], res[4:6,]), res[1:6,])
+    
+    ## Test plots
+    expect_is(plot(res, resultType="Pest_N0"), "ggplot")
+    expect_is(plot(res, resultType="G"), "ggplot")
+    expect_equal(plot(res, resultType="N0_Pest"), NA)
+    expect_is(plot(res, resultType="Ntf"), "ggplot")
+    
+    expect_is(hist(res, resultType="Ntf"), "ggplot")
   }
 })
 
@@ -62,6 +70,14 @@ test_that("discrete models with 2 sexes", {
     ## Test rbind
     expect_is(rbind(res[1:3,], res[4:6,]), "Model")
     expect_identical(rbind(res[1:3,], res[4:6,]), res[1:6,])
+    
+    ## Test plots
+    expect_is(plot(res, resultType="Pest_N0"), "ggplot")
+    expect_is(plot(res, resultType="G"), "ggplot")
+    expect_equal(plot(res, resultType="N0_Pest"), NA)
+    expect_is(plot(res, resultType="Ntf"), "ggplot")
+    
+    expect_is(hist(res, resultType="Ntf"), "ggplot")
   }
 })
 
@@ -104,6 +120,12 @@ test_that("compound distribution", {
     ## Test rbind
     expect_is(rbind(res[1:3,], res[4:6,]), "Model")
     expect_identical(rbind(res[1:3,], res[4:6,]), res[1:6,])
+    
+    ## Test plots
+    expect_is(plot(res, resultType="Pest_N0"), "ggplot")
+    expect_is(plot(res, resultType="G"), "ggplot")
+    expect_equal(plot(res, resultType="N0_Pest"), NA)
+    expect_is(plot(res, resultType="Ntf"), "ggplot")
   }
 })
 
@@ -147,6 +169,12 @@ test_that("compound distribution with environmental variation", {
     ## Test rbind
     expect_is(rbind(res[1:3,], res[4:6,]), "Model")
     expect_identical(rbind(res[1:3,], res[4:6,]), res[1:6,])
+    
+    ## Test plots
+    expect_is(plot(res, resultType="Pest_N0"), "ggplot")
+    expect_is(plot(res, resultType="G"), "ggplot")
+    expect_equal(plot(res, resultType="N0_Pest"), NA)
+    expect_is(plot(res, resultType="Ntf"), "ggplot")
   }
 })
 
@@ -189,6 +217,14 @@ test_that("ABM LH-behavior", {
     # a<- res[1:6,]
     # b<- rbind(res[1:3,], res[4:6,])
     # all.equal(a@Ntf[order(a@Ntf$idScenario),], b@Ntf[order(b@Ntf$idScenario),])
+    
+    ## Test plots
+    expect_is(plot(res, resultType="Pest_N0"), "ggplot")
+    expect_is(plot(res, resultType="G"), "ggplot")
+    expect_equal(plot(res, resultType="N0_Pest"), NA)
+    expect_is(plot(res, resultType="Ntf"), "ggplot")
+    
+    expect_is(hist(res, resultType="Ntf"), "ggplot")
   }
 })
 

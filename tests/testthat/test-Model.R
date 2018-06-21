@@ -1,9 +1,7 @@
 context("Class Model")
 
 test_that("combine LH and Env", {
-  expect_is(combineLH_Env(lh=LH(), env=Env()), "list")
-  
-  obj<- combineLH_Env(lh=LH(), env=Env())
+  expect_is(obj<- combineLH_Env(lh=LH(), env=Env()), "list")
   
   expect_equal(length(obj$seasonBroodEnv$broodEnv), nrow(obj$scenario))
   expect_equal(nrow(obj$seasonBroodEnv$parsBroodEnv), nrow(obj$scenario))
@@ -20,12 +18,7 @@ test_that("Model class constructors", {
   expect_is(Model(sim=Sim.numericDistri()), "Model")
 
   ## No seasonality implemented
-  expect_is(Model(env=env[env$seasonAmplitude == 0,], sim=Sim.ABM(),habDiffScenario="nestPredHab2", behavior="learnExploreBreed"), "Model")
-  
-  ## A data.frame can't define a model. A Sim object is necessary.
-  # obj<- Model()
-  # expect_is(Model(S3Part(obj)), "Model")
-  # expect_equivalent(Model(S3Part(obj)), obj)
+  expect_is(Model(env=env[env$seasonAmplitude == 0,], sim=Sim.ABM(), habDiffScenario="nestPredHab2", behavior="learnExploreBreed"), "Model")
 })
 
 
@@ -47,4 +40,10 @@ test_that("subsetting and rbind", {
   expect_is(rbind(obj[1:3,], obj[4:6,]), "Model")
   expect_warning(rbind(obj, obj))
   expect_identical(rbind(obj[1:3,], obj[4:6,]), obj[1:6,])
+})
+
+test_that("parameter space plots", {
+  expect_is(plot(Model(type="discretePopSim")), "NULL")
+  expect_is(plot(Model(type="numericDistri")), "NULL")
+  expect_is(plot(Model(sim=Sim.ABM(), env=Env(seasonAmplitude=0))), "NULL")
 })

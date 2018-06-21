@@ -6,6 +6,8 @@ b<- 2^(0:4)
 a<- seq(0.4, 0.95, length.out=3)
 AFR<-  2^(0:2)
 
+lh<- LH()
+
 test_that("constructor", {
   expect_is(LH(), "LH")
   expect_is(LH(method="LH axes"), "LH")
@@ -17,20 +19,18 @@ test_that("constructor", {
   expect_is(pars<- sampleLH(), "data.frame")
   expect_is(LH(pars), "LH")
   
-  obj<- LH()
-  expect_is(LH(S3Part(obj)), "LH")
-  expect_equivalent(LH(S3Part(obj)), obj)
+  expect_is(LH(S3Part(lh)), "LH")
+  expect_equivalent(LH(S3Part(lh)), lh)
 })
 
 
 test_that("subsetting", {
-  obj<- LH()
-  expect_is(obj[c(1,3,5),], "LH")
-  expect_is(head(obj), "LH")
-  expect_is(obj[1:5,], "LH")
+  expect_is(lh[c(1,3,5),], "LH")
+  expect_is(head(lh), "LH")
+  expect_is(lh[1:5,], "LH")
   
-  expect_is(obj$a[2], "numeric")
-  expect_is(obj[[4]], "numeric")
+  expect_is(lh$a[2], "numeric")
+  expect_is(lh[[4]], "numeric")
 })
 
 
@@ -44,4 +44,9 @@ test_that("popbio", {
   
   expect_warning(lh<- LH(lambda=lambda, broods=broods, b=b, a=a, AFR=AFR, method="regular", popbio=TRUE)) # parameters out of domain
   expect_is(lh, "LH")
+})
+
+
+test_that("plot", {
+  expect_is(plot(lh), "NULL")
 })

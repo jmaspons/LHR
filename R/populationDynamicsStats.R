@@ -142,9 +142,10 @@ plot.discretePopSim<- function(x, type="l", xlab="t", ylab="N", ...){
 #' @export
 #'
 #' @examples
-hist.discretePopSim<- function(x, xlab="N", ...){
+hist.discretePopSim<- function(x, xlab="N_tf", ...){
   main<- as.expression(bquote("N_t=" * .(ncol(x) - 1) * " for " * .(nrow(x)) * " replicates", where=environment()))
-  x<- x[,ncol(x)]
+  x<- x[, ncol(x)]
+  x[is.na(x)]<- 0 # extinct populations
   graphics::hist(x, main=main, xlab=xlab, ...)
 }
 

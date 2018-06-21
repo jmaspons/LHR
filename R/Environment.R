@@ -225,3 +225,22 @@ setMethod("show", signature(object="Env"),
   Env(pars=data.frame(x)[...])
 }
 
+
+#' Plot Env
+#'
+#' @rdname Env
+#' @param x 
+#' @param ... 
+#'
+#' @return
+#' @export
+#' @importFrom graphics plot
+plot.Env<- function(x, ...){
+  x<- S3Part(x)
+
+  cols<- intersect(names(x), c("seasonAmplitude", "seasonMean", "varJ", "varA", "breedFail"))
+  x<- unique(x[, cols])
+  out<- graphics::plot(x[, sapply(x, is.numeric)], ...)
+
+  return(invisible(out))
+}

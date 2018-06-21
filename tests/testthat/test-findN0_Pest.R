@@ -16,6 +16,12 @@ if (skip_on_cran()){
   expect_identical(nrow(N0_Pest@sim@N0_Pest), 3L)
   expect_identical(nrow(N0_Pest[1,]@sim@N0_Pest), 1L)
   expect_identical(nrow(N0_Pest[c(1,3),]@sim@N0_Pest), 2L)
+  
+  ## Test plots
+  expect_equal(plot(N0_Pest, resultType="Pest_N0"), NA)
+  expect_equal(plot(N0_Pest, resultType="G"), NA)
+  expect_is(plot(N0_Pest, resultType="N0_Pest"), "ggplot")
+  expect_equal(plot(N0_Pest, resultType="Ntf"), NA)
 }
 })
 
@@ -35,6 +41,12 @@ if (skip_on_cran()){
   expect_identical(nrow(N0_Pest@sim@N0_Pest), 3L)
   expect_identical(nrow(N0_Pest[1,]@sim@N0_Pest), 1L)
   expect_identical(nrow(N0_Pest[c(1,3),]@sim@N0_Pest), 2L)
+  
+  ## Test plots
+  expect_equal(plot(N0_Pest, resultType="Pest_N0"), NA)
+  expect_equal(plot(N0_Pest, resultType="G"), NA)
+  expect_is(plot(N0_Pest, resultType="N0_Pest"), "ggplot")
+  expect_equal(plot(N0_Pest, resultType="Ntf"), NA)
 }
 })
 
@@ -54,6 +66,12 @@ if (skip_on_cran()){
   expect_identical(nrow(N0_Pest@sim@N0_Pest), 3L)
   expect_identical(nrow(N0_Pest[1,]@sim@N0_Pest), 1L)
   expect_identical(nrow(N0_Pest[c(1,3),]@sim@N0_Pest), 2L)
+  
+  ## Test plots
+  expect_equal(plot(N0_Pest, resultType="Pest_N0"), NA)
+  expect_equal(plot(N0_Pest, resultType="G"), NA)
+  expect_is(plot(N0_Pest, resultType="N0_Pest"), "ggplot")
+  expect_equal(plot(N0_Pest, resultType="Ntf"), NA)
 }
 })
 
