@@ -1,31 +1,53 @@
-/* PARAMETERS
- * s: adult survival
- * j: juvenile survival
- * \alpha: age at first reproduction
- * b: fecundity
- * F: net fecundity (j * b)
- * l: survival until reproductive class (j * s^(alpha-1))
- *
- * Code to solve Euler-Lotka equation using maxima (http://maxima.sourceforge.net/)
- */
+/* PARAMETERS 
+* a: adult survival 
+* s: subadult survival 
+* j: juvenile survival 
+* \alpha: age at first reproduction 
+* b: fecundity 
+* F: net fecundity (j * b) 
+* l: survival until reproductive class (j * s^(alpha-1))
+* 
+* Code to solve Euler-Lotka equation using maxima (http://maxima.sourceforge.net/)
+*/
 
-lambda^alpha * (1 - (s / lambda)) = l * F;
+lambda^alpha * (1 - (a / lambda)) = l * F;
 
-solve(lambda^alpha * (1 - (s / lambda)) = l * F, F);
-solve(lambda^alpha * (1 - (s / lambda)) = l * F, s);
-solve(lambda^alpha * (1 - (s / lambda)) = l * F, l);
-solve(lambda^alpha * (1 - (s / lambda)) = l * F, alpha);
+solve(lambda^alpha * (1 - (a / lambda)) = l * F, F);
+
+solve(lambda^alpha * (1 - (a / lambda)) = l * F, a);
+
+solve(lambda^alpha * (1 - (a / lambda)) = l * F, l);
+
+solve(lambda^alpha * (1 - (a / lambda)) = l * F, alpha);
 
 /* Substitute
- * l = j * s^(alpha-1)
- * F = j * b
- */
+* l = j * s^(alpha-1) 
+* F = j * b  
+*/
 
-lambda^alpha*(1-(s/lambda)) = j * s^(alpha-1) * j * b;
+lambda^alpha * (1 - (a / lambda)) = j * s^(alpha-1) * j * b;
 
-solve(lambda^alpha * (1 - (s / lambda)) = j * s^(alpha-1) * F, F);
-solve(lambda^alpha * (1 - (s / lambda)) = j * s^(alpha-1) * j * b, s);
-solve(lambda^alpha * (1 - (s / lambda)) = j * s^(alpha-1) * j * b, j);
-solve(lambda^alpha * (1 - (s / lambda)) = j * s^(alpha-1) * j * b, b);
-solve(lambda^alpha * (1 - (s / lambda)) = j * s^(alpha-1) * j * b, alpha);
+solve(lambda^alpha * (1 - (a / lambda)) = j * s^(alpha-1) * j * b, j);
+
+solve(lambda^alpha * (1 - (a / lambda)) = j * s^(alpha-1) * j * b, b);
+
+solve(lambda^alpha * (1 - (a / lambda)) = j * s^(alpha-1) * j * b, alpha);
+
+/* Error when resolving a and s. Numerical values differs from Lefkovitch matrix  */
+
+solve(lambda^alpha * (1 - (a / lambda)) = j * s^(alpha-1) * j * b, s);
+
+s = ((lambda^AFR) / b - a * lambda^(AFR-1) / b)^(1 / (AFR-1)) / (j^(2 / (AFR-1)));
+
+/* R code matches formula. Some probabilities > 1  */
+
+solve(lambda^alpha * (1 - (a / lambda)) = j * s^(alpha-1) * j * b, a);
+
+a= -((b * j^2 * s^(AFR-1) * lambda - lambda^(AFR+1)) / (lambda^AFR));
+
+/* R code matches formula. Some probabilities > 1  */
+
+b * j^2  * lambda * s^alpha + s * lambda^alpha * (s - lambda) = 0;
+
+solve(b * j^2 * lambda * s^alpha + s * lambda^alpha * (s - lambda) = 0, s);
 

@@ -94,7 +94,7 @@ setMethod("LH",
           function(lambda=c(1.05, 1.2), broods=2^(0:2), b=c(1, 2, 5, 10), 
                    a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s=a, AFR=1, free="j", popbio=FALSE, ...){
 
-            pars<- sampleLH(lambda=lambda, broods=broods, b=b, j=j, a=a, AFR=AFR, free=free, ...)
+            pars<- sampleLH(lambda=lambda, broods=broods, b=b, j=j, a=a, s=s, AFR=AFR, free=free, ...)
             
             LH(pars=pars, popbio=popbio)
           }
@@ -137,7 +137,7 @@ examplesLH<- function(){
   
   fecundity<- broods * b
   
-  j<- findJ_EulerLotka(lambda=lambda, b=fecundity, a=a, AFR=AFR)
+  j<- findJ_EulerLotka(lambda=lambda, b=fecundity, a=a, s=s, AFR=AFR)
   
   pars<- data.frame(idLH, baseLH=idLH, lambda, fecundity, broods, b, a, s, j, AFR, stringsAsFactors=FALSE, row.names=idLH)
   
@@ -171,7 +171,7 @@ examplesLH<- function(){
 #'
 #' @examples
 sampleLH<- function(lambda=seq(1, 1.2, by=0.1), broods=2^(0:2), b=c(1, 2, 5, 10), 
-                    j=seq(0.2, 0.8, by=0.2), a=seq(0.3, 0.9, by=0.2), AFR=1,
+                    j=seq(0.2, 0.8, by=0.2), a=seq(0.3, 0.9, by=0.2), s, AFR=2^(0:2),
                     free=c("j", "lambda", "a"), maxFecundity=20, higherJuvMortality=TRUE, method=c("LH axes", "regular", "MonteCarlo"), census="pre-breeding"){
   free<- match.arg(free)
   method<- match.arg(method)
@@ -184,84 +184,81 @@ sampleLH<- function(lambda=seq(1, 1.2, by=0.1), broods=2^(0:2), b=c(1, 2, 5, 10)
       pars<- merge(pars[,-grep("lambda", names(pars))], comb, by="idLH")
       
       # Euler-Lotka corresponds to a pre-breding census matrix
-      pars$j<- with(pars, findJ_EulerLotka(lambda=lambda, b=fecundity, a=a, AFR=AFR))
+      pars$j<- with(pars, findJ_EulerLotka(lambda=lambda, b=fecundity, a=a, s=s, AFR=AFR))
       
       pars$idLH<- paste0(pars$idLH, "-L", pars$lambda)
       rownames(pars)<- pars$idLH
       pars<- pars[order(pars$baseLH, pars$lambda),]
     }
     
+    if (any(is.na(pars))){
+      warning("Some parameter combinations produce NAs and are discarded (eg. probabilities > 1)")
+      pars<- stats::na.omit(pars)
+    }
+    
     return(pars)
   }
   
+  misS<- missing(s) # s == a
+
   if (free == "lambda"){
-    pars<- expand.grid(broods=broods, b=b, j=j, a=a, AFR=AFR)
+    if (misS){
+      pars<- expand.grid(broods=broods, b=b, j=j, a=a, AFR=AFR)
+      pars$s<- pars$a
+    }else{
+      pars<- expand.grid(broods=broods, b=b, j=j, s=s, a=a, AFR=AFR)
+    }
     pars$fecundity<- pars$broods * pars$b
     pars<- pars[pars$fecundity <= maxFecundity,]
     
     # mean Lambda in the discrete time simulations correspons to pre-breeding census
     if (census == "pre-breeding"){
       pars$lambda<- apply(pars, 1, function(x){
-        mat<- with(as.list(x), LefkovitchPre(a=a, s=a, bj=j * fecundity, AFR=AFR)) # subadult survival equal to adult survival
+        mat<- with(as.list(x), LefkovitchPre(a=a, s=s, bj=j * fecundity, AFR=AFR))
         return(lambda(mat))
       })
     }else if (census == "post-breeding"){
       pars$lambda<- apply(pars, 1, function(x){
-        mat<- with(as.list(x), LefkovitchPost(a=a, s=a, j=j, b=fecundity, AFR=AFR))  # subadult survival equal to adult survival # subadult survival equal to adult survival
+        mat<- with(as.list(x), LefkovitchPost(a=a, s=s, j=j, b=fecundity, AFR=AFR))
         return(lambda(mat))
       })
     }
     
   }else if (free == "j"){
-    pars<- expand.grid(lambda=lambda, broods=broods, b=b, a=a, AFR=AFR)
+    if (misS){
+      pars<- expand.grid(lambda=lambda, broods=broods, b=b, a=a, AFR=AFR)
+      pars$s<- pars$a
+    }else{
+      pars<- expand.grid(lambda=lambda, broods=broods, b=b, s=s, a=a, AFR=AFR)
+    }
     pars$fecundity<- pars$broods * pars$b
     pars<- pars[pars$fecundity <= maxFecundity,]
     # Euler-Lotka corresponds to a pre-breding census matrix
-    pars$j<- with(pars, findJ_EulerLotka(lambda=lambda, b=fecundity, a=a, AFR=AFR))
+    pars$j<- with(pars, findJ_EulerLotka(lambda=lambda, b=fecundity, a=a, s=s, AFR=AFR))
   }else if (free == "a"){
+    if (misS){
+      pars<- expand.grid(lambda=lambda, broods=broods, b=b, j=j, AFR=AFR)
+      pars$s<- pars$j ## WARNING: s<- j
+    }else{
+      pars<- expand.grid(lambda=lambda, broods=broods, b=b, j=j, s=s, AFR=AFR)
+    }
     # warning("There are errors when estimating a = f(lambda, fecundity, j, AFR)")
-    pars<- expand.grid(lambda=lambda, broods=broods, b=b, j=j, AFR=AFR)
     pars$fecundity<- pars$broods * pars$b
     pars<- pars[pars$fecundity <= maxFecundity,]
     # Euler-Lotka corresponds to a pre-breding census matrix
-    pars$a<- with(pars, findA_EulerLotka(lambda=lambda, b=fecundity, j=j, AFR=AFR))
+    pars$a<- with(pars, findA_EulerLotka(lambda=lambda, b=fecundity, j=j, s=s, AFR=AFR))
   }
   
-  pars<- stats::na.omit(pars)
-  
-  ## TODO: move to tests
-  # Detect errors on the inverse eigenvalue problem and discard them
-  if (free != "lambda"){
-    lambdaMat<- apply(pars, 1, function(x){
-      x<- as.list(x)
-      if (is.na(x$j) | is.na(x$a)) return(NA)
-      mat<- with(x, LefkovitchPre(a=a, s=a, bj=j * fecundity, AFR=AFR)) # subadult survival equal to adult survival
-      return(lambda(mat))
-    })
-    
-    errLambda<- abs(pars$lambda - lambdaMat)
-    errLambda<- which(errLambda > 0.001)
-    
-    if (length(errLambda) > 0) warning("Some errors on Euler-Lotka function to find parameters with ", free, "free.")
-    
-    if (free == "j"){
-      pars$j[errLambda]<- NA
-      pars<- pars[!is.na(pars$j),]
-      pars<- pars[pars$j >= min(j),]
-    }
-    if (free == "a"){
-      pars$a[errLambda]<- NA
-      pars<- pars[!is.na(pars$a),]
-      pars<- pars[pars$a >= min(a),]
-    }
+  if (any(is.na(pars))){
+    warning("Some parameter combinations produce NAs and are discarded (eg. probabilities > 1)")
+    pars<- stats::na.omit(pars)
   }
-  
   
   # Filter restrictions
   if (higherJuvMortality) pars<- pars[pars$j <= pars$a,]
   
   # Sort columns
-  pars<- pars[order(pars$lambda, pars$a, pars$fecundity), c("lambda", "fecundity", "broods", "b", "a", "j", "AFR")]
+  pars<- pars[order(pars$lambda, pars$a, pars$fecundity), c("lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")]
   rownames(pars)<- NULL
   pars<- cbind(idLH=rownames(pars), pars, stringsAsFactors=FALSE)
   

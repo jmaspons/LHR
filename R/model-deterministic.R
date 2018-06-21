@@ -104,7 +104,7 @@ lambda.leslieMatrix<- function(x, ...){ # Ted J. Case. "An Illustrated Guide to 
 # Euler-Lotka equation fails for some cases with no clear pattern (see test/Euler-Lotka.r)
 # http://en.wikipedia.org/wiki/Euler-Lotka_equation
 # http://darwin.eeb.uconn.edu/eeb310/lecture-notes/spotted-owl/node3.html
-# see Euler-Lotka.txt
+# see exec/Euler-Lotka.txt & inst/Euler-lotka.cws (cantor)
 # alpha= AFR
 #(l_{alpha}*F)*lambda^-alpha sumatori(from x=alpha to infinite){lambda^(-x+alpha)*s^(x-alpha)} = 1
 #(l_{alpha}*F)*(1/(1-(a/lambda))) = lambda^alpha
@@ -113,51 +113,64 @@ lambda.leslieMatrix<- function(x, ...){ # Ted J. Case. "An Illustrated Guide to 
 # lambda^alpha*(1-(a/lambda)) = j * a^(alpha-1) * F
 
 ## Maxima
-# solve(lambda^alpha * (1 - (s / lambda)) = j * s^(alpha-1) * F, F);
-# solve(lambda^alpha * (1 - (a / lambda)) = j * a^(alpha-1) * j * b, a);
-# solve(lambda^alpha * (1 - (a / lambda)) = j * a^(alpha-1) * j * b, j);
-# solve(lambda^alpha * (1 - (a / lambda)) = j * a^(alpha-1) * j * b, b);
-# solve(lambda^alpha * (1 - (a / lambda)) = j * a^(alpha-1) * j * b, alpha);
+# lambda^alpha * (1 - (a / lambda)) = j * s^(alpha-1) * F;
+#
+# solve(lambda^alpha * (1 - (a / lambda)) = j * s^(alpha-1) * F, F);
+# solve(lambda^alpha * (1 - (a / lambda)) = j * s^(alpha-1) * j * b, a);
+# solve(lambda^alpha * (1 - (a / lambda)) = j * s^(alpha-1) * j * b, j);
+# solve(lambda^alpha * (1 - (a / lambda)) = j * s^(alpha-1) * j * b, b);
+# solve(lambda^alpha * (1 - (a / lambda)) = j * s^(alpha-1) * j * b, alpha);
 
 #' Euler-Lotka equations
 #'
 #' @name EulerLotka
 #' @param lambda 
-#' @param a 
-#' @param AFR
+#' @param a adult survival
+#' @param s subadult survival
+#' @param j juvenile survival
+#' @param b litter size
+#' @param AFR age at first reproduction
 NULL
 
 #' @rdname EulerLotka
 #' @export
-findF_EulerLotka<- function(lambda, a, AFR){
-  F<- -(a * lambda^AFR - lambda^(AFR+1)) / (a^(AFR-1) * lambda)
+findF_EulerLotka<- function(lambda, a, s=a, AFR){
+  F<- -(a * lambda^AFR - lambda^(AFR+1)) / (s^(AFR-1) * lambda)
   F[F < 0]<- NA
   return (F)
 }
 
 #' @rdname EulerLotka
 #' @export
-findJ_EulerLotka<- function(lambda, b, a, AFR){
-  F<- findF_EulerLotka(lambda=lambda, a=a, AFR=AFR)
+findJ_EulerLotka<- function(lambda, b, a, s=a, AFR){
+  F<- findF_EulerLotka(lambda=lambda, a=a, s=s, AFR=AFR)
   j<- F / b
   j[j < 0 | j > 1]<- NA
   return (j)
 }
 
 #' @rdname EulerLotka
-#' @description TODO: check findA_EulerLotka. Some parameters produce adult survival > 1 and 
-#' mal formed output (returns 4 values instead of 1, see test-Euler-Lotka.R)
 #' @export
-findA_EulerLotka<- function(lambda, b, j, AFR){
-  a<- -(b * j^2 * a^(AFR-1) * lambda - lambda^(AFR + 1)) / (lambda^AFR)
+findA_EulerLotka<- function(lambda, b, j, s=ifelse(AFR == 1, 0, NA), AFR){
+  a<- -( (b * j^2 * s^(AFR-1) * lambda - lambda^(AFR + 1)) / (lambda^AFR) )
   a[a < 0 | a > 1]<- NA
+  warning("findA_EulerLotka() produce wrong results.")
   return (a)
 }
 
 #' @rdname EulerLotka
 #' @export
-findB_EulerLotka<- function(lambda, j, a, AFR){
-  F<- findF_EulerLotka(lambda, a, AFR)
+findS_EulerLotka<- function(lambda, b, j, a, AFR){
+  s<- ((lambda^AFR) / b - a * lambda^(AFR-1) / b)^(1/(AFR-1)) / (j^(2 / (AFR - 1)))
+  s[s < 0 | s > 1]<- NA
+  warning("findS_EulerLotka() produce wrong results.")
+  return (s)
+}
+
+#' @rdname EulerLotka
+#' @export
+findB_EulerLotka<- function(lambda, j, a, s=a, AFR){
+  F<- findF_EulerLotka(lambda=lambda, a=a, s=s, AFR=AFR)
   b<- F / j
   return (b)
 }

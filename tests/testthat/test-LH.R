@@ -1,10 +1,10 @@
 context("Class LH")
 
-lambda<- seq(.9, 1.2, by=0.1)
+lambda<- seq(.9, 1.2, length.out=3)
 broods<- 2^(0:2)
 b<- 2^(0:4)
-a<- seq(0.4, 0.95, length.out=5)
-AFR<- 1:5
+a<- seq(0.4, 0.95, length.out=3)
+AFR<-  2^(0:2)
 
 test_that("constructor", {
   expect_is(LH(), "LH")
@@ -12,8 +12,8 @@ test_that("constructor", {
   expect_is(LH(method="LH axes", lambda=c(1, 1.2)), "LH")
   expect_is(LH(method="regular"), "LH")
 
-  expect_is(LH(lambda=lambda, broods=broods, b=b, a=a, AFR=AFR, method="regular"), "LH")
-  
+  expect_warning(lh<- LH(lambda=lambda, broods=broods, b=b, a=a, AFR=AFR, method="regular")) # parameters out of domain
+  expect_is(lh, "LH")
   expect_is(pars<- sampleLH(), "data.frame")
   expect_is(LH(pars), "LH")
   
@@ -42,7 +42,6 @@ test_that("popbio", {
   expect_is(lh<- LH(method="regular", popbio=TRUE), "LH")
   expect_is(LH(pars=S3Part(lh), popbio=TRUE), "LH") ## test reusing popbio columns
   
-  expect_is(LH(lambda=lambda, broods=broods, b=b, a=a, AFR=AFR, method="regular", popbio=TRUE), "LH")
-  
-  
+  expect_warning(lh<- LH(lambda=lambda, broods=broods, b=b, a=a, AFR=AFR, method="regular", popbio=TRUE)) # parameters out of domain
+  expect_is(lh, "LH")
 })
