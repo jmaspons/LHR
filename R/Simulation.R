@@ -179,7 +179,7 @@ setMethod("Sim.ABM",
           signature(params="missing", N0="ANY", transitionsFunc="ANY", tf="ANY", replicates="ANY", maxN="ANY", raw="ANY", discretePopSim="ANY", Ntf="ANY", stats="ANY"),
           function(N0, transitionsFunc=transitionABM.LH_Beh, tf=10, replicates=100, maxN=10000, raw=TRUE, discretePopSim=TRUE, Ntf=TRUE, stats=TRUE, ...){
             if (missing(N0)){
-              N0<- c(N1s=0, N1b=1, N1bF=0, N1sa=0, N2s=0, N2b=1, N2bF=0, N2sa=0)
+              N0<- c(N1s=0, N1b=1, N1bF=0, N2s=0, N2b=1, N2bF=0)
               N0<- lapply(2^(0:5), function(x) N0 * x)
               names(N0)<- paste0("N", sapply(N0, sum))
             }

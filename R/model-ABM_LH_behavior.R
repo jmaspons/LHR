@@ -1,18 +1,36 @@
 
 ## Discrete time transitions with a probability model ----
 # Stage based subadult class. 
-# TODO: Add age based subadults class?
+# TODO: Add age based subadults class? Important for time lags
 # params<- slow=c(clutch1=1, clutch2=1,   b=1, PbF1=.4, PbF2=.4,  d1=.1,db1=.25,dj1=.25,  d2=.1,db2=.25,dj2=.25, g1=1, g2=1, K=500)
 # params<- c(params, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5) # add neutral behavior
 #' @importFrom stats rbinom 
-transitionABM.LH_Beh<- function(N=matrix(rep(5, 8), nrow=4, ncol=8, dimnames=list(replicates=NULL, state=c("N1s", "N1b", "N1bF", "N1sa", "N2s", "N2b", "N2bF", "N2sa"))),
+transitionABM.LH_Beh<- function(N=matrix(rep(5, 6 * 4), nrow=4, ncol=6, dimnames=list(replicates=NULL, state=c("N1s", "N1b", "N1bF", "N2s", "N2b", "N2bF"))),
                          params=list(b1=1, b2=1,  broods=1, PbF1=.4, PbF2=.4,  a1=.25,ab1=.1,sa1=.25,j1=.1,  a2=.25,ab2=.1,sa2=.25,j2=.1, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5)){
-  N0<- N
   nRep<- nrow(N)
-  
+  if (nRep < 2) stop("Minimum 2 replicates")
   N1j<- N2j<- numeric(nRep) # Juveniles
   
-  ## Breeding
+  saAges<- grep("sa", colnames(N), value=TRUE)
+  if (length(saAges) / 2 < params$AFR - 1){
+    warning("Subadult classes missing in the population matrix N. Updating N") 
+    if (sum(N[, saAges]) > 0) warning("Removing individuals from subadult classes ", saAges)
+    
+    saColsOri<- grep("sa", colnames(N))
+    if (length(saColsOri) > 0)
+      N<- N[, -saColsOri] # remove original columns
+    
+    saAges<- paste0("sa", 1:(params$AFR - 1))
+    saAges<- c(paste0("N1", saAges), paste0("N2", saAges))
+    Nsa<- matrix(0, nrow=nRep, ncol=length(saAges), dimnames=list(replicates=NULL, state=saAges))
+    N<- cbind(N, Nsa)
+    rm(Nsa)
+  }
+  
+  saAges1<- grep("N1", saAges, value=TRUE)
+  saAges2<- grep("N2", saAges, value=TRUE)
+  
+  ## BREEDING
   for (i in 1:params$broods){
     ## Recruitment including juvenile survival and reproductive state change
     adultN1<- rowSums(N[,c("N1b", "N1bF", "N1s")])
@@ -39,39 +57,43 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 8), nrow=4, ncol=8, dimnames=lis
     
     ## interbreed interval mortality
     
-    ## Movements  (juveniles don't change habitat)
+    ## MOVEMENTS
     # habOLD_NEW
     hab2_1Nb<-  with(params, rbinom(nRep, size=N[,"N2b"], prob=c2 * P1b))
     hab1_2Nb<-  with(params, rbinom(nRep, size=N[,"N1b"], prob=c1 * (1 - P1b)))
-    hab2_1Ns<-  with(params, rbinom(nRep, size=N[,"N2s"], prob=c2 * P1b))
-    hab1_2Ns<-  with(params, rbinom(nRep, size=N[,"N1s"], prob=c1 * (1 - P1b)))
     hab2_1NbF<-  with(params, rbinom(nRep, size=N[,"N2bF"], prob=cF * P1b))
     hab1_2NbF<-  with(params, rbinom(nRep, size=N[,"N1bF"], prob=cF * (1 - P1b)))
-#     hab2_1Nj<-  with(params, rbinom(nRep, size=N2j, prob=c2 * P1j))
-#     hab1_2Nj<-  with(params, rbinom(nRep, size=N1j, prob=c1 * (1 - P1j)))
 
     ## Apply movements
     N[,"N1b"]<-  N[,"N1b"]  + hab2_1Nb  - hab1_2Nb
     N[,"N2b"]<-  N[,"N2b"]  + hab1_2Nb  - hab2_1Nb
-    N[,"N1s"]<-  N[,"N1s"]  + hab2_1Ns  - hab1_2Ns
-    N[,"N2s"]<-  N[,"N2s"]  + hab1_2Ns  - hab2_1Ns
     N[,"N1bF"]<- N[,"N1bF"] + hab2_1NbF - hab1_2NbF
     N[,"N2bF"]<- N[,"N2bF"] + hab1_2NbF - hab2_1NbF
-#     N1j<-  N1j + hab2_1Nj  - hab1_2Nj
-#     N2j<-  N2j + hab1_2Nj  - hab2_1Nj
-    
-    if (params$AFR > 1){
-      hab2_1Nsa<-  with(params, rbinom(nRep, size=N[,"N2s"], prob=c2 * P1sa))
-      hab1_2Nsa<-  with(params, rbinom(nRep, size=N[,"N1s"], prob=c1 * (1 - P1sa)))
-      N[,"N1sa"]<-  N[,"N1sa"]  + hab2_1Nsa  - hab1_2Nsa
-      N[,"N2sa"]<-  N[,"N2sa"]  + hab1_2Nsa  - hab2_1Nsa
-    }
   }
   
-  ## Survival
-  # N[,"N1j"]<- # juvenile survival already calculated during recruitment.
-  # N[,"N2j"]<- 
+  ## MOVEMENTS (not based on breeding experience, only once per year)
+  # non reproductive adults (juveniles don't change habitat)
+  hab2_1Ns<-  with(params, rbinom(nRep, size=N[,"N2s"], prob=c2 * P1b))
+  hab1_2Ns<-  with(params, rbinom(nRep, size=N[,"N1s"], prob=c1 * (1 - P1b)))
+  # hab2_1Nj<-  with(params, rbinom(nRep, size=N2j, prob=c2 * P1j))
+  # hab1_2Nj<-  with(params, rbinom(nRep, size=N1j, prob=c1 * (1 - P1j)))
   
+  N[,"N1s"]<-  N[,"N1s"]  + hab2_1Ns  - hab1_2Ns
+  N[,"N2s"]<-  N[,"N2s"]  + hab1_2Ns  - hab2_1Ns
+  #     N1j<-  N1j + hab2_1Nj  - hab1_2Nj
+  #     N2j<-  N2j + hab1_2Nj  - hab2_1Nj
+  
+  # subadults
+  if (params$AFR > 1){
+    hab2_1Nsa<-  apply(N[, saAges2, drop=FALSE], 2, function(x) with(params, rbinom(nRep, size=x, prob=c2 * P1sa)))
+    hab1_2Nsa<-  apply(N[, saAges1, drop=FALSE], 2, function(x) with(params, rbinom(nRep, size=x, prob=c1 * (1 - P1sa))))
+    N[, saAges1]<-  N[, saAges1, drop=FALSE] + hab2_1Nsa - hab1_2Nsa
+    N[, saAges2]<-  N[, saAges2, drop=FALSE] + hab1_2Nsa - hab2_1Nsa
+  }
+  
+  
+  ## SURVIVAL
+  # juvenile survival already calculated during recruitment (saved in N*j)
   N[,"N1b"]<-  with(params, rbinom(nRep, size=N[,"N1b"], prob=ab1))
   N[,"N2b"]<-  with(params, rbinom(nRep, size=N[,"N2b"], prob=ab2))
 
@@ -81,21 +103,22 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 8), nrow=4, ncol=8, dimnames=lis
   N[,"N1s"]<-  with(params, rbinom(nRep, size=N[,"N1s"], prob=a1))
   N[,"N2s"]<-  with(params, rbinom(nRep, size=N[,"N2s"], prob=a2))
   
+  ## Subadults
   if (params$AFR > 1){
-    N[,"N1sa"]<-  with(params, rbinom(nRep, size=N[,"N1sa"], prob=sa1))
-    N[,"N2sa"]<-  with(params, rbinom(nRep, size=N[,"N2sa"], prob=sa2))
+    N1sa<-  apply(N[, saAges1, drop=FALSE], 2, function(x) with(params, rbinom(nRep, size=x, prob=sa1)))
+    N2sa<-  apply(N[, saAges2, drop=FALSE], 2, function(x) with(params, rbinom(nRep, size=x, prob=sa2)))
   }
   
-  ## Growth
+  
+  ## GROWTH
   if (params$AFR > 1){
-    # Subadults -> adults prob=sa^(AFR-1) # Juvenile survival already applied for the first year (AFR-1)
-    N1sa.a<- with(params, rbinom(nRep, size=N[,"N1sa"], prob=sa1^(AFR-1)))
-    N2sa.a<- with(params, rbinom(nRep, size=N[,"N2sa"], prob=sa2^(AFR-1)))
-    N[,"N1b"]<- N[,"N1b"] + N1sa.a
-    N[,"N2b"]<- N[,"N2b"] + N2sa.a
-    # Add juveniles -> subadults and remove subadults -> adults
-    N[,"N1sa"]<- N[,"N1sa"] + N1j - N1sa.a
-    N[,"N2sa"]<- N[,"N2sa"] + N2j - N2sa.a
+    # WARNING: assumes saAges* is sorted by age
+    N[, c(saAges1[-1])]<- N1sa[, -ncol(N1sa)] # subadult age transitions
+    N[, c(saAges2[-1])]<- N2sa[, -ncol(N2sa)] # subadult age transitions
+    N[, "N1b"]<- N1sa[, ncol(N1sa)] # subadult -> adult
+    N[, "N2b"]<- N2sa[, ncol(N2sa)] # subadult -> adult
+    N[, c(saAges1[1])]<- N1j # juvenil -> subadult
+    N[, c(saAges2[1])]<- N2j # juvenil -> subadult
   } else { # Juveniles grow to N*b
     N[,"N1b"]<- N[,"N1b"] + N1j
     N[,"N2b"]<- N[,"N2b"] + N2j

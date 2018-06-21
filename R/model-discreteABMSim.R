@@ -23,16 +23,18 @@ NULL
 #' @export
 #'
 #' @examples
-discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N1sa=5, N2s=5, N2b=5, N2bF=5, N2sa=5),
+discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
                           transitionsFunc=transitionABM.LH_Beh,
                           params=list(b1=2, b2=2,   broods=2, PbF1=.4, PbF2=.4,  a1=.3,ab1=.25,sa1=.25,j1=.1,  a2=.3,ab2=.25,sa2=.20,j2=.1, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5),
                           tf=10, replicates=100, maxN=10000, Ntf=FALSE){
-  stateName<- names(N0)
+  # Check nStates returned by transitionsFunc (LH_behavior add subadult classes according to AFR)
+  N<- transitionsFunc(N=rbind(N0, N0), params=params)
+  stateName<- colnames(N)
   nStates<- length(stateName)
   
   if (!Ntf){
     popABM<- array(NA_real_, dim=c(replicates, nStates, tf+1), dimnames=list(replicate=NULL, state=stateName, t=0:tf))
-    popABM[,,1]<- N0
+    popABM[, names(N0), 1]<- N0
     
     for (ti in 1:tf){
       popABM[,,ti+1]<- transitionsFunc(N=popABM[,,ti], params=params)
@@ -47,6 +49,7 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N1sa=5, N2s=5, N2b=5, N2bF=
       # Stop if all replicates have a class that reach maxN
       if (all(apply(popABM[,,ti+1], MARGIN=1, function(x) any(c(x == maxN, FALSE), na.rm=TRUE)))){ # FALSE in case all is NA
         popABM[,,tf+1]<- maxN
+        ## TODO: fill ti:tf+1?? check extincNA
         break
       }# Stop if all replicates get extinct
       if (all(apply(popABM[,,ti+1], MARGIN=1, function(x) all(c(x <= 0, TRUE), na.rm=TRUE))) & ti < tf){ # TRUE in case all is NA
@@ -56,8 +59,8 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N1sa=5, N2s=5, N2b=5, N2bF=
     }
   }else{ # Save t0 and tf and discard intermediate timesteps
     popABM<- array(NA_real_, dim=c(replicates, nStates, 2), dimnames=list(replicate=NULL, state=stateName, t=c(0, tf)))
-    popABM[,,1]<- N0
-    popABM[,,2]<- N0
+    popABM[, names(N0), 1]<- N0
+    popABM[, names(N0), 2]<- N0
     
     for (ti in 1:tf){
       popABM[,,2]<- transitionsFunc(N=popABM[,,2], params=params)
@@ -66,7 +69,6 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N1sa=5, N2s=5, N2b=5, N2bF=
       # Stop if all replicates have a class that reach maxN
       if (all(apply(popABM[,,2], MARGIN=1, function(x) any(c(x == maxN, FALSE), na.rm=TRUE)))){ # FALSE in case all is NA
         popABM[,,2]<- maxN
-        pop[,ti + 1]<- maxN
         break
       }# Stop if all replicates get extinct
       if (all(apply(popABM[,,2], MARGIN=1, function(x) all(c(x <= 0, TRUE), na.rm=TRUE)))){ # TRUE in case all is NA
