@@ -32,7 +32,7 @@ NULL
 #' 
 #' @export
 setGeneric("LH", function(pars, lambda=c(1.05, 1.2), fecundity, broods=2^(0:2), b=c(1, 2, 5, 10),
-                          a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s=a, AFR=1, free="j", popbio=FALSE, ...) standardGeneric("LH"))
+                          a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s, AFR=1, free="j", popbio=FALSE, ...) standardGeneric("LH"))
 
 setMethod("LH",
           signature(pars="data.frame", lambda="missing", fecundity="missing", broods="missing", b="missing",
@@ -92,7 +92,7 @@ setMethod("LH",
           signature(pars="missing", lambda="ANY", fecundity="missing", broods="ANY", b="ANY",
                     a="ANY", j="ANY", s="ANY", AFR="ANY", free="ANY", popbio="ANY"),
           function(lambda=c(1.05, 1.2), broods=2^(0:2), b=c(1, 2, 5, 10), 
-                   a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s=a, AFR=1, free="j", popbio=FALSE, ...){
+                   a=seq(0.3, 0.9, by=0.2), j=seq(0.2, 0.8, by=0.2), s, AFR=1, free="j", popbio=FALSE, ...){
 
             pars<- sampleLH(lambda=lambda, broods=broods, b=b, j=j, a=a, s=s, AFR=AFR, free=free, ...)
             

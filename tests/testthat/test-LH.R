@@ -16,6 +16,7 @@ test_that("constructor", {
 
   expect_warning(lh<- LH(lambda=lambda, broods=broods, b=b, a=a, AFR=AFR, method="regular")) # parameters out of domain
   expect_is(lh, "LH")
+  expect_equal(lh$s, lh$a) # if s is missing -> s=a
   expect_is(pars<- sampleLH(), "data.frame")
   expect_is(LH(pars), "LH")
   
