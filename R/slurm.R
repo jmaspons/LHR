@@ -5,6 +5,7 @@
 #' @param model 
 #' @param nodes
 #' @param cpus_per_node  
+#' @param slurm_options list with slurm parameters as in \code{\link[rslurm]{slurm_apply}. \code{cpus-per-task} fixed to \code{cpus_per_nodes}.
 #' @param ... parameters passed to \code{\link[rslurm]{slurm_apply}
 #' @inheritParams rslurm::slurm_apply
 #'
@@ -14,25 +15,26 @@
 #' cleanup_files(sjob)
 #' @include aaa-classes.R
 #' @export
-setGeneric("run.slurm", function(model, nodes, cpus_per_node, ...) standardGeneric("run.slurm"))
+setGeneric("run.slurm", function(model, nodes, cpus_per_node, slurm_options, ...) standardGeneric("run.slurm"))
 
 setMethod("run.slurm", 
-          signature(model="Model", nodes="numeric", cpus_per_node="numeric"),
-          function(model, nodes, cpus_per_node, ...){
+          signature(model="Model", nodes="numeric", cpus_per_node="numeric", slurm_options="list"),
+          function(model, nodes, cpus_per_node, slurm_options, ...){
 
             if (!requireNamespace("rslurm")) stop("run.slurm requires to install rslurm package.")
             
-            nBatch<- nrow(model) %/% nodes
+            if (missing(slurm_options)){
+              slurm_options<- list(`cpus-per-task`=cpus_per_node)
+            }else{
+              slurm_options$`cpus-per-task`<- cpus_per_node
+            }
             
+            nBatch<- nrow(model) %/% nodes
             splitScenarios<- suppressWarnings(split(1:nrow(model), rep(1:nBatch, times=nodes)))
-            # sort(as.integer(unlist(splitScenarios)))
             
             params<- data.frame(i=seq_along(splitScenarios))
             
-            call<- switch(class(model@sim),
-                          Sim.discretePopSim="run.discretePopSim(model[splitScenarios[[i]],], cl=cpus_per_node)",
-                          Sim.numericDistri="run.numericDistri(model[splitScenarios[[i]],], cl=cpus_per_node)",
-                          Sim.ABM="run.ABM(model[splitScenarios[[i]],], cl=cpus_per_node, ...)")
+            call<- "run(model[splitScenarios[[i]], ], cl=cpus_per_node, pb=FALSE)"
             
             s_call<- function(i){
               eval(parse(text=call))
@@ -40,7 +42,7 @@ setMethod("run.slurm",
             
             sjob<- rslurm::slurm_apply(f=s_call, params=params,
                                   add_objects=c("model", "splitScenarios", "call", "cpus_per_node"),
-                                  nodes=nodes, cpus_per_node=cpus_per_node, ...)
+                                  nodes=nodes, cpus_per_node=1, slurm_options=slurm_options, ...)
             
             return(sjob)
           }
@@ -58,6 +60,7 @@ setMethod("run.slurm",
 #' @param cpus_per_node
 #' @param Pobjective the probability that a given population still exists at the end of the simulations.
 #' @param verbose
+#' @param slurm_options list with slurm parameters as in \code{\link[rslurm]{slurm_apply}. \code{cpus-per-task} fixed to \code{cpus_per_nodes}.
 #' @param ... parameters passed to \code{\link[rslurm]{slurm_apply}
 #' @inheritParams rslurm::slurm_apply
 #'
@@ -68,26 +71,31 @@ setMethod("run.slurm",
 #' cleanup_files(sjob)
 #' @include aaa-classes.R
 #' @export
-findN0_Pest.slurm<- function(model=Model(), nodes, cpus_per_node, Pobjective=.5, verbose=FALSE, ...){
+findN0_Pest.slurm<- function(model=Model(), nodes, cpus_per_node, Pobjective=.5, verbose=FALSE, slurm_options, ...){
   
   if (!requireNamespace("rslurm")) stop("run.slurm requires to install rslurm package.")
+
+  if (missing(slurm_options)){
+    slurm_options<- list(`cpus-per-task`=cpus_per_node)
+  }else{
+    slurm_options$`cpus-per-task`<- cpus_per_node
+  }
   
   nBatch<- nrow(model) %/% nodes
-  
   splitScenarios<- suppressWarnings(split(1:nrow(model), rep(1:nBatch, times=nodes)))
-  # sort(as.integer(unlist(splitScenarios)))
-
+  
   params<- data.frame(i=seq_along(splitScenarios))
   
-  call<- "findN0_Pest(model=model[splitScenarios[[i]],], cl=cpus_per_node, Pobjective=Pobjective, verbose=verbose)"
+  call<- "findN0_Pest(model=model[splitScenarios[[i]], ], cl=cpus_per_node, Pobjective=Pobjective, verbose=verbose, pb=FALSE)"
   
   s_call<- function(i){
     eval(parse(text=call))
   }
   
+
   sjob<- rslurm::slurm_apply(f=s_call, params=params,  
                      add_objects=c("model", "splitScenarios", "call", "cpus_per_node", "Pobjective", "verbose"),
-                     nodes=nodes, cpus_per_node=cpus_per_node, ...)
+                     nodes=nodes, cpus_per_node=cpus_per_node, slurm_options=slurm_options, ...)
   
   return(sjob)
 }
@@ -111,7 +119,6 @@ findN0_Pest.slurm<- function(model=Model(), nodes, cpus_per_node, Pobjective=.5,
 #' @export
 ensembleModel.slurm<- function(sjob, wait=TRUE){
   out<- rslurm::get_slurm_out(sjob, outtype="raw", wait=wait)
-  # do.call(rbind, out)
   do.call(rbind, out)
 }
 
