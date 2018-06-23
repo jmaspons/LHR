@@ -30,20 +30,20 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 6 * 4), nrow=4, ncol=6, dimnames
   saAges1<- grep("N1", saAges, value=TRUE)
   saAges2<- grep("N2", saAges, value=TRUE)
   
+  
   ## BREEDING
+  adultN1<- rowSums(N[,c("N1b", "N1bF", "N1s")])
+  adultN2<- rowSums(N[,c("N2b", "N2bF", "N2s")])
+  
+  ## Breeders
+  breedingN1<-  with(params, rbinom(nRep, size=adultN1, prob=Pb1))
+  breedingN2<-  with(params, rbinom(nRep, size=adultN2, prob=Pb2))
+  
+  # Skip reproduction
+  N[,"N1s"]<- adultN1 - breedingN1
+  N[,"N2s"]<- adultN2 - breedingN2
+  
   for (i in 1:params$broods){
-    ## Recruitment including juvenile survival and reproductive state change
-    adultN1<- rowSums(N[,c("N1b", "N1bF", "N1s")])
-    adultN2<- rowSums(N[,c("N2b", "N2bF", "N2s")])
-    
-    ## Breeding attemps
-    breedingN1<-  with(params, rbinom(nRep, size=adultN1, prob=Pb1))
-    breedingN2<-  with(params, rbinom(nRep, size=adultN2, prob=Pb2))
-    
-    # Skip reproduction
-    N[,"N1s"]<- adultN1 - breedingN1
-    N[,"N2s"]<- adultN2 - breedingN2
-    
     ## Breeding success
     N[,"N1b"]<-  with(params, rbinom(nRep, size=breedingN1, prob=(1 - PbF1)))
     N[,"N2b"]<-  with(params, rbinom(nRep, size=breedingN2, prob=(1 - PbF2)))
@@ -55,7 +55,8 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 6 * 4), nrow=4, ncol=6, dimnames
     N1j<- N1j + with(params, rbinom(nRep, size=N[,"N1b"] * b1, prob=j1))
     N2j<- N2j + with(params, rbinom(nRep, size=N[,"N2b"] * b2, prob=j2))
     
-    ## interbreed interval mortality
+    ## interbreed interval mortality? otherwise mortality only affected by the last brood event
+    ## Skip reproduction moved outside the broods loop?
     
     ## MOVEMENTS
     # habOLD_NEW
