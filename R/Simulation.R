@@ -164,7 +164,7 @@ setMethod("Sim.numericDistri",
 #' @examples Sim.ABM()
 #' 
 #' @export
-setGeneric("Sim.ABM", function(params, N0, transitionsFunc=transitionABM.LH_Beh, tf=10, replicates=15, maxN=10000,
+setGeneric("Sim.ABM", function(params, N0, transitionsFunc=transitionABM.LH_Beh, tf=10, replicates=100, maxN=10000,
                                raw=TRUE, discretePopSim=TRUE, Ntf=TRUE, stats=TRUE, ...) standardGeneric("Sim.ABM"))
 setMethod("Sim.ABM",
           signature(params="list", N0="missing", transitionsFunc="missing", tf="missing", replicates="missing", maxN="missing", raw="missing", discretePopSim="missing", Ntf="missing", stats="missing"),
