@@ -25,8 +25,8 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=
   behavior<- match.arg(behavior, several.ok=TRUE)
   
   if (any(env$seasonAmplitude > 0)){
-    warning("Seasonality not implemented for this model. Scenarios discarded!")
-    env<- env[env$seasonAmplitude == 0,]
+    warning("Seasonality and environmental variation not implemented for this model. Scenarios discarded!")
+    env<- env[env$seasonAmplitude == 0 & env$varA == 0 & env$varJ == 0, ]
   }
   
   if (is.numeric(cl)){
