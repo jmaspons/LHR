@@ -33,8 +33,8 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
   nStates<- length(stateName)
   
   if (!Ntf){
-    popABM<- array(NA_real_, dim=c(replicates, nStates, tf+1), dimnames=list(replicate=NULL, state=stateName, t=0:tf))
-    popABM[, names(N0), 1]<- N0
+    popABM<- array(0, dim=c(replicates, nStates, tf+1), dimnames=list(replicate=NULL, state=stateName, t=0:tf))
+    popABM[, names(N0), 1]<- t(replicate(replicates, N0))
     
     for (ti in 1:tf){
       popABM[,,ti+1]<- transitionsFunc(N=popABM[,,ti], params=params)
@@ -58,9 +58,9 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
       }
     }
   }else{ # Save t0 and tf and discard intermediate timesteps
-    popABM<- array(NA_real_, dim=c(replicates, nStates, 2), dimnames=list(replicate=NULL, state=stateName, t=c(0, tf)))
-    popABM[, names(N0), 1]<- N0
-    popABM[, names(N0), 2]<- N0
+    popABM<- array(0, dim=c(replicates, nStates, 2), dimnames=list(replicate=NULL, state=stateName, t=c(0, tf)))
+    popABM[, names(N0), 1]<- t(replicate(replicates, N0))
+    popABM[, names(N0), 2]<- t(replicate(replicates, N0))
     
     for (ti in 1:tf){
       popABM[,,2]<- transitionsFunc(N=popABM[,,2], params=params)
