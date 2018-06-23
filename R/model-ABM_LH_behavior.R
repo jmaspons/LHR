@@ -152,7 +152,6 @@ plotLH_behavior<- function(x, ...){ UseMethod("plotLH_behavior") }
 #'
 #' @examples
 plotLH_behavior.discreteABMSim<- function(x, groups=c("all", "habitat", "age", "habitat*age"), ...){
-  
   if (is.integer(groups)) groups<- c("habitat", "age", "habitat*age", "all")[groups]
   else groups<- match.arg(groups)
   
@@ -166,36 +165,28 @@ plotLH_behavior.discreteABMSim<- function(x, groups=c("all", "habitat", "age", "
          },
          habitat={
            tmp<- array(dim=c(nrow(x), 2, dim(x)[3]), dimnames=list(replicate=NULL, state=c("Hab1", "Hab2"), t=0:(dim(x)[3] - 1)))
-           tmp[,1,]<-  apply(x[,grep("1", colnames(x)),], 3, rowSums)
-           tmp[,2,]<-  apply(x[,grep("2", colnames(x)),], 3, rowSums)
+           tmp[, 1,]<-  apply(x[, grep("^N1", colnames(x)), ], 3, rowSums)
+           tmp[, 2,]<-  apply(x[, grep("^N2", colnames(x)), ], 3, rowSums)
            
            color<- grDevices::rainbow(length(grep("1", colnames(tmp))), start=0, end=1/7)
            color<- c(color, rev(grDevices::rainbow(length(grep("2", colnames(tmp))), start=2/6, end=4/7)))
            ylab<- "N by Habitat"
          },
          age={
-           tmp<- array(dim=c(nrow(x), 2, dim(x)[3]), dimnames=list(replicate=NULL, state=c("Hab1", "Hab2"), t=0:(dim(x)[3] - 1)))
-           tmp[,1,]<-  apply(x[,grep("1", colnames(x)),], 3, rowSums)
-           tmp[,2,]<-  apply(x[,grep("2", colnames(x)),], 3, rowSums)
+           tmp<- array(dim=c(nrow(x), 2, dim(x)[3]), dimnames=list(replicate=NULL, state=c("Ad", "subAd"), t=0:(dim(x)[3] - 1)))
+           tmp[, 1,]<-  apply(x[, grep("^N[12]{1}[sbF]{1,2}$", colnames(x)), ], 3, rowSums)
+           tmp[, 2,]<-  apply(x[, grep("^N[12]{1}sa", colnames(x)), ], 3, rowSums)
            
-           nRow<- nrow(x)
-            tmp<- matrix(NA_real_, nrow=nRow, ncol=3, dimnames=list(timeSeries=rep("", nRow), c("", "Ad", "Juv")))
-            tmp[,1]<- x[,1]
-            tmp[,2]<- apply(x[,c(2:4, 6:8)], 1, sum)
-            tmp[,3]<- apply(x[,c(5,9)], 1, sum)
-            
-            color<- grDevices::rainbow(2, start=0, end=4/6)
-            ylab<- "N by Age"
+           color<- grDevices::rainbow(2, start=0, end=4/6)
+           ylab<- "N by Age"
          },
          `habitat*age`={
-            nRow<- nrow(x)
-            tmp<- matrix(NA_real_, nrow=nRow, ncol=5, dimnames=list(timeSeries=rep("", nRow), c("", "AdHab1", "JuvHab1", "AdHab2", "JuvHab2")))
-            tmp[,1]<-  x[,1]
-            tmp[,2]<-  apply(x[,2:4], 1, sum)
-            tmp[,3]<-  x[,5]
-            tmp[,4]<-  apply(x[,6:8], 1, sum)
-            tmp[,5]<-  x[,9]
-            
+            tmp<- array(dim=c(nrow(x), 4, dim(x)[3]), dimnames=list(replicate=NULL, state=c("AdHab1", "subAdHab1", "AdHab2", "subAdHab2"), t=0:(dim(x)[3] - 1)))
+            tmp[, 1,]<-  apply(x[, grep("^N1[sbF]{1,2}$", colnames(x)), ], 3, rowSums)
+            tmp[, 2,]<-  apply(x[, grep("^N1sa", colnames(x)), ], 3, rowSums)
+            tmp[, 3,]<-  apply(x[, grep("^N2[sbF]{1,2}$", colnames(x)), ], 3, rowSums)
+            tmp[, 4,]<-  apply(x[, grep("^N2sa", colnames(x)), ], 3, rowSums)
+           
             color<- grDevices::rainbow(length(grep("1", colnames(tmp))), start=0, end=1/8)
             color<- c(color, rev(grDevices::rainbow(length(grep("2", colnames(tmp))), start=2/6, end=4/7)))
             ylab<- "N by Habitat and Age"
@@ -230,6 +221,9 @@ plotLH_behavior.discreteABMSim<- function(x, groups=c("all", "habitat", "age", "
   
   tmpQuantile$color<- tmpQuantile$state
   
+  # Avoid -Inf when scale_y_log10
+  if (any(tmpQuantile$N == 0)) tmpQuantile$N<- tmpQuantile$N + .5
+  
   tmpMean<- tmpQuantile[tmpQuantile$quantile == "50%",]
   tmpQuantile<- tmpQuantile[tmpQuantile$quantile %in% c("25%", "75%"),]
   tmpQuantile<- reshape2::dcast(tmpQuantile, t + state + color ~ quantile, value.var="N")
@@ -253,11 +247,9 @@ plotLH_behavior.discreteABMSim<- function(x, groups=c("all", "habitat", "age", "
 #'
 #' @examples
 plotLH_behavior.Model<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf"), facet_grid=breedFail ~ habDiff + behavior, ...){
-  
   if (missing(resultType)) noType<- TRUE else noType<- FALSE
   
   resultType<- match.arg(resultType)
-  
   
   stats<- nrow(x@sim) > 0
   N0_Pest<- nrow(x@sim@N0_Pest) > 0
@@ -320,12 +312,10 @@ plotLH_behavior.Model<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf
 #' @export
 #'
 #' @examples
-plotLH_behavior.data.frame<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf"), facet_grid=breedFail~habDiff + behavior, ...){
-  
+plotLH_behavior.data.frame<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf"), facet_grid=breedFail ~ habDiff + behavior, ...){
   if (missing(resultType)) noType<- TRUE else noType<- FALSE
   
   resultType<- match.arg(resultType)
-  
   
   stats<- all(c("idScenario", "N0", "GL", "colorLH", "lambda", "seasonAmplitude", "varJ", "varA", "breedFail") %in% names(x))
   N0_Pest<- all(c("idScenario", "N0interpoled", "colorLH", "lambda", "seasonAmplitude", "varJ", "varA", "breedFail") %in% names(x))
@@ -370,7 +360,7 @@ plotLH_behavior.data.frame<- function(x, resultType=c("Pest_N0", "G", "N0_Pest",
   return(out)
 }
 
-plotPest_N0.LH_behavior<- function(x, ...){
+plotPest_N0.LH_behavior<- function(x, facet_grid=breedFail ~ habDiff + behavior, ...){
   x$Pest<- 1 - x$extinct
   
   ggplot2::ggplot(data=x, ggplot2::aes(x=N0, y=Pest, group=idScenario, color=colorLH)) + 
@@ -379,7 +369,7 @@ plotPest_N0.LH_behavior<- function(x, ...){
     ggplot2::scale_size(breaks=unique(x$lambda), range=c(0.5, 2))
 }
 
-plotG.LH_behavior<- function(x, ...){
+plotG.LH_behavior<- function(x, facet_grid=breedFail ~ habDiff + behavior, ...){
   ggplot2::ggplot(data=x, ggplot2::aes(x=N0, y=GL, group=idScenario, color=colorLH)) + 
     ggplot2::geom_hline(yintercept=1) + ggplot2::geom_line(mapping=ggplot2::aes(size=lambda), alpha=0.5) + # ggplot2::geom_point() +
     ggplot2::geom_line(mapping=ggplot2::aes(y=meanL), linetype=2) +
@@ -388,14 +378,19 @@ plotG.LH_behavior<- function(x, ...){
     ggplot2::scale_size(breaks=unique(x$lambda), range=c(0.5, 2))
 }
 
-plotN0_Pest.LH_behavior<- function(x, ...){
+plotN0_Pest.LH_behavior<- function(x, facet_grid=breedFail ~ habDiff + behavior, ...){
   ggplot2::ggplot(data=x, ggplot2::aes(x=lambda, y=N0interpoled, group=colorLH, color=colorLH)) + ggplot2::scale_y_log10() +
     ggplot2::geom_point() + ggplot2::geom_line(size=0.5) + ggplot2::facet_grid(facet_grid, labeller=ggplot2::label_both)  
 }
 
-plotNtf.LH_behavior<- function(x, ...){
+plotNtf.LH_behavior<- function(x, facet_grid=breedFail ~ habDiff + behavior, ...){
   abline<- 1:max(x$N0)
   abline<- data.frame(x=abline, y=abline)
+  
+  # Avoid -Inf when scale_y_log10
+  if (any(x[, grep("%", names(x), value=T)] == 0)){
+    x[, grep("%", names(x), value=T)]<- x[, grep("%", names(x), value=T)] + 0.5
+  }
   
   ggplot2::ggplot(data=x, ggplot2::aes(x=N0, color=colorLH, fill=colorLH, group=idScenario)) + ggplot2::scale_y_log10() + 
     ggplot2::geom_ribbon(mapping=ggplot2::aes(ymin=`25%`, ymax=`75%`), alpha=.4, linetype=0) + ggplot2::geom_line(mapping=ggplot2::aes(y=`50%`, size=lambda)) + 
