@@ -125,6 +125,19 @@ setMethod("show", signature(object="LH"),
 }
 
 
+#' LH summary
+#'
+#' @rdname LH
+#' @param object 
+#' @param ... 
+#'
+#' @return
+#' @export
+summary.LH<- function(object, ...){
+  selCols<- intersect(colnames(object), c("baseLH", "lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR"))
+  lapply(S3Part(object)[, selCols], function(x) sort(unique(x)))
+}
+
 #' Plot LH
 #'
 #' @rdname LH

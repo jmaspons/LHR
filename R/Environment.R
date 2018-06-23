@@ -226,6 +226,19 @@ setMethod("show", signature(object="Env"),
 }
 
 
+#' Env summary
+#'
+#' @rdname Env
+#' @param object 
+#' @param ... 
+#'
+#' @return
+#' @export
+summary.LH<- function(object, ...){
+  lapply(S3Part(object)[, sapply(object, is.numeric)], function(x) sort(unique(x)))
+}
+
+
 #' Plot Env
 #'
 #' @rdname Env
