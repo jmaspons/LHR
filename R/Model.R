@@ -143,38 +143,35 @@ setMethod("combineLH_Env",
 #' @param model 
 #' @param cl 
 #' @param pb if \code{TRUE} and \link[pbapply]{pbapply} package is installed, show a progress bar.
+#' @param debug if \code{TRUE} run the simulations in a simple loop and print information about the state.
 #' @param ... 
 #'
 #' @return a \code{Model} object with the result of the simulation.
 #' @examples res<- run(model, cl=2)
 #' @export
-setGeneric("run", function(model, cl=parallel::detectCores(), pb=FALSE, ...) standardGeneric("run"))
+setGeneric("run", function(model, cl=parallel::detectCores(), pb=FALSE, debug=FALSE,...) standardGeneric("run"))
 
 setMethod("run", 
           signature(model="Model", cl="ANY", pb="ANY"),
           function(model, cl=parallel::detectCores(), pb=FALSE, ...){
             if (is.numeric(cl)){
-              numericCL<- TRUE
               if (.Platform$OS.type == "windows"){
                 cl<- parallel::makePSOCKcluster(cl)
               }else{
                 cl<- parallel::makeForkCluster(cl)
               }
-            } else {
-              numericCL<- FALSE
+              on.exit(parallel::stopCluster(cl))
             }
             
             simRes<- switch(class(model@sim),
-                               Sim.discretePopSim=run.discretePopSim(model, cl=cl, pb=pb, ...),
-                               Sim.numericDistri=run.numericDistri(model, cl=cl, pb=pb, ...),
-                               Sim.ABM=run.ABM(model, cl=cl, pb=pb, ...))
+                               Sim.discretePopSim=run.discretePopSim(model, cl=cl, pb=pb, debug=debug, ...),
+                               Sim.numericDistri=run.numericDistri(model, cl=cl, pb=pb, debug=debug, ...),
+                               Sim.ABM=run.ABM(model, cl=cl, pb=pb, debug=debug, ...))
 
             modelRes<- new(class(model), 
                         S3Part(model),
                         sim=simRes,
                         params=model@params)
-            
-            if (numericCL) parallel::stopCluster(cl)
             
             return(modelRes)
           }
@@ -182,33 +179,36 @@ setMethod("run",
 )
 
 
-run.discretePopSim<- function(model, cl=parallel::detectCores(), pb=FALSE){
+run.discretePopSim<- function(model, cl=parallel::detectCores(), pb=FALSE, debug=FALSE){
   scenario<- S3Part(model)
   scenario<- split(scenario, scenario$idScenario)
   pars<- model@sim@params
-
-  if (is.numeric(cl)){
-    numericCL<- TRUE
-    cl<- parallel::makeCluster(cl)
+  
+  if (!debug){
+    if (is.numeric(cl)){
+      cl<- parallel::makeCluster(cl)
+      on.exit(parallel::stopCluster(cl))
+    }
+    
+    parallel::clusterExport(cl=cl, "pars", envir=environment())
+    parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
+    parallel::clusterEvalQ(cl, library(LHR))
+    
+    if (pb & requireNamespace("pbapply", quietly=TRUE)){
+      sim<- pbapply::pblapply(scenario, runScenario.discretePopSim, pars=pars, cl=cl)
+    }else{
+      sim<- parallel::parLapply(cl=cl, scenario, runScenario.discretePopSim, pars=pars)
+    }
+    
   } else {
-    numericCL<- FALSE
+    sim<- list()
+    for (i in seq_along(scenario)){
+      message(i, "/", length(scenario))
+      print(scenario[[i]], row.names=FALSE)
+      eTime<- system.time(sim[[i]]<- runScenario.discretePopSim(scenario=scenario[[i]], pars=pars))
+      message("Elapsed time: ", eTime["elapsed"])
+    }
   }
-  
-  parallel::clusterExport(cl=cl, "pars", envir=environment())
-  parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
-  parallel::clusterEvalQ(cl, library(LHR))
-  
-  if (pb & requireNamespace("pbapply", quietly=TRUE)){
-    sim<- pbapply::pblapply(scenario, runScenario.discretePopSim, pars=pars, cl=cl)
-  }else{
-    sim<- parallel::parLapply(cl=cl, scenario, runScenario.discretePopSim, pars=pars)
-  }
-  
-  # sim<- list()
-  # for (i in seq_along(scenario)){
-  #   sim[[i]]<- runScenario.discretePopSim(scenario=scenario[[i]], pars=pars)
-  # }
-  
   
   stats<- lapply(sim, function(x) x$stats)
   stats<- do.call("rbind", stats)
@@ -230,18 +230,11 @@ run.discretePopSim<- function(model, cl=parallel::detectCores(), pb=FALSE){
     simRes@Ntf<- Ntf
   }
   
-  if (numericCL) parallel::stopCluster(cl)
-  
   return(simRes)
 }
 
 
-runScenario.discretePopSim<- function (scenario, pars, verbose=FALSE){
-  if (verbose){
-    message(rownames(scenario), "/", nrow(scenario), "\n")
-    print(scenario, row.names=FALSE)
-  }
-  
+runScenario.discretePopSim<- function (scenario, pars){
   stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=15, 
                dimnames=list(scenario_N0=paste0(rep(scenario$idScenario, length=length(pars$N0)), "_N", pars$N0),
                              stats=c("idScenario", "N0", "increase", "decrease", "stable","extinct", 
@@ -302,38 +295,40 @@ runScenario.discretePopSim<- function (scenario, pars, verbose=FALSE){
 
 
 
-run.numericDistri<- function(model, cl=parallel::detectCores(), pb=FALSE){
+run.numericDistri<- function(model, cl=parallel::detectCores(), pb=FALSE, debug=FALSE){
   scenario<- S3Part(model)
   scenario<- split(scenario, scenario$idScenario)
   pars<- model@sim@params
   
-  if (is.numeric(cl)){
-    numericCL<- TRUE
-    cl<- parallel::makeCluster(cl)
+  if (!debug){
+    if (is.numeric(cl)){
+      cl<- parallel::makeCluster(cl)
+      on.exit(parallel::stopCluster(cl))
+    }
+  
+    parallel::clusterExport(cl=cl, "pars", envir=environment())
+    parallel::clusterEvalQ(cl, library(LHR))
+  
+    if (pb & requireNamespace("pbapply", quietly=TRUE)){
+      sim<- pbapply::pblapply(scenario, runScenario.numericDistri, pars=pars, cl=cl)
+    }else{
+      sim<- parallel::parLapply(cl=cl, scenario, runScenario.numericDistri, pars=pars)
+    }
+    
   } else {
-    numericCL<- FALSE
+    sim<- list()
+    for (i in seq_along(scenario)){
+      message(i, "/", length(scenario))
+      print(scenario[[i]], row.names=FALSE)
+      eTime<- system.time(sim[[i]]<- runScenario.numericDistri(scenario=scenario[[i]], pars=pars))
+      message("Elapsed time: ", eTime["elapsed"])
+    }
   }
-
-  parallel::clusterExport(cl=cl, "pars", envir=environment())
-  parallel::clusterEvalQ(cl, library(LHR))
-
-  if (pb & requireNamespace("pbapply", quietly=TRUE)){
-    sim<- pbapply::pblapply(scenario, runScenario.numericDistri, pars=pars, cl=cl)
-  }else{
-    sim<- parallel::parLapply(cl=cl, scenario, runScenario.numericDistri, pars=pars)
-  }
-  
-  # sim<- list()
-  # for (i in seq_along(scenario)){
-  #   sim[[i]]<- runScenario.numericDistri(scenario=scenario[[i]], pars=pars)
-  # }
-  
   
   stats<- lapply(sim, function(x) x$stats)
   stats<- do.call("rbind", stats)
   stats<- as.data.frame(stats, stringsAsFactors=FALSE)
-  stats<- stats[naturalsort::naturalorder(paste0(stats$idScenario, "|", stats$N0)),]
-  
+
   simRes<- model@sim
   S3Part(simRes)<- stats
   
@@ -341,22 +336,15 @@ run.numericDistri<- function(model, cl=parallel::detectCores(), pb=FALSE){
     rawSim<- lapply(sim, function(x) x$raw)
     simRes@raw<- rawSim
   }
-  
-  if (numericCL) parallel::stopCluster(cl)
-  
+
   return(simRes)
 }
 
 
-runScenario.numericDistri<- function(scenario, pars, verbose=FALSE){
-  if (verbose){
-    cat(rownames(scenario), "/", nrow(scenario), "\n")
-    print(scenario, row.names=FALSE)
-  }
-  
+runScenario.numericDistri<- function(scenario, pars){
   stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=12, 
-               dimnames=list(scenario_N0=paste0(rep(scenario$idScenario, length=length(pars$N0)), "_N", pars$N0),
-                             stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = lenght(summary(pop)) + 2 (idScenario + N0)
+            dimnames=list(scenario_N0=paste0(rep(scenario$idScenario, length=length(pars$N0)), "_N", pars$N0),
+                          stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 11 = lenght(summary(pop)) + 2 (idScenario + N0)
   stats<- as.data.frame(stats, stringsAsFactors=FALSE)
   stats$idScenario<- scenario$idScenario
   stats$N0<- pars$N0
@@ -410,33 +398,36 @@ runScenario.numericDistri<- function(scenario, pars, verbose=FALSE){
 }
 
 
-run.ABM<- function(model, cl=parallel::detectCores(), raw, pb=FALSE, ...){
+run.ABM<- function(model, cl=parallel::detectCores(), raw, pb=FALSE, debug=FALSE, ...){
   scenario<- S3Part(model)
   scenario<- split(scenario, scenario$idScenario)
   pars<- model@sim@params
 
-  if (is.numeric(cl)){
-    numericCL<- TRUE
-    cl<- parallel::makeCluster(cl)
+  if (!debug){
+    if (is.numeric(cl)){
+      cl<- parallel::makeCluster(cl)
+      on.exit(parallel::stopCluster(cl))
+    }
+    
+    parallel::clusterExport(cl=cl, "pars", envir=environment())
+    parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
+    parallel::clusterEvalQ(cl, library(LHR))
+    
+    if (pb & requireNamespace("pbapply", quietly=TRUE)){
+      sim<- pbapply::pblapply(scenario, runScenario.ABM, pars=pars, cl=cl)
+    }else{
+      sim<- parallel::parLapply(cl=cl, scenario, runScenario.ABM, pars=pars)
+    }
+    
   } else {
-    numericCL<- FALSE
+    sim<- list()
+    for (i in seq_along(scenario)){
+      message(i, "/", length(scenario))
+      print(scenario[[i]], row.names=FALSE)
+      eTime<- system.time(sim[[i]]<- runScenario.ABM(scenario=scenario[[i]], pars=pars))
+      message("Elapsed time: ", eTime["elapsed"])
+    }
   }
-  
-  parallel::clusterExport(cl=cl, "pars", envir=environment())
-  parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
-  parallel::clusterEvalQ(cl, library(LHR))
-  
-  if (pb & requireNamespace("pbapply", quietly=TRUE)){
-    sim<- pbapply::pblapply(scenario, runScenario.ABM, pars=pars, cl=cl)
-  }else{
-    sim<- parallel::parLapply(cl=cl, scenario, runScenario.ABM, pars=pars)
-  }
-  
-  # sim<- list()
-  # for (i in seq_along(scenario)){
-  #   sim[[i]]<- runScenario.ABM(scenario=scenario[[i]], pars=pars)
-  # }
-  
   
   stats<- lapply(sim, function(x) x$stats)
   names(stats)<- NULL
@@ -461,19 +452,12 @@ run.ABM<- function(model, cl=parallel::detectCores(), raw, pb=FALSE, ...){
     # Ntf[,-1]<- apply(Ntf[,2:ncol(Ntf)], 2, as.numeric)
     simRes@Ntf<- Ntf
   }
-  
-  if (numericCL) parallel::stopCluster(cl)
-  
+
   return (simRes)
 }
 
 
-runScenario.ABM<- function (scenario, pars, verbose=FALSE){
-  if (verbose){
-    message(rownames(scenario), "/", nrow(scenario), "\n")
-    print(scenario, row.names=FALSE)
-  }
-  
+runScenario.ABM<- function (scenario, pars){
   stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=15, 
                dimnames=list(scenario_N0=paste0(rep(scenario$idScenario, length=length(pars$N0)), "_N", sapply(pars$N0, sum)),
                              stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct",
@@ -617,14 +601,14 @@ setMethod("result",
                   }
                   
                   Ntf<- apply(model@sim@Ntf[,-c(1,2)], 1, function(x){
-                    if (all(is.na(x))){
-                      res<- rep(NA_real_, 5) # TODO: add probs parameter for Ntf -> ifelse(missing(probs), rep(NA_real_, 5), rep(NA_real_, length(probs))) ## 5 quantiles otherwise as many as probs length
-                    } else {
-                      res<- stats::ecdf(x)
-                      res<- stats::quantile(res, ...)
-                    }
-                    res
-                  })
+                          if (all(is.na(x))){
+                            res<- rep(NA_real_, 5) # TODO: add probs parameter for Ntf -> ifelse(missing(probs), rep(NA_real_, 5), rep(NA_real_, length(probs))) ## 5 quantiles otherwise as many as probs length
+                          } else {
+                            res<- stats::ecdf(x)
+                            res<- stats::quantile(res, ...)
+                          }
+                          res
+                        })
                   Ntf<- t(Ntf)
                   colnames(Ntf)<- names(quantile(1, ...))
                   Ntf<- cbind(model@sim@Ntf[, c(1,2)], Ntf, stringsAsFactors=FALSE)

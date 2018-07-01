@@ -30,14 +30,12 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=
   }
   
   if (is.numeric(cl)){
-    numericCL<- TRUE
     if (.Platform$OS.type == "windows"){
       cl<- parallel::makePSOCKcluster(cl)
     }else{
       cl<- parallel::makeForkCluster(cl)
     }
-  } else {
-    numericCL<- FALSE
+    on.exit(parallel::stopCluster(cl))
   }
   
   
@@ -68,8 +66,6 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=
     })
   }
 
-  if (numericCL) parallel::stopCluster(cl)
-  
   params<- do.call(rbind, params)
 
   params<- merge(params, LH_Env[,c("idScenario", setdiff(names(LH_Env), names(params)))], by="idScenario")

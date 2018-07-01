@@ -4,10 +4,11 @@
 #' @param model a \code{Model} object.
 #' @param Pobjective the probability that a given population still exists at the end of the simulations.
 #' @param cl
-#' @param verbose
 #' @param pb if \code{TRUE} and \link[pbapply]{pbapply} package is installed, show a progress bar. It 
 #' increases the communication overhead between the main process and nodes / child processes. In most cases,
 #' using \code{pbobtions(use_lb=TRUE)} improves the concurrency.
+#' @param verbose if \code{TRUE}, print information of the search status for each iteration.
+#' @param debug if \code{TRUE} run the simulations in a simple loop and print information about the state.
 #' 
 #' @return for \code{findN0_Pest.scenario} a \code{data.frame} with N0, the probability to survive, 
 #'   N0interpoled and objectiveprobability. For \code{findN0_Pest} a \code{Model} object containing the same 
@@ -15,38 +16,42 @@
 #' @export
 #'
 #' @examples
-findN0_Pest<- function(model=Model(), cl=parallel::detectCores(), Pobjective=.5, verbose=FALSE, pb=FALSE){
+findN0_Pest<- function(model=Model(), cl=parallel::detectCores(), Pobjective=.5, pb=FALSE, verbose=FALSE, debug=FALSE){
   scenario<- S3Part(model)
   scenario<- split(scenario, rownames(scenario))
   pars<- model@sim@params
   sim<- model@sim
   
-  if (is.numeric(cl)){
-    numericCL<- TRUE
-    if (.Platform$OS.type == "windows"){
-      cl<- parallel::makePSOCKcluster(cl)
-    }else{
-      cl<- parallel::makeForkCluster(cl)
+  if (!debug){
+    if (is.numeric(cl)){
+      if (.Platform$OS.type == "windows"){
+        cl<- parallel::makePSOCKcluster(cl)
+      }else{
+        cl<- parallel::makeForkCluster(cl)
+      }
+      on.exit(parallel::stopCluster(cl))
     }
+    
+    parallel::clusterExport(cl=cl, c("sim", "Pobjective", "verbose"), envir=environment())
+    parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
+    parallel::clusterEvalQ(cl, library(LHR))
+  
+    if (pb & requireNamespace("pbapply", quietly=TRUE)){
+      N0_Pest<- pbapply::pblapply(scenario, findN0_Pest.scenario, sim=sim, Pobjective=Pobjective, verbose=verbose, cl=cl)
+    }else{
+      N0_Pest<- parallel::parLapply(cl=cl, scenario, findN0_Pest.scenario, sim=sim, Pobjective=Pobjective, verbose=verbose)
+    }
+    
   } else {
-    numericCL<- FALSE
+    N0_Pest<- list()
+    for (i in seq_along(scenario)){
+      message(i, "/", length(scenario))
+      print(scenario[[i]], row.names=FALSE)
+      eTime<- system.time(N0_Pest[[i]]<- findN0_Pest.scenario(scenario=scenario[[i]], sim=sim, Pobjective=Pobjective, verbose=verbose))
+      message("Elapsed time: ", eTime["elapsed"])
+    }
   }
   
-  parallel::clusterExport(cl=cl, c("sim", "Pobjective", "verbose"), envir=environment())
-  parallel::clusterSetRNGStream(cl=cl, iseed=NULL)
-  parallel::clusterEvalQ(cl, library(LHR))
-
-  if (pb & requireNamespace("pbapply", quietly=TRUE)){
-    N0_Pest<- pbapply::pblapply(scenario, findN0_Pest.scenario, sim=sim, Pobjective=Pobjective, verbose=verbose, cl=cl)
-  }else{
-    N0_Pest<- parallel::parLapply(cl=cl, scenario, findN0_Pest.scenario, sim=sim, Pobjective=Pobjective, verbose=verbose)
-  }
-
-  # N0_Pest<- list()
-  # for (i in seq_along(scenario)){
-  #   N0_Pest[[i]]<- findN0_Pest.scenario(scenario=scenario[[i]], sim=sim, Pobjective=Pobjective, verbose=verbose)
-  # }
-
   N0_Pest<- do.call("rbind", N0_Pest)
   
   simRes<- model@sim
@@ -55,8 +60,6 @@ findN0_Pest<- function(model=Model(), cl=parallel::detectCores(), Pobjective=.5,
   out<- Model(pars=S3Part(model), sim=simRes) # constructor removes results
   out@sim<- simRes
 
-  if (numericCL) parallel::stopCluster(cl)
-  
   return(out)
 }
 
@@ -115,7 +118,6 @@ findN0_Pest.scenario<- function(scenario=data.frame(Model(lh=LH(lambda=1))[1,]),
     
     if (N0 == N0anterior) {N0<- N0 - 1}
     
-    # cat("N0=", N0, "\tNmin=", minN, "\tNp50max=", maxN, "\tPmin=", Pmin, "\tPmax=", Pmax, "\n")
     Pest<- fun(N0=N0, scenario=scenario, parsSim=parsSim)
     
     if (Pest < Pobjective){
@@ -144,7 +146,8 @@ findN0_Pest.scenario<- function(scenario=data.frame(Model(lh=LH(lambda=1))[1,]),
       Pmin<- b
     }
     
-    if (verbose){cat("N0=", N0, "\tPestabliment=", Pest, "\tNmin=", minN, "\tNmax=", maxN, "\tPmin=", Pmin, "\tPmax=", Pmax, "\n")}
+    if (verbose)
+      message("N0=", N0, "\tPestabliment=", Pest, "\tNmin=", minN, "\tPmin=", Pmin, "\tNmax=", maxN, "\tPmax=", Pmax)
     
     if (maxN - minN < 2){
       if (maxN - minN == 1){
@@ -156,11 +159,10 @@ findN0_Pest.scenario<- function(scenario=data.frame(Model(lh=LH(lambda=1))[1,]),
           Pest<- Pmin
         }
       }
-      # cat("N0=", N0, "\tPestabliment=", Pest, "\n")
+      
       found<- TRUE
     }
     N0anterior<- N0
-    i<- i+1
   } # End find N0 loop
   
   N0interpoled<- interpole(Pobjective, minN, maxN, Pmin, Pmax)
@@ -194,7 +196,7 @@ Pestablishment.discretePopSim<- function(N0, scenario, parsSim){
   parsSim$N0<- round(N0)
   parsSim$raw<- FALSE
   parsSim$Ntf<- FALSE
-  res<- runScenario.discretePopSim(scenario=scenario, pars=parsSim, verbose=FALSE)
+  res<- runScenario.discretePopSim(scenario=scenario, pars=parsSim)
   
   Pest<- 1 - res$stats[,"extinct"]
   
@@ -207,7 +209,7 @@ Pestablishment.numericDistri<- function(N0, scenario, parsSim){
   parsSim$N0<- round(N0)
   parsSim$raw<- FALSE
   # parsSim$Ntf<- FALSE ## TODO Not set in constructor Sim.numericDistri
-  res<- runScenario.numericDistri(scenario=scenario, pars=parsSim, verbose=FALSE)
+  res<- runScenario.numericDistri(scenario=scenario, pars=parsSim)
   
   Pest<- 1 - res$stats[,"extinct"]
   
