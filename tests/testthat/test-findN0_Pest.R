@@ -22,6 +22,30 @@ if (skip_on_cran()){
   expect_equal(plot(N0_Pest, resultType="G"), NA)
   expect_is(plot(N0_Pest, resultType="N0_Pest"), "ggplot")
   expect_equal(plot(N0_Pest, resultType="Ntf"), NA)
+  
+  ## Critical values
+  lh<- LH(lambda=.3, broods=1, a=.3, method="regular")
+  env<- Env(seasonAmplitude=0, varJ=0, varA=0, breedFail=.3)
+  # Pest < Pobjective for N0 == maxN
+  sim<- Sim.discretePopSim(replicates=1000, maxN=1000)
+  model<- Model(lh=lh, env=env, sim=sim)
+  N0_Pest<- findN0_Pest(model=model, Pobjective=.5)
+  expect_equal(unique(N0_Pest@sim@N0_Pest$N0_Pest), sim@params$maxN)
+  expect_equal(unique(N0_Pest@sim@N0_Pest$N0interpoled), NA_real_)
+  # Pest == 0 for N0 == maxN
+  sim<- Sim.discretePopSim(replicates=1000, maxN=1000, tf=100)
+  model<- Model(lh=lh, env=env, sim=sim)
+  N0_Pest<- findN0_Pest(model=model, Pobjective=.5)
+  expect_equal(unique(N0_Pest@sim@N0_Pest$Pest), 0)
+  expect_equal(unique(N0_Pest@sim@N0_Pest$N0_Pest), sim@params$maxN)
+  expect_equal(unique(N0_Pest@sim@N0_Pest$N0interpoled), NA_real_)
+  # Pest > Pobjective for N0 == 1
+  sim<- Sim.discretePopSim(replicates=1000, maxN=1000)
+  model<- Model(lh=LH(), env=env, sim=sim)
+  N0_Pest<- findN0_Pest(model=model, Pobjective=.1)
+  tmp<- sapply(N0_Pest@sim@N0_Pest$Pest, expect_gt, 0.1)
+  expect_equal(unique(N0_Pest@sim@N0_Pest$N0_Pest), 1)
+  tmp<- sapply(N0_Pest@sim@N0_Pest$N0interpoled, expect_lt, 1)
 }
 })
 
@@ -47,6 +71,8 @@ if (skip_on_cran()){
   expect_equal(plot(N0_Pest, resultType="G"), NA)
   expect_is(plot(N0_Pest, resultType="N0_Pest"), "ggplot")
   expect_equal(plot(N0_Pest, resultType="Ntf"), NA)
+  
+  ## TODO: Critical values
 }
 })
 
@@ -72,6 +98,32 @@ if (skip_on_cran()){
   expect_equal(plot(N0_Pest, resultType="G"), NA)
   expect_is(plot(N0_Pest, resultType="N0_Pest"), "ggplot")
   expect_equal(plot(N0_Pest, resultType="Ntf"), NA)
+  
+  ## Critical values
+  lh<- LH(lambda=.3, broods=1, a=.3, method="regular")
+  env<- Env(seasonAmplitude=0, varJ=0, varA=0, breedFail=.3)
+  pars<- getParamsCombination.LH_Beh(lh, env, habDiffScenario="mortalHab2", behavior="preferHab2")
+  # Pest < Pobjective for N0 == maxN
+  sim<- Sim.ABM(replicates=1000, maxN=1000, raw=FALSE)
+  model<- Model(pars=pars, sim=sim)
+  N0_Pest<- findN0_Pest(model=model, Pobjective=.5)
+  expect_equal(unique(N0_Pest@sim@N0_Pest$N0_Pest), sim@params$maxN)
+  expect_equal(unique(N0_Pest@sim@N0_Pest$N0interpoled), NA_real_)
+  # Pest == 0 for N0 == maxN
+  sim<- Sim.ABM(replicates=1000, maxN=1000, tf=100, raw=FALSE)
+  model<- Model(pars=pars, sim=sim)
+  N0_Pest<- findN0_Pest(model=model, Pobjective=.5)
+  expect_equal(unique(N0_Pest@sim@N0_Pest$Pest), 0)
+  expect_equal(unique(N0_Pest@sim@N0_Pest$N0_Pest), sim@params$maxN)
+  expect_equal(unique(N0_Pest@sim@N0_Pest$N0interpoled), NA_real_)
+  # Pest > Pobjective for N0 == 1
+  sim<- Sim.ABM(replicates=1000, maxN=1000, raw=FALSE)
+  pars<- getParamsCombination.LH_Beh(LH(lambda=1.2), env, habDiffScenario="identicalHab", behavior="neutral")
+  model<- Model(pars=pars, sim=sim)
+  N0_Pest<- findN0_Pest(model=model, Pobjective=.1)
+  tmp<- sapply(N0_Pest@sim@N0_Pest$Pest, expect_gt, 0.1)
+  expect_equal(unique(N0_Pest@sim@N0_Pest$N0_Pest), 1)
+  tmp<- sapply(N0_Pest@sim@N0_Pest$N0interpoled, expect_lt, 1)
 }
 })
 

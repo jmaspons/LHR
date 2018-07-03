@@ -79,28 +79,51 @@ findN0_Pest.scenario<- function(scenario=data.frame(Model(lh=LH(lambda=1))[1,]),
               Sim.discretePopSim=Pestablishment.discretePopSim,
               Sim.numericDistri=Pestablishment.numericDistri,
               Sim.ABM=Pestablishment.ABM)
-  minN<- 1
-  Pmin<- fun(N0=minN, scenario=scenario, parsSim=parsSim)
+
   
   if (inherits(sim, "Sim.ABM")){
     if (!is.list(parsSim$N0)) parsSim$N0<- list(parsSim$N0)
-    maxN<- max(sapply(parsSim$N0, sum))
+    selN0<- ceiling(length(parsSim$N0) / 2)
+    maxN<- sum(parsSim$N0[[selN0]])
     
-    N0<- parsSim$N0[[1]]
+    N0<- parsSim$N0[[selN0]]
     N0[N0 != 0]<- 1
     parsSim$N0<- list(N0)
     names(parsSim$N0)<- paste0("N", sum(N0))
-    
-    Pmax<- fun(N0=maxN, scenario=scenario, parsSim=parsSim)
   }else{
-    maxN<- max(parsSim$N0)
+    maxN<- parsSim$N0[ceiling(length(parsSim$N0) / 2)]
+  }
+  
+  Pmax<- fun(N0=maxN, scenario=scenario, parsSim=parsSim)
+  
+  if (Pmax == 0){
+    maxN<- parsSim$maxN
     Pmax<- fun(N0=maxN, scenario=scenario, parsSim=parsSim)
+    
+    if (Pmax < Pobjective){ # maxN == parsSim$maxN -> no solution
+      warning("Pestablishment < Pobjective for maxN allowed in ", rownames(scenario))
+      return (data.frame(idScenario=scenario$idScenario, N0_Pest=maxN, Pest=Pmax, N0interpoled=NA_real_, Pobjective, stringsAsFactors=FALSE))
+    }
+  }
+  
+  minN<- 1
+  Pmin<- fun(N0=minN, scenario=scenario, parsSim=parsSim)
+  
+  if (Pmin > Pobjective){
+    # warning("Pestablishment < Pobjective for N0=1 in ", rownames(scenario))
+    maxN<- minN
+    Pmax<- Pmin
+    minN<- 0
+    Pmin<- 0
+    N0interpoled<- interpole(Pobjective, minN, maxN, Pmin, Pmax)
+    
+    return (data.frame(idScenario=scenario$idScenario, N0_Pest=maxN, Pest=Pmax, N0interpoled=N0interpoled, Pobjective, stringsAsFactors=FALSE))
   }
   
   N0<- N0anterior<- 0
-  i<- 1
   found<- FALSE
   Pest<- NA
+  
   
   while (!found){
     N0<- interpole(Pobjective, minN, maxN, Pmin, Pmax)
@@ -108,46 +131,65 @@ findN0_Pest.scenario<- function(scenario=data.frame(Model(lh=LH(lambda=1))[1,]),
     
     if (is.na(N0)) break
       
-    if (N0 < 1) {N0<- 1}
+    if (N0 < 1) { N0<- 1 }
     
     if (N0 > parsSim$maxN){ # Evita passar Inf com a N0 (important per lambdes baixes)
       N0<- parsSim$maxN - 1
       maxN<- parsSim$maxN
-      Pmax<- 1
-    } 
-    
-    if (N0 == N0anterior) {N0<- N0 - 1}
+      Pmax<- fun(N0=maxN, scenario=scenario, parsSim=parsSim)
+      
+      if (Pmax < Pobjective){ # maxN == parsSim$maxN -> no solution
+        warning("Pestablishment < Pobjective for maxN allowed in ", rownames(scenario))
+        return (data.frame(idScenario=scenario$idScenario, N0_Pest=maxN, Pest=Pmax, N0interpoled=NA_real_, Pobjective, stringsAsFactors=FALSE))
+      }
+    }
+
+    if (N0 == N0anterior || N0 == maxN) {
+      N0<- N0 - 1
+    } else if (N0 == minN) N0<- N0 + 1
     
     Pest<- fun(N0=N0, scenario=scenario, parsSim=parsSim)
     
     if (Pest < Pobjective){
-      if (N0 < minN){
+      if (N0 < minN){ 
+        # Optimitzation when Pest < Pobjective and N0 < minN < maxN
+        # Pobjective < Pmin < Pmax
         maxN<- N0
         Pmax<- Pest
-      }else{
+      }else{ # minN < N0 < maxN
         minN<- N0
         Pmin<- Pest
-      } #Optimitzacio en cas que N0 estigui per sota de Pobjective, minN i maxN
-    }else{# && maxN > N0){
-      if (N0 > maxN){
+      } 
+    }else{
+      if (N0 > maxN){ 
+        # Optimitzation when Pest > Pobjective and N0 > maxN > minN
+        # Pobjective > Pmax > Pmin 
         minN<-N0
         Pmin<- Pest
-      }else{
+      }else{ # minN < N0 < maxN
         maxN<- N0
         Pmax<- Pest
-      } #Optimitzacio en cas que N0 estigui per sobre de Pobjective, minN i maxN
-    }
-    if (maxN < minN){
-      b<- maxN
-      maxN<- minN
-      minN<- b
-      b<- Pmax
-      Pmax<- Pmin
-      Pmin<- b
+      }
     }
     
+    if (maxN < minN){
+      tmp<- maxN
+      maxN<- minN
+      minN<- tmp
+      
+      tmp<- Pmax
+      Pmax<- Pmin
+      Pmin<- tmp
+    }
+
     if (verbose)
-      message("N0=", N0, "\tPestabliment=", Pest, "\tNmin=", minN, "\tPmin=", Pmin, "\tNmax=", maxN, "\tPmax=", Pmax)
+      message("Scenario ", rownames(scenario), " N0=", N0, "\tPestabliment=", Pest, "\tNmin=", minN, "\tPmin=", Pmin, "\tNmax=", maxN, "\tPmax=", Pmax)
+    
+    if (Pmax < Pmin){
+      warning("Inestability in Pest. Increase the number of replicates or check errors in scenario", rownames(scenario))
+      found<- TRUE
+    }
+    
     
     if (maxN - minN < 2){
       if (maxN - minN == 1){
@@ -174,7 +216,11 @@ findN0_Pest.scenario<- function(scenario=data.frame(Model(lh=LH(lambda=1))[1,]),
     }else if (minN == maxN){
       N0interpoled<- minN
       Pest<- mean(Pmin, Pmax)
-    }else{
+    }else if (Pmax == Pmin){
+      Pest<- Pmin
+      N0interpoled<- mean(maxN, minN)
+      warning("Inestability in Pest. Increase the number of replicates")
+    }else if (debug){
       browser()
     }
   }
