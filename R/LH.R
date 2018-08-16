@@ -152,7 +152,7 @@ plot.LH<- function(x, ...){
   if ("baseLH" %in% names(x)){
     x$colorLH<- factor(x$baseLH)
   } else {
-    x$colorLH<- 1
+    x$colorLH<- "black"
   }
   
   cols<- intersect(names(x), c("lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR", "colorLH"))

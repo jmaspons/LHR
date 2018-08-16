@@ -629,12 +629,18 @@ setMethod("result",
               }
             )
             
-            
+            ## Add colorLH
             idLH<- unique(res$idLH)
-            lh<- strsplit(idLH, "-")
-            lh<- sapply(lh, function(y) y[[1]])
-            lh<- data.frame(idLH=idLH, colorLH=lh, stringsAsFactors=FALSE)
-            res<- merge(res, lh, by="idLH")
+            if (any(grepl("-", idLH))){
+              lh<- strsplit(idLH, "-")
+              lh<- sapply(lh, function(y) y[[1]])
+              lh<- data.frame(idLH=idLH, colorLH=lh, stringsAsFactors=FALSE)
+              res<- merge(res, lh, by="idLH")
+            } else if (length(idLH) < 9){ # default palette() has 8 colors
+              res$colorLH<- factor(res$idLH)
+            } else {
+              res$colorLH<- "black"
+            }
             
             if (popbio & requireNamespace("popbio", quietly=TRUE)){
               lh<- unique(res[, c("idLH", "a", "s", "j", "fecundity", "AFR")])
