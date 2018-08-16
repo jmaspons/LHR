@@ -219,7 +219,7 @@ run.discretePopSim<- function(model, cl=parallel::detectCores(), pb=FALSE, debug
 
   if (pars$raw){
     rawSim<- lapply(sim, function(x) x$raw)
-    simRes@raw<- rawSim
+    simRes@discretePopSim<- rawSim
   }
   if (pars$Ntf){
     Ntf<- lapply(sim, function(x) x$Ntf)

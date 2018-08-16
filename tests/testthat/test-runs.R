@@ -17,9 +17,9 @@ test_that("discrete time models", {
     expect_is(result(res, type="Ntf"), "data.frame")
     
     ## Test subsetting
-    expect_identical(length(res@sim@raw), nrow(res))
-    expect_identical(length(res[1,]@sim@raw), nrow(res[1,]))
-    expect_identical(length(res[c(1,3),]@sim@raw), nrow(res[c(1,3),]))
+    expect_identical(length(res@sim@discretePopSim), nrow(res))
+    expect_identical(length(res[1,]@sim@discretePopSim), nrow(res[1,]))
+    expect_identical(length(res[c(1,3),]@sim@discretePopSim), nrow(res[c(1,3),]))
     
     expect_equal(nrow(res@sim@Ntf) / length(res@sim@params$N0), nrow(res))
     expect_equal(nrow(res[1,]@sim@Ntf) / length(res@sim@params$N0), nrow(res[1,]))
@@ -72,9 +72,9 @@ test_that("discrete models with 2 sexes", {
     tmp<- lapply(popList, expect_is, class="discretePopSim")
     
     ## Test subsetting
-    expect_identical(length(res@sim@raw), nrow(res))
-    expect_identical(length(res[1,]@sim@raw), nrow(res[1,]))
-    expect_identical(length(res[c(1,3),]@sim@raw), nrow(res[c(1,3),]))
+    expect_identical(length(res@sim@discretePopSim), nrow(res))
+    expect_identical(length(res[1,]@sim@discretePopSim), nrow(res[1,]))
+    expect_identical(length(res[c(1,3),]@sim@discretePopSim), nrow(res[c(1,3),]))
     
     expect_equal(nrow(res@sim@Ntf) / length(res@sim@params$N0), nrow(res))
     expect_equal(nrow(res[1,]@sim@Ntf) / length(res@sim@params$N0), nrow(res[1,]))
