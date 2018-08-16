@@ -744,7 +744,6 @@ setMethod("show", signature(object="Model"),
 #' @export
 rbind.Model<- function(...){
   models<- list(...)
-  sims<- lapply(models, function(x) x@sim)
   
   classModels<- sapply(models, class)
   if (length(unique(classModels)) > 1){
@@ -752,6 +751,7 @@ rbind.Model<- function(...){
          paste(unique(classModels), collapse=" & "), ".")
   }
 
+  sims<- lapply(models, function(x) x@sim)
   params<- lapply(sims, function(x) x@params)
   params<- unique(params)
   if (length(params) > 1){
@@ -760,35 +760,186 @@ rbind.Model<- function(...){
     params<- params[[1]]
   }
   
-  scenario<- do.call(rbind, lapply(models, S3Part))
-  if (any(duplicated(scenario))) 
-    warning("Duplicated scenarios. Don't trust id* columns nor row names. It is recommended to not proceed until this problem is fixed.")
-  # TODO: rebuild id*columns
+  scenarios<- lapply(models, S3Part)
+  idScenarios<- lapply(scenarios, function(x) x$idScenario)
+  scenario<- do.call(rbind, scenarios)
+  rebuildId<- FALSE
+  
+  if (any(duplicated(unlist(idScenarios)))){
+    nonUniqueIdLH<- FALSE
+    nonUniqueIdEnv<- FALSE
+    rebuildId<- TRUE
+    
+    ## duplicated idLH (same idLH & different params)
+    colsLH<- c("baseLH", "idLH", "lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")
+    colsLH<- intersect(colsLH, names(scenario))
+    colsLHnoId<- colsLH[!grepl("LH", colsLH)] # "baseLH", "idLH"
+    
+    lhU<- unique(scenario[, colsLHnoId])
+    lhUId<- unique(scenario$idLH)
+    if (nrow(lhU) != length(lhUId)){
+      nonUniqueIdLH<- TRUE
+      # lhU$idLH_ori<- lhU$idLH
+      lhU<- lhU[order(lhU$lambda, lhU$a, lhU$fecundity), ]
+      lhU$idLH<- as.character(seq_len(nrow(lhU)))
+    }
+    
+    
+    ## duplicated idEnv
+    colsEnv<- c("idEnv", "seasonAmplitude", "seasonMean", "varJ", "varA", "breedFail")
+    colsEnv<- intersect(colsEnv, names(scenario))
+    colsEnvnoId<- colsEnv[!grepl("idEnv", colsEnv)]
+    
+    envU<- unique(scenario[, colsEnvnoId])
+    envUId<- unique(scenario$idEnv)
+    if (nrow(envU) != length(envUId)){
+      nonUniqueIdEnv<- TRUE
+      # envU$idEnv_ori<- envU$idEnv
+      envU<- envU[order(envU$seasonAmplitude, envU$seasonMean, envU$varJ, envU$varA, envU$breedFail), ]
+      envU$idEnv<- as.character(seq_len(nrow(envU)))
+    }
+    
+    
+    ## Rebuild idLH
+    if (nonUniqueIdLH){
+      scenarios<- lapply(scenarios, function(x){
+        res<- merge(x[, -grep("LH", names(x))], lhU, by.x=colsLHnoId, by.y=colsLHnoId)
+      })
+    }
+    
+    ## Rebuild idEnv
+    if (nonUniqueIdEnv){
+      scenarios<- lapply(scenarios, function(x){
+        res<- merge(x[, -grep("idEnv", names(x))], envU, by.x=colsEnvnoId, by.y=colsEnvnoId)
+      })
+    }
+    
+    
+    ## Rebuild idScenario
+    if (rebuildId){
+      scenarios<- lapply(scenarios, function(x){
+        id<- paste0("LH", x$idLH, "_Env", x$idEnv)
+        idExtra<- gsub("^LH[0-9]+_Env[0-9]+[_]*", "", x$idScenario)
+        if (any(idExtra != "")){
+          id<- paste0(id, "_", idExtra)
+        }
+        x$idScenario_ori<- x$idScenario
+        x$idScenario<- id
+        x
+      })
+    }
+    
+    colsOrd<- c(names(scenario), setdiff(names(scenarios[[1]]), names(scenario)))
+    scenario<- do.call(rbind, scenarios)[, colsOrd]
+    
+    if (any(dup<- duplicated(scenario$idScenario))){
+      dupId<- scenario$idScenario[dup]
+      dups<- lapply(scenarios, function(x) x$idScenario_ori[x$idScenario %in% dupId])
+      stop("Some duplicated scenarios with the same parameters. Autoremove duplicates not implemented yet. Do it.\n", dupId)
+      ## TODO: remove duplicated scenarios keeping the first only and throwing a warning
+      warning("Some duplicated scenarios with the same parameters. Remove them.")
+      i<- length(scenarios)
+      while (length(dupId) > 0){
+        m<- models[[i]]
+        models[[i]]<- m[!m$idScenario %in% dupId, ]
+        scenario<- do.call(rbind, scenarios)[, colsOrd]
+        dupId<- scenario$idScenario[duplicated(scenario$idScenario)]
+        i<- i - 1
+      }
+    }
+    
+    rownames(scenario)<- scenario$idScenario
+  }
+  
   
   sim<- Sim(params=params, type=gsub("Sim\\.", "", class(sims[[1]])))
-  
+
   # If nrow == 0, data.frame change from S4 to S3 and some tests fail
   sel<- which(sapply(sims, function(x) nrow(S3Part(x)) > 0))
   if (length(sel) > 0){
-    stats<- do.call(rbind, lapply(sims[sel], S3Part))
+    statsL<- lapply(sims[sel], S3Part)
+    
+    if (rebuildId){
+      colsOrd<- names(statsL[[1]])
+      
+      statsL<- mapply(function(x, y){
+                  names(x)<- gsub("idScenario", "idScenario_ori", names(x))
+                  res<- merge(x, y[, c("idScenario", "idScenario_ori")], by="idScenario_ori")
+                  rownames(res)<- paste0(res$idScenario, "_N", res$N0)
+                  res<- res[, colsOrd]
+                }, x=statsL, y=scenarios[sel], SIMPLIFY=FALSE)
+    }
+    
+    stats<- do.call(rbind, statsL)
     S3Part(sim)<- stats
   }
   
   sel<- which(sapply(sims, function(x) nrow(x@N0_Pest) > 0))
   if (length(sel) > 0){
-    sim@N0_Pest<- do.call(rbind, lapply(sims[sel], function(x) x@N0_Pest))
+    N0_PestL<- lapply(sims[sel], function(x) x@N0_Pest)
+    
+    if (rebuildId){
+      colsOrd<- names(N0_PestL[[1]])
+      
+      N0_PestL<- mapply(function(x, y){
+                    names(x)<- gsub("idScenario", "idScenario_ori", names(x))
+                    res<- merge(x, y[, c("idScenario", "idScenario_ori")], by="idScenario_ori")
+                    rownames(res)<- res$idScenario
+                    res<- res[, colsOrd]
+                  }, x=N0_PestL, y=scenarios[sel], SIMPLIFY=FALSE)
+    }
+    
+    sim@N0_Pest<- do.call(rbind, N0_PestL)
   }
   
-  sim@raw<- do.call(c, lapply(sims, function(x) x@raw))
+  
+  rawL<- lapply(sims, function(x) x@raw)
+  
+  if (rebuildId){
+    rawL<- mapply(function(x, y){
+      if (is.null(x)) return(x)
+      
+      thesaurus<- merge(y[, c("idScenario", "idScenario_ori")], names(x), by.x="idScenario_ori", by.y=1)
+      names(x)<- thesaurus$idScenario[match(names(x), thesaurus$idScenario_ori)]
+      x
+    }, x=rawL, y=scenarios, SIMPLIFY=FALSE)
+  }
+  sim@raw<- do.call(c, rawL)
 
   
   if (inherits(sim, "Sim.discretePopSim")){
     sel<- which(sapply(sims, function(x) nrow(x@Ntf) > 0))
     if (length(sel) > 0){
-      sim@Ntf<- do.call(rbind, lapply(sims[sel], function(x) x@Ntf))
+      NtfL<- lapply(sims[sel], function(x) x@Ntf)
+      
+      if (rebuildId){
+        colsOrd<- names(NtfL[[1]])
+        
+        NtfL<- mapply(function(x, y){
+          names(x)<- gsub("idScenario", "idScenario_ori", names(x))
+          res<- merge(x, y[, c("idScenario", "idScenario_ori")], by="idScenario_ori")
+          rownames(res)<- paste0(res$idScenario, "_N", res$N0)
+          res<- res[, colsOrd]
+        }, x=NtfL, y=scenarios[sel], SIMPLIFY=FALSE)
+      }
+      
+      sim@Ntf<- do.call(rbind, NtfL)
     }
-
-    sim@discretePopSim<- do.call(c, lapply(sims, function(x) x@discretePopSim))
+    
+    
+    discretePopSimL<- lapply(sims, function(x) x@discretePopSim)
+    
+    if (rebuildId){
+      discretePopSimL<- mapply(function(x, y){
+        if (is.null(x) | length(x) == 0) return(x)
+        
+        thesaurus<- merge(y[, c("idScenario", "idScenario_ori")], names(x), by.x="idScenario_ori", by.y=1)
+        names(x)<- thesaurus$idScenario[match(names(x), thesaurus$idScenario_ori)]
+        x
+      }, x=discretePopSimL, y=scenarios, SIMPLIFY=FALSE)
+    }
+    
+    sim@discretePopSim<- do.call(c, discretePopSimL)
   }
   
   return(Model(pars=scenario, sim=sim))

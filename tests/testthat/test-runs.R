@@ -28,6 +28,19 @@ test_that("discrete time models", {
     ## Test rbind
     expect_is(rbind(res[1:3,], res[4:6,]), "Model")
     expect_identical(rbind(res[1:3,], res[4:6,]), res[1:6,])
+    ## Duplicated ids
+    lh1<- LH(lambda=1, broods=1, a=.7, method="regular")
+    lh2<- LH(lambda=1.1, broods=1, a=.6, method="regular")
+    env1<- Env(seasonAmplitude=0, varJ=0, varA=0)
+    env2<- Env(varJ=0, varA=0, breedFail=0.5)
+    model1<- Model(lh=lh1, env=env1, sim=sim)
+    model2<- Model(lh=lh2, env=env2, sim=sim)
+    res1<- run(model1)
+    res2<- run(model2)
+    res12<- rbind(res1, res2)
+    expect_identical(nrow(res12), nrow(res1) + nrow(res2))
+    expect_setequal(res12@sim@Ntf$idScenario, res12$idScenario)
+    expect_setequal(names(res12@sim@discretePopSim), res12$idScenario)
     
     ## Test plots
     expect_is(plot(res, resultType="Pest_N0"), "ggplot")
@@ -70,6 +83,20 @@ test_that("discrete models with 2 sexes", {
     ## Test rbind
     expect_is(rbind(res[1:3,], res[4:6,]), "Model")
     expect_identical(rbind(res[1:3,], res[4:6,]), res[1:6,])
+    expect_error(rbind(res, res)) # duplicated scenarios
+    ## Duplicated ids
+    lh1<- LH(lambda=1, broods=1, a=.7, method="regular")
+    lh2<- LH(lambda=1.1, broods=1, a=.6, method="regular")
+    env1<- Env(seasonAmplitude=0, varJ=0, varA=0)
+    env2<- Env(varJ=0, varA=0, breedFail=0.5)
+    model1<- Model(lh=lh1, env=env1, sim=sim)
+    model2<- Model(lh=lh2, env=env2, sim=sim)
+    res1<- run(model1)
+    res2<- run(model2)
+    res12<- rbind(res1, res2)
+    expect_identical(nrow(res12), nrow(res1) + nrow(res2))
+    expect_setequal(res12@sim@Ntf$idScenario, res12$idScenario)
+    expect_setequal(names(res12@sim@discretePopSim), res12$idScenario)
     
     ## Test plots
     expect_is(plot(res, resultType="Pest_N0"), "ggplot")
@@ -120,7 +147,20 @@ test_that("compound distribution", {
     ## Test rbind
     expect_is(rbind(res[1:3,], res[4:6,]), "Model")
     expect_identical(rbind(res[1:3,], res[4:6,]), res[1:6,])
-    
+    expect_error(rbind(res, res)) # duplicated scenarios
+    ## Duplicated ids
+    lh1<- LH(lambda=1, broods=1, a=.7, method="regular")
+    lh2<- LH(lambda=1.1, broods=1, a=.6, method="regular")
+    env1<- Env(seasonAmplitude=0, varJ=0, varA=0)
+    env2<- Env(varJ=0, varA=0, breedFail=0.5)
+    model1<- Model(lh=lh1, env=env1, sim=sim)
+    model2<- Model(lh=lh2, env=env2, sim=sim)
+    res1<- run(model1)
+    res2<- run(model2)
+    res12<- rbind(res1, res2)
+    expect_identical(nrow(res12), nrow(res1) + nrow(res2))
+    expect_setequal(names(res12@sim@raw), res12$idScenario)
+
     ## Test plots
     expect_is(plot(res, resultType="Pest_N0"), "ggplot")
     expect_is(plot(res, resultType="G"), "ggplot")
@@ -169,6 +209,19 @@ test_that("compound distribution with environmental variation", {
     ## Test rbind
     expect_is(rbind(res[1:3,], res[4:6,]), "Model")
     expect_identical(rbind(res[1:3,], res[4:6,]), res[1:6,])
+    expect_error(rbind(res, res)) # duplicated scenarios
+    ## Duplicated ids
+    lh1<- LH(lambda=1, broods=1, a=.7, method="regular")
+    lh2<- LH(lambda=1.1, broods=1, a=.6, method="regular")
+    env1<- Env(seasonAmplitude=0, varJ=0, varA=.01)
+    env2<- Env(varJ=0, varA=0.05, breedFail=0.5)
+    model1<- Model(lh=lh1, env=env1, sim=sim)
+    model2<- Model(lh=lh2, env=env2, sim=sim)
+    res1<- run(model1)
+    res2<- run(model2)
+    res12<- rbind(res1, res2)
+    expect_identical(nrow(res12), nrow(res1) + nrow(res2))
+    expect_setequal(names(res12@sim@raw), res12$idScenario)
     
     ## Test plots
     expect_is(plot(res, resultType="Pest_N0"), "ggplot")
@@ -216,7 +269,23 @@ test_that("ABM LH-behavior", {
     # TODO: differences in row sorting
     # a<- res[1:6,]
     # b<- rbind(res[1:3,], res[4:6,])
-    # all.equal(a@Ntf[order(a@Ntf$idScenario),], b@Ntf[order(b@Ntf$idScenario),])
+    # all.equal(a@sim@Ntf[order(a@sim@Ntf$idScenario),], b@sim@Ntf[order(b@sim@Ntf$idScenario),])
+    expect_error(rbind(res, res)) # duplicated scenarios
+
+    ## Duplicated ids
+    lh1<- LH(lambda=1, broods=1, a=.7, method="regular")
+    lh2<- LH(lambda=1.1, broods=1, a=.6, method="regular")
+    env1<- Env(seasonAmplitude=0, varJ=0, varA=0)
+    env2<- Env(seasonAmplitude=0, varJ=0, varA=0, breedFail=0.4)
+    model1<- Model(lh=lh1, env=env1, sim=sim, habDiffScenario="nestPredHab2", behavior="learnExploreBreed")
+    model2<- Model(lh=lh2, env=env2, sim=sim, habDiffScenario="nestPredHab2", behavior="learnExploreBreed")
+    res1<- run(model1)
+    res2<- run(model2)
+    res12<- rbind(res1, res2)
+    expect_identical(nrow(res12), nrow(res1) + nrow(res2))
+    expect_setequal(res12@sim@Ntf$idScenario, res12$idScenario)
+    expect_setequal(names(res12@sim@discretePopSim), res12$idScenario)
+    expect_setequal(names(res12@sim@raw), res12$idScenario)
     
     ## Test plots
     expect_is(plot(res, resultType="Pest_N0"), "ggplot")

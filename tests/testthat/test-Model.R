@@ -38,7 +38,7 @@ test_that("subsetting and rbind", {
   expect_is(obj[[1]], "character")
   
   expect_is(rbind(obj[1:3,], obj[4:6,]), "Model")
-  expect_warning(rbind(obj, obj))
+  expect_error(rbind(obj, obj)) # duplicated scenarios
   expect_identical(rbind(obj[1:3,], obj[4:6,]), obj[1:6,])
 })
 

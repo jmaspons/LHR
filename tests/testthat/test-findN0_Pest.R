@@ -17,6 +17,20 @@ if (skip_on_cran()){
   expect_identical(nrow(N0_Pest[1,]@sim@N0_Pest), 1L)
   expect_identical(nrow(N0_Pest[c(1,3),]@sim@N0_Pest), 2L)
   
+  ## Test rbind
+  lh1<- LH(lambda=1, broods=1, a=.7, method="regular")
+  lh2<- LH(lambda=1.1, broods=1, a=.6, method="regular")
+  env1<- Env(varJ=0, varA=0, breedFail=.3)
+  env2<- Env(seasonAmplitude=0, varJ=0, varA=0)
+  model1<- Model(lh=lh1, env=env1, sim=sim)
+  model2<- Model(lh=lh2, env=env2, sim=sim)
+  N0_Pest1<- findN0_Pest(model1)
+  N0_Pest2<- findN0_Pest(model2)
+  N0_Pest12<- rbind(N0_Pest1, N0_Pest2)
+  expect_identical(nrow(N0_Pest12), nrow(N0_Pest1) + nrow(N0_Pest2))
+  expect_setequal(N0_Pest12@sim@N0_Pest$idScenario, N0_Pest12$idScenario)
+  expect_identical(rownames(N0_Pest12), N0_Pest12$idScenario)
+  
   ## Test plots
   expect_equal(plot(N0_Pest, resultType="Pest_N0"), NA)
   expect_equal(plot(N0_Pest, resultType="G"), NA)
@@ -25,7 +39,6 @@ if (skip_on_cran()){
   
   ## Critical values
   lh<- LH(lambda=.3, broods=1, a=.3, method="regular")
-  env<- Env(seasonAmplitude=0, varJ=0, varA=0, breedFail=.3)
   # Pest < Pobjective for N0 == maxN
   sim<- Sim.discretePopSim(replicates=1000, maxN=1000)
   model<- Model(lh=lh, env=env, sim=sim)
@@ -66,6 +79,20 @@ if (skip_on_cran()){
   expect_identical(nrow(N0_Pest[1,]@sim@N0_Pest), 1L)
   expect_identical(nrow(N0_Pest[c(1,3),]@sim@N0_Pest), 2L)
   
+  ## Test rbind
+  lh1<- LH(lambda=1, broods=1, a=.7, method="regular")
+  lh2<- LH(lambda=1.1, broods=1, a=.6, method="regular")
+  env1<- Env(varJ=0, varA=0, breedFail=.3)
+  env2<- Env(seasonAmplitude=0, varJ=0, varA=0)
+  model1<- Model(lh=lh1, env=env1, sim=sim)
+  model2<- Model(lh=lh2, env=env2, sim=sim)
+  N0_Pest1<- findN0_Pest(model1)
+  N0_Pest2<- findN0_Pest(model2)
+  N0_Pest12<- rbind(N0_Pest1, N0_Pest2)
+  expect_identical(nrow(N0_Pest12), nrow(N0_Pest1) + nrow(N0_Pest2))
+  expect_setequal(N0_Pest12@sim@N0_Pest$idScenario, N0_Pest12$idScenario)
+  expect_identical(rownames(N0_Pest12), N0_Pest12$idScenario)
+  
   ## Test plots
   expect_equal(plot(N0_Pest, resultType="Pest_N0"), NA)
   expect_equal(plot(N0_Pest, resultType="G"), NA)
@@ -92,6 +119,20 @@ if (skip_on_cran()){
   expect_identical(nrow(N0_Pest@sim@N0_Pest), 3L)
   expect_identical(nrow(N0_Pest[1,]@sim@N0_Pest), 1L)
   expect_identical(nrow(N0_Pest[c(1,3),]@sim@N0_Pest), 2L)
+  
+  ## Test rbind
+  lh1<- LH(lambda=1, broods=1, a=.7, method="regular")
+  lh2<- LH(lambda=1.1, broods=1, a=.6, method="regular")
+  env1<- Env(seasonAmplitude=0, varJ=0, varA=0, breedFail=.3)
+  env2<- Env(seasonAmplitude=0, varJ=0, varA=0, breedFail=.5)
+  model1<- Model(lh=lh1, env=env1, sim=sim, habDiffScenario="nestPredHab2", behavior="learnExploreBreed")
+  model2<- Model(lh=lh2, env=env2, sim=sim, habDiffScenario="nestPredHab2", behavior="learnExploreBreed")
+  N0_Pest1<- findN0_Pest(model1)
+  N0_Pest2<- findN0_Pest(model2)
+  N0_Pest12<- rbind(N0_Pest1, N0_Pest2)
+  expect_identical(nrow(N0_Pest12), nrow(N0_Pest1) + nrow(N0_Pest2))
+  expect_setequal(N0_Pest12@sim@N0_Pest$idScenario, N0_Pest12$idScenario)
+  expect_identical(rownames(N0_Pest12), N0_Pest12$idScenario)
   
   ## Test plots
   expect_equal(plot(N0_Pest, resultType="Pest_N0"), NA)
