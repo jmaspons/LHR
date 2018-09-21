@@ -457,7 +457,7 @@ run.ABM<- function(model, cl=parallel::detectCores(), raw, pb=FALSE, debug=FALSE
 }
 
 
-runScenario.ABM<- function (scenario, pars){
+runScenario.ABM<- function (scenario, pars, randomizeN0=FALSE){
   stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=15, 
                dimnames=list(scenario_N0=paste0(rep(scenario$idScenario, length=length(pars$N0)), "_N", sapply(pars$N0, sum)),
                              stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct",
@@ -491,7 +491,8 @@ runScenario.ABM<- function (scenario, pars){
   
   for (n in 1:length(pars$N0)){
     N0<- pars$N0[[n]]
-    popABM<- discreteABMSim(N0=N0, params=scenario, transitionsFunc=pars$transitionsFunc, replicates=pars$replicates, tf=pars$tf, maxN=pars$maxN, Ntf=!pars$raw & !pars$discretePopSim)
+    popABM<- discreteABMSim(N0=N0, params=scenario, transitionsFunc=pars$transitionsFunc, replicates=pars$replicates,
+                            tf=pars$tf, maxN=pars$maxN, Ntf=!pars$raw & !pars$discretePopSim, randomizeN0=randomizeN0)
     
     N0<- sum(N0)
     

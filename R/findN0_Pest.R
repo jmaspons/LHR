@@ -269,11 +269,15 @@ Pestablishment.ABM<- function(N0, scenario, parsSim){
   N0class<- parsSim$N0[[1]] * (N0 %/% sum(parsSim$N0[[1]])) # split N0 evenly between classes with N0 != 0
   
   mod<- N0 %% sum(parsSim$N0[[1]])
-  if (mod > 0) N0class[selClass[1:mod]]<- N0class[selClass[1:mod]] + 1 # add the module to the firsts classes with N0 != 0
-  
+  if (mod > 0){
+    N0class[selClass[1:mod]]<- N0class[selClass[1:mod]] + 1 # add the module to the firsts classes with N0 != 0
+    randomizeN0<- TRUE # avoid bias due to the order of the classes
+  }else{
+    randomizeN0<- FALSE
+  }
   parsSim$N0<- list(N0class)
   
-  res<- runScenario.ABM(scenario=scenario, pars=parsSim)
+  res<- runScenario.ABM(scenario=scenario, pars=parsSim, randomizeN0=randomizeN0)
   
   Pest<- 1 - res$stats[,"extinct"]
   
