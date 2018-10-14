@@ -49,6 +49,7 @@ findN0_Pest<- function(model=Model(), cl=parallel::detectCores(), Pobjective=.5,
       print(scenario[[i]], row.names=FALSE)
       eTime<- system.time(N0_Pest[[i]]<- findN0_Pest.scenario(scenario=scenario[[i]], sim=sim, Pobjective=Pobjective, verbose=verbose))
       message("Elapsed time: ", eTime["elapsed"])
+      print(N0_Pest[[i]])
     }
   }
   
@@ -133,7 +134,7 @@ findN0_Pest.scenario<- function(scenario=data.frame(Model(lh=LH(lambda=1))[1,]),
       
     if (N0 < 1) { N0<- 1 }
     
-    if (N0 > parsSim$maxN){ # Evita passar Inf com a N0 (important per lambdes baixes)
+    if (N0 > parsSim$maxN){ # Avoid N0 == Inf
       N0<- parsSim$maxN - 1
       maxN<- parsSim$maxN
       Pmax<- fun(N0=maxN, scenario=scenario, parsSim=parsSim)
@@ -241,7 +242,7 @@ Pestablishment.discretePopSim<- function(N0, scenario, parsSim){
   
   parsSim$N0<- round(N0)
   parsSim$raw<- FALSE
-  parsSim$Ntf<- FALSE
+  parsSim$Ntf<- TRUE # no need to keep intermediate time steps
   res<- runScenario.discretePopSim(scenario=scenario, pars=parsSim)
   
   Pest<- 1 - res$stats[,"extinct"]
@@ -264,6 +265,9 @@ Pestablishment.numericDistri<- function(N0, scenario, parsSim){
 
 Pestablishment.ABM<- function(N0, scenario, parsSim){
   if (N0 == 0) return(0)
+  
+  parsSim$raw<- FALSE
+  parsSim$Ntf<- TRUE # no need to keep intermediate time steps
   
   selClass<- which(parsSim$N0[[1]] > 0)
   N0class<- parsSim$N0[[1]] * (N0 %/% sum(parsSim$N0[[1]])) # split N0 evenly between classes with N0 != 0

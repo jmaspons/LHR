@@ -1,0 +1,87 @@
+---
+title: "Benchmarking"
+author: "Joan Maspons"
+date: "21 de setembre de 2018"
+output: slidy_presentation
+editor_options: 
+  chunk_output_type: console
+---
+<!-- http://adv-r.had.co.nz/Performance.html -->
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE)
+
+library(LHR)
+library(microbenchmark)
+```
+
+## discretePop
+
+```{r discretePop, echo = TRUE}
+tf<- 5
+N0<- c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5)
+params<- list(b1=2, b2=2,   broods=2, PbF1=.4, PbF2=.4,  a1=.3,ab1=.25,sa1=.25,j1=.1,
+              a2=.3,ab2=.25,sa2=.20,j2=.1, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1,
+              P1s=.5, P1b=.5, P1sa=.5, P1j=.5)
+replicates<- 1000
+
+benchmarkRep<- microbenchmark(r100=discreteABMSim(N0=N0, params=params, tf=tf, replicates=100, Ntf=TRUE),
+                              r1000=discreteABMSim(N0=N0, params=params, tf=tf, replicates=1000, Ntf=TRUE),
+                              r10000=discreteABMSim(N0=N0, params=params, tf=tf, replicates=10000, Ntf=TRUE),
+                              r100000=discreteABMSim(N0=N0, params=params, tf=tf, replicates=100000, Ntf=TRUE), times=10)
+
+boxplot(benchmarkRep)
+ggplot2::autoplot(benchmarkRep)
+
+profvisRep<- profvis::profvis({
+  discreteABMSim(N0=N0, params=params, tf=tf, replicates=100, Ntf=TRUE)
+  discreteABMSim(N0=N0, params=params, tf=tf, replicates=1000, Ntf=TRUE)
+  discreteABMSim(N0=N0, params=params, tf=tf, replicates=10000, Ntf=TRUE)
+  discreteABMSim(N0=N0, params=params, tf=tf, replicates=100000, Ntf=TRUE)
+})
+
+profvisRep
+
+profvisNtf<- profvis::profvis({
+  discreteABMSim(N0=N0, params=params, tf=tf, replicates=replicates, Ntf=TRUE)
+  discreteABMSim(N0=N0, params=params, tf=tf, replicates=replicates, Ntf=FALSE)
+})
+
+profvisNtf
+
+```
+
+## ABM
+
+```{r ABM, echo = TRUE}
+tf<- 5
+N0<- c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5)
+params<- list(b1=2, b2=2,   broods=2, PbF1=.4, PbF2=.4,  a1=.3,ab1=.25,sa1=.25,j1=.1,
+              a2=.3,ab2=.25,sa2=.20,j2=.1, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1,
+              P1s=.5, P1b=.5, P1sa=.5, P1j=.5)
+replicates<- 1000
+
+benchmarkRep<- microbenchmark(r100=discreteABMSim(N0=N0, params=params, tf=tf, replicates=100, Ntf=TRUE),
+                              r1000=discreteABMSim(N0=N0, params=params, tf=tf, replicates=1000, Ntf=TRUE),
+                              r10000=discreteABMSim(N0=N0, params=params, tf=tf, replicates=10000, Ntf=TRUE),
+                              r100000=discreteABMSim(N0=N0, params=params, tf=tf, replicates=100000, Ntf=TRUE), times=10)
+
+boxplot(benchmarkRep)
+ggplot2::autoplot(benchmarkRep)
+
+profvisRep<- profvis::profvis({
+  discreteABMSim(N0=N0, params=params, tf=tf, replicates=100, Ntf=TRUE)
+  discreteABMSim(N0=N0, params=params, tf=tf, replicates=1000, Ntf=TRUE)
+  discreteABMSim(N0=N0, params=params, tf=tf, replicates=10000, Ntf=TRUE)
+  discreteABMSim(N0=N0, params=params, tf=tf, replicates=100000, Ntf=TRUE)
+})
+
+profvisRep
+
+profvisNtf<- profvis::profvis({
+  discreteABMSim(N0=N0, params=params, tf=tf, replicates=replicates, Ntf=TRUE)
+  discreteABMSim(N0=N0, params=params, tf=tf, replicates=replicates, Ntf=FALSE)
+})
+
+profvisNtf
+
+```

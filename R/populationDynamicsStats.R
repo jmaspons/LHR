@@ -82,8 +82,10 @@ trendsProp<- function(...){
 #' @export
 trendsProp.discretePopSim<- function(x, dt=1, ...){
   pop0<- x[, 1, drop=FALSE]
-  popF<- x[,ncol(x), drop=FALSE] # final population
-  popF[is.na(popF)]<- 0
+  # final population
+  popF<- apply(x[, -1, drop=FALSE], 1, function(y) y[which(match(y, NA) == 1)[1] - 1])
+  popF[is.na(popF)]<- x[is.na(popF), ncol(x)] # replicates which run until tf (no extinction nor maxN)
+  popF<- matrix(popF, nrow=nrow(x), ncol=1, dimnames=list(replicate=NULL, t="tf"))
   replicates<- nrow(x)
   
   sampleT<- seq(1, ncol(x), by=dt)
@@ -92,18 +94,36 @@ trendsProp.discretePopSim<- function(x, dt=1, ...){
   dN<- t(diff(t(x))) # dN =  N_t+1 - N_t
   nTransitions<- sum(!is.na(dN))
   
-  increaseTrans<- length(which(dN > 0)) / nTransitions
-  decreaseTrans<- length(which(dN < 0)) / nTransitions
-  stableTrans<- length(which(dN == 0)) / nTransitions
+  if (nTransitions > 0){
+    increaseTrans<- length(which(dN > 0)) / nTransitions
+    decreaseTrans<- length(which(dN < 0)) / nTransitions
+    stableTrans<- length(which(dN == 0)) / nTransitions
+    
+    increase<- length(which(popF > pop0)) / replicates
+    decrease<- length(which(popF < pop0)) / replicates
+    stable<- length(which(popF == pop0)) / replicates
+    extinct<- length(which(popF == 0)) / replicates
+    res<- structure(c(increase, decrease, stable, extinct, increaseTrans, decreaseTrans, stableTrans),
+                    names=c("increase", "decrease", "stable", "extinct", "increaseTrans", "decreaseTrans", "stableTrans"))
+  }else{
+    res<- structure(rep(NA_real_, 7),
+                    names=c("increase", "decrease", "stable", "extinct", "increaseTrans", "decreaseTrans", "stableTrans"))
+  }
   
-  increase<- length(which(popF > pop0)) / replicates
-  decrease<- length(which(popF < pop0)) / replicates
-  stable<- length(which(popF == pop0)) / replicates
-  extinct<- length(which(popF == 0)) / replicates
-  res<- structure(c(increase, decrease, stable, extinct, increaseTrans, decreaseTrans, stableTrans),
-                  names=c("increase", "decrease", "stable", "extinct", "increaseTrans", "decreaseTrans", "stableTrans"))
-  return (res)
+  return(res)
 }
+
+#' @rdname discreteABMSim
+#'
+#' @param object 
+#' @param dt 
+#'
+#' @return
+#' @export
+trendsProp.discreteABMSim<- function(x, dt=1, ...){
+  trendsProp(discreteABMSim2discretePopSim(x), dt=dt)
+}
+
 
 #' @rdname numericDistri
 #' @export

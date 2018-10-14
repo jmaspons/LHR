@@ -91,7 +91,7 @@ mFit.t.leslie<- function(fecundity, j, s, a, AFR, N0, replicates, tf, maxN=10000
   }
   
   pop<- pop[order(pop[, ncol(pop), AFR]),, AFR] # Keep adults only and drop subadults
-  pop<- extinctNA(pop)
+  pop<- cleanDiscretePopSim(pop, maxN=maxN)
   class(pop)<- c("discretePopSim", "matrix")
   
   return(pop)
@@ -138,7 +138,7 @@ mFit.t.lefkovitch<- function(fecundity, j, s, a, AFR, N0, replicates, tf, maxN=1
   } else {
     pop<- pop[order(pop[, ncol(pop), 1]),, 1] # Keep adults only and drop subadults
   }
-  pop<- extinctNA(pop)
+  pop<- cleanDiscretePopSim(pop, maxN=maxN)
   class(pop)<- c("discretePopSim", "matrix")
   
   return(pop)

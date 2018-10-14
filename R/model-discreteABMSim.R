@@ -17,11 +17,10 @@ NULL
 #' @param tf 
 #' @param replicates 
 #' @param maxN 
-#' @param raw if \code{TRUE} return the complete time serie, otherwise only t0  and tf. Useful when memory is limited.
-#' @param Ntf
+#' @param Ntf if \code{FALSE} return the complete time serie, otherwise only t0  and tf. Useful when memory is limited.
 #' @param randomizeN0 randomly exchange N0 for classes > 0. Useful for findN0 whith non balanced N0.
 #'
-#' @return
+#' @return a \code{discreteABMSim} object.
 #' @export
 #'
 #' @examples
@@ -33,6 +32,8 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
   N<- transitionsFunc(N=rbind(N0, N0), params=params)
   stateName<- colnames(N)
   nStates<- length(stateName)
+  
+  if (length(which(N0 > 0)) < 2) randomizeN0<- FALSE
   
   if (!Ntf){
     popABM<- array(0, dim=c(replicates, nStates, tf+1), dimnames=list(replicate=NULL, state=stateName, t=0:tf))
@@ -60,15 +61,16 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
         else popABM[,,tf+1]<- -1
         break
       }
-      # Stop if all replicates have a class that reach maxN
-      if (all(apply(popABM[,,ti+1], MARGIN=1, function(x) any(c(x == maxN, FALSE), na.rm=TRUE)))){ # FALSE in case all is NA
-        popABM[,,tf+1]<- maxN
-        ## TODO: fill ti:tf+1?? check extincNA
-        break
-      }# Stop if all replicates get extinct
-      if (all(apply(popABM[,,ti+1], MARGIN=1, function(x) all(c(x <= 0, TRUE), na.rm=TRUE))) & ti < tf){ # TRUE in case all is NA
-        popABM[,,(ti+2):(tf+1)]<- 0
-        break
+      
+      if (ti %% 10 == 0 & ti + 1 < tf){ # check stop conditions every 10 time steps
+        # Stop if all replicates have a class that reach maxN. TODO: check if the optimization is worth it benchmark.Rmd
+        if (all(apply(popABM[,,ti+1], MARGIN=1, function(x) any(c(x == maxN, FALSE), na.rm=TRUE)))){ # FALSE in case all is NA
+          popABM[,, (ti+2):(tf+1)]<- NA # remove 0. If maxN is not stable, the transitions are cosidered valid at maxNNA(pop)
+          break
+        }# Stop if all replicates get extinct TODO: check if the optimization is worth in benchmark.Rmd
+        if (all(apply(popABM[,,ti+1], MARGIN=1, function(x) all(c(x <= 0, TRUE), na.rm=TRUE))) & ti < tf){ # TRUE in case all is NA
+          break
+        }
       }
     }
   }else{ # Save t0 and tf and discard intermediate timesteps
@@ -93,14 +95,16 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
     for (ti in 1:tf){
       popABM[,,2]<- transitionsFunc(N=popABM[,,2], params=params)
       popABM[,,2]<- apply(popABM[,,2], MARGIN=2, function(x) ifelse(x > maxN, maxN, x))
-
-      # Stop if all replicates have a class that reach maxN
-      if (all(apply(popABM[,,2], MARGIN=1, function(x) any(c(x == maxN, FALSE), na.rm=TRUE)))){ # FALSE in case all is NA
-        popABM[,,2]<- maxN
-        break
-      }# Stop if all replicates get extinct
-      if (all(apply(popABM[,,2], MARGIN=1, function(x) all(c(x <= 0, TRUE), na.rm=TRUE)))){ # TRUE in case all is NA
-        break
+      
+      if (ti %% 10 == 0 & ti < tf){ # check stop conditions every 10 time steps
+        # Stop if all replicates have a class that reach maxN
+        if (all(apply(popABM[,,2], MARGIN=1, function(x) any(c(x == maxN, FALSE), na.rm=TRUE)))){ # FALSE in case all is NA
+          break
+        }# Stop if all replicates get extinct
+        if (all(apply(popABM[,,2], MARGIN=1, function(x) all(c(x <= 0, TRUE), na.rm=TRUE)))){ # TRUE in case all is NA
+          popABM[,, 2]<- 0
+          break
+        }
       }
     }
   }
@@ -108,11 +112,7 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
   
   pop<- discreteABMSim2discretePopSim(popABM) # sort replicates by final size
   
-  popABM<- popABM[order(pop[,ncol(pop)]),,, drop=FALSE]
-  
-  if (Ntf){
-    popABM<- popABM[,,c(1, dim(popABM)[3]), drop=FALSE]
-  }
+  popABM<- popABM[order(pop[, ncol(pop)], na.last=TRUE),,, drop=FALSE]
   
   class(popABM)<- c("discreteABMSim", "array")
   return(popABM)
@@ -122,20 +122,23 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
 #' discreteABMSim2discretePopSim
 #'
 #' @param popABM 
+#' @param maxN
+#' @param omitClass character string containing a regular expression to exclude classes.
 #'
 #' @return
 #' @export
 #'
 #' @examples
-discreteABMSim2discretePopSim<- function(popABM, omitJuv=FALSE){
-  if (omitJuv){
-    pop<- apply(popABM[, !grepl("j", colnames(popABM)),], MARGIN=3, rowSums)
-  }else{
+discreteABMSim2discretePopSim<- function(popABM, maxN, omitClass){
+  if (missing(omitClass)){
     pop<- apply(popABM, MARGIN=3, rowSums)
+  }else{
+    pop<- apply(popABM[, !grepl(omitClass, colnames(popABM)),, drop=FALSE], MARGIN=3, rowSums)
   }
   
-  pop<- pop[order(pop[,ncol(pop)]),, drop=FALSE]
-  pop<- extinctNA(pop)
+  
+  pop<- cleanDiscretePopSim(pop)
+  
   class(pop)<- c("discretePopSim", "matrix")
 
   return(pop)

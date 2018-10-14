@@ -280,9 +280,9 @@ runScenario.discretePopSim<- function (scenario, pars){
       names(rawSim)[n]<- N0
     }
     if (pars$Ntf){
-      pop<- pop[,ncol(pop)]
-      pop[is.na(pop)]<- 0
-      Ntf[n, -(1:2)]<- sort(pop)
+      tmpNtf<- apply(pop[, -1, drop=FALSE], 1, function(x) x[which(match(x, NA) == 1)[1] - 1])
+      tmpNtf[is.na(tmpNtf)]<- pop[is.na(tmpNtf), ncol(pop)] # replicates which run until tf (no extinction nor maxN)
+      Ntf[n, -(1:2)]<- sort(tmpNtf)
     }
   }
   
@@ -517,15 +517,35 @@ runScenario.ABM<- function (scenario, pars, randomizeN0=FALSE){
       names(pop)[n]<- N0
     }
     if (pars$Ntf){
-      popABM<- popABM[,,dim(popABM)[3]]
-      popABM<- rowSums(popABM)
-      popABM[is.na(popABM)]<- 0
-      Ntf[n, -c(1:2)]<- sort(popABM) # First columns: idScenario and N0
+      if (pars$discretePopSim) popTmp<- pop[[n]]
+      else popTmp<- discreteABMSim2discretePopSim(popABM)
+      
+      if (ncol(popTmp) == 2){ ## Only one timestep or (pars$Ntf & !pars$raw & !pars$discretePopSim)
+        Ntf[n, -(1:2)]<- sort(popTmp[, 2]) # First columns: idScenario and N0
+        
+      } else {
+        tf<- apply(popTmp, 1, function(x) which(match(x, NA) == 1)[1] - 1)
+        tf[is.na(tf)]<- ncol(popTmp)
+        
+        # check if tf is maxN
+        if (length(tfMaxN<- unique(tf)) == 1 & all(popTmp[, tfMaxN] > 0)){
+          Ntf[n, -(1:2)]<- sort(popTmp[, tfMaxN - 1]) # take last value before saturation (useful for ABM where tfMaxN could be much larger than the average N)
+        } else {
+          tmpNtf<- mapply(function(x, tf) x[tf], x=split(popTmp, 1:nrow(popTmp)), tf=tf)
+          Ntf[n, -(1:2)]<- sort(tmpNtf) # First columns: idScenario and N0
+        }
+#         
+#         
+#         tmpNtf<- apply(popTmp[, -1, drop=FALSE], 1, function(x) x[which(match(x, NA) == 1)[1] - 1])
+#         tmpNtf[is.na(tmpNtf)]<- popTmp[is.na(tmpNtf), ncol(popTmp)] # replicates which run until tf (no extinction nor maxN)
+#         Ntf[n, -(1:2)]<- sort(tmpNtf) # First columns: idScenario and N0
+      }
     }
   }
   
   res<- list(stats=stats)
   if (pars$Ntf) res<- c(res, list(Ntf=Ntf))
+  if (pars$discretePopSim) res<- c(res, list(discretePopSim=pop))
   if (pars$raw) res<- c(res, list(raw=rawSim))
   
   return (res)
