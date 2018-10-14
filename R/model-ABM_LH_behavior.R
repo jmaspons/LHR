@@ -116,10 +116,10 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 6 * 4), nrow=4, ncol=6, dimnames
     # WARNING: assumes saAges* is sorted by age
     N[, c(saAges1[-1])]<- N1sa[, -ncol(N1sa)] # subadult age transitions
     N[, c(saAges2[-1])]<- N2sa[, -ncol(N2sa)] # subadult age transitions
-    N[, "N1b"]<- N1sa[, ncol(N1sa)] # subadult -> adult
-    N[, "N2b"]<- N2sa[, ncol(N2sa)] # subadult -> adult
     N[, c(saAges1[1])]<- N1j # juvenil -> subadult
     N[, c(saAges2[1])]<- N2j # juvenil -> subadult
+    N[, "N1b"]<- N[, "N1b"] + N1sa[, ncol(N1sa)] # subadult -> adult
+    N[, "N2b"]<- N[, "N2b"] + N2sa[, ncol(N2sa)] # subadult -> adult
   } else { # Juveniles grow to N*b
     N[,"N1b"]<- N[,"N1b"] + N1j
     N[,"N2b"]<- N[,"N2b"] + N2j
