@@ -51,7 +51,7 @@ r.discretePopSim<- function(x, dt=1, ...){
   if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
   x<- x[, sampleT, drop=FALSE]
   dN<- t(diff(t(x))) # dN =  N_t+1 - N_t
-  N0<- x[,-ncol(x), drop=FALSE]
+  N0<- x[, -ncol(x), drop=FALSE]
   r<- (dN / dt) / N0
 #   names(r)<- colnames(dN) # otherwise it takes the names from N0 (0:(tf-1) instead of 1:tf as does lambda function
   return (r) # intrinsic grow rate (r = dN / dt / N)
@@ -66,7 +66,7 @@ lambda.discretePopSim<- function(x, dt=1, ...){
   if (length(sampleT) < 2) {warning("length(sampleT) < 2")}
   x<- x[,sampleT, drop=FALSE]
   
-  return (x[,-1, drop=FALSE] / x[,-ncol(x), drop=FALSE]) # lambda = Nt+1 / Nt
+  return (x[, -1, drop=FALSE] / x[, -ncol(x), drop=FALSE]) # lambda = Nt+1 / Nt
 }
 
 # lambda.leslieMatrix on model-deterministic.R

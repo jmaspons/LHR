@@ -114,12 +114,12 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 6 * 4), nrow=4, ncol=6, dimnames
   ## GROWTH
   if (params$AFR > 1){
     # WARNING: assumes saAges* is sorted by age
-    N[, c(saAges1[-1])]<- N1sa[, -ncol(N1sa)] # subadult age transitions
-    N[, c(saAges2[-1])]<- N2sa[, -ncol(N2sa)] # subadult age transitions
-    N[, c(saAges1[1])]<- N1j # juvenil -> subadult
-    N[, c(saAges2[1])]<- N2j # juvenil -> subadult
+    N[, saAges1[-1]]<- N1sa[, -ncol(N1sa)] # subadult age transitions
+    N[, saAges2[-1]]<- N2sa[, -ncol(N2sa)] # subadult age transitions
     N[, "N1b"]<- N[, "N1b"] + N1sa[, ncol(N1sa)] # subadult -> adult
     N[, "N2b"]<- N[, "N2b"] + N2sa[, ncol(N2sa)] # subadult -> adult
+    N[, saAges1[1]]<- N1j # juvenil -> subadult
+    N[, saAges2[1]]<- N2j # juvenil -> subadult
   } else { # Juveniles grow to N*b
     N[,"N1b"]<- N[,"N1b"] + N1j
     N[,"N2b"]<- N[,"N2b"] + N2j
@@ -304,7 +304,7 @@ plotLH_behavior.Model<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf
 #' PlotLH_behavior
 #' 
 #' @describeIn plotLH_behavior
-#' @param x 
+#' @param x a \code{data.frame} from \code{\link{result}}.
 #' @param resultType 
 #' @param facet_grid 
 #' @param ... 

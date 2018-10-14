@@ -1,7 +1,7 @@
 Package: LHR
 Type: Package
 Title: Tools for Life History Modeling
-Version: 0.7
+Version: 0.8
 Date: 2018-08-16
 Authors@R: person("Joan", "Maspons", email = "j.maspons@creaf.uab.cat", role = c("aut", "cre"))
 Description: Implements stochastic demographic models. Compound distributions

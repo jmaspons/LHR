@@ -184,6 +184,11 @@ setMethod("Sim.ABM",
               names(N0)<- paste0("N", sapply(N0, sum))
             }
             
+            if (!inherits(N0, "list")){
+                N0<- list(N0)
+                names(N0)<- paste0("N", sapply(N0, sum))
+            }
+            
             params<- list(N0=N0, transitionsFunc=transitionsFunc, tf=tf, replicates=replicates, maxN=maxN, raw=raw, discretePopSim=discretePopSim, Ntf=Ntf, stats=stats)
             
             dots<- list(...)
