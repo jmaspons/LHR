@@ -218,15 +218,28 @@ setMethod("show", signature(object="Sim"),
               print(object@N0_Pest)
               cat("\n\n")
             }
-            
+
             cat(" Parameters:\n")
-            pars<- object@params
+            
+            cat("$N0\n")
+            N0<- object@params$N0
+            if (is.list(N0)){
+              print(do.call(rbind, N0))
+            } else {
+              print(N0)
+            }
+            
+            cat("\n")
+            
+            pars<- object@params[!names(object@params) %in% "N0"]
             
             func<- sapply(pars, inherits, "function")
             gt1<- sapply(pars, length) > 1
             
-            print(pars[gt1 & !func]) # Parameters with more than one value
-            print(data.frame(pars[!gt1 &!func]), row.names=FALSE) # Parameters with only one value
+            if (any(func)) print(lapply(pars[func], formals)) # Parameters with functions
+            if (any(gt1 & !func)) print(pars[gt1 & !func]) # Parameters with more than one value
+            
+            print(data.frame(pars[!gt1 & !func]), row.names=FALSE) # Parameters with only one value
             
             invisible(object)
           }
