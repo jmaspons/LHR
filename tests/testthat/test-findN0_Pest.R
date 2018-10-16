@@ -1,5 +1,6 @@
 context("findN0_Pest")
 
+## discretePopSim ----
 test_that("discretePopSim", {
 if (skip_on_cran()){
   sim<- Sim.discretePopSim(replicates=1000)
@@ -62,6 +63,7 @@ if (skip_on_cran()){
 }
 })
 
+## numericDistri ----
 test_that("numericDistri", {
 if (skip_on_cran()){
   sim<- Sim.numericDistri()
@@ -103,6 +105,7 @@ if (skip_on_cran()){
 }
 })
 
+## discreteABM ----
 test_that("discreteABM", {
 if (skip_on_cran()){
   sim<- Sim.ABM(replicates=1000)

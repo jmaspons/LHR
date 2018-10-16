@@ -20,7 +20,61 @@ test_that("discreteABMSim", {
   expect_is(Gmean(pop), "numeric")
 })
 
-
+test_that("discreteABMSim extreme values", {
+  ## Extinction
+  suppressWarnings( lh<- LH(lambda=.3, broods=1, a=.3, AFR=c(1, 3), method="regular") )
+  env<- Env(seasonAmplitude=0, varJ=0, varA=0, breedFail=.3)
+  pars<- getParamsCombination.LH_Beh(lh, env, habDiffScenario="mortalHab2", behavior="preferHab2")
+  
+  N0<- c(N1s=0, N1b=1, N1bF=0, N2s=0, N2b=1, N2bF=0)
+  sim<- Sim.ABM(N0=N0, replicates=1000, maxN=1000, raw=TRUE, discretePopSim=TRUE)
+  model<- Model(pars=pars, sim=sim)
+  
+  resExt<- run(model)
+  
+  stats<- S3Part(resExt@sim)
+  Ntf<- resExt@sim@Ntf
+  pop<- resExt@sim@discretePopSim
+  popABM<- resExt@sim@raw
+  
+  expect_equal(unique(stats$extinct), 1)
+  expect_equal(unique(stats$decrease), 1)
+  expect_equal(unique(stats$stable), 0)
+  expect_equal(unique(stats$increase), 0)
+  
+  expect_equal(sum(Ntf[, ncol(Ntf)]), 0) # Last column in Ntf is the replicate with larger N.
+  tmp<- lapply(unlist(pop, recursive=FALSE), function(x) expect_equal(unique(x[, ncol(x)]), NA_real_))
+  tmp<- lapply(unlist(popABM, recursive=FALSE), function(x) expect_equal(sum(unique(x[,, dim(x)[3]])), 0))
+  
+  # maxN
+  lh<- LH(lambda=2, broods=2, a=.8, AFR=c(1, 3), method="regular")
+  env<- Env(seasonAmplitude=0, varJ=0, varA=0, breedFail=.3)
+  pars<- getParamsCombination.LH_Beh(lh, env, habDiffScenario="identicalHab", behavior="neutral")
+  
+  N0<- c(N1s=0, N1b=100, N1bF=0, N2s=0, N2b=100, N2bF=0)
+  sim<- Sim.ABM(N0=N0, replicates=1000, maxN=1000, tf=100, raw=TRUE, discretePopSim=TRUE)
+  model<- Model(pars=pars, sim=sim)
+  
+  resMaxN<- run(model)
+  
+  stats<- S3Part(resMaxN@sim)
+  Ntf<- resMaxN@sim@Ntf
+  pop<- resMaxN@sim@discretePopSim
+  popABM<- resMaxN@sim@raw
+  
+  expect_equal(unique(stats$extinct), 0)
+  expect_equal(unique(stats$decrease), 0)
+  expect_equal(unique(stats$stable), 0)
+  expect_equal(unique(stats$increase), 1)
+  
+  ## check model-discreteABMSim.R stop conditions (break).  It fills all classes (dim(popABM[[1]][[1]])[2]) with maxN
+  ## Model.R -> runScenario.ABM() -> if (pars$Ntf) take the last N before all classes are MaxN
+  expect_gt(sum(Ntf[, ncol(Ntf)]), sum(nrow(Ntf) * resMaxN@sim@params$maxN))
+  tmp<- lapply(unlist(pop, recursive=FALSE), function(x) expect_equal(unique(x[, ncol(x)]), NA_real_))
+  tmp<- lapply(unlist(popABM, recursive=FALSE), function(x) expect_true(all(is.na(unique(x[,, dim(x)[3]])))))
+  
+  # sapply(unlist(popABM, recursive=FALSE), summary)
+})
 
 test_that("sample parameter space", {
   expect_is(getScenario("identicalHab"), "numeric")
