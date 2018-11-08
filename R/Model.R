@@ -782,7 +782,14 @@ rbind.Model<- function(...){
   params<- lapply(sims, function(x) x@params)
   params<- unique(params)
   if (length(params) > 1){
-    stop("Ensambling models with different simulation parameters is not supported.")
+    tmpParams<- unique(lapply(params, function(x) x[names(x) != "transitionsFunc"]))
+    tmpTransitionsFunc<- lapply(params, function(x) x[names(x) == "transitionsFunc"])
+    equalTrans<- sapply(tmpTransitionsFunc, function(x) all.equal(x, tmpTransitionsFunc[[1]]))
+    if (length(tmpParams) == 1 & all(equalTrans)){
+      params<- params[[1]]
+    }else{
+      stop("Ensambling models with different simulation parameters is not supported.")
+    }
   }else{
     params<- params[[1]]
   }
