@@ -74,8 +74,8 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 6 * 4), nrow=4, ncol=6, dimnames
   
   ## MOVEMENTS (not based on breeding experience, only once per year)
   # non reproductive adults (juveniles don't change habitat)
-  hab2_1Ns<-  with(params, rbinom(nRep, size=N[,"N2s"], prob=c2 * P1b))
-  hab1_2Ns<-  with(params, rbinom(nRep, size=N[,"N1s"], prob=c1 * (1 - P1b)))
+  hab2_1Ns<-  with(params, rbinom(nRep, size=N[,"N2s"], prob=c2 * P1s))
+  hab1_2Ns<-  with(params, rbinom(nRep, size=N[,"N1s"], prob=c1 * (1 - P1s)))
   # hab2_1Nj<-  with(params, rbinom(nRep, size=N2j, prob=c2 * P1j))
   # hab1_2Nj<-  with(params, rbinom(nRep, size=N1j, prob=c1 * (1 - P1j)))
   
