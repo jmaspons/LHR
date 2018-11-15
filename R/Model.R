@@ -724,7 +724,7 @@ setMethod("show", signature(object="Model"),
 )
 
 # Only allowed to subset by rows but $ and [[i]] works for columns
-# TODO: keep the results from run(model)
+## TODO: use match to keep the index orders from the user input. -> ERRORS in tests
 #' @rdname Model
 #' @export
 `[.Model`<- function(x, ...){
@@ -736,16 +736,19 @@ setMethod("show", signature(object="Model"),
   if (nrow(sim) > 0){
     stats<- data.frame(sim)
     stats<- stats[stats$idScenario %in% scenarioIdSel,]
+    # stats<- stats[na.omit(match(stats$idScenario, scenarioIdSel)),]
     S3Part(sim)<- stats
   }
   
   if (length(sim@raw) > 0){
     sim@raw<- sim@raw[which(names(sim@raw) %in% scenarioIdSel)]
+    # sim@raw<- sim@raw[na.omit(match(names(sim@raw), scenarioIdSel))]
   }
   
   if (nrow(sim@N0_Pest) > 0){
     N0_Pest<- sim@N0_Pest
     sim@N0_Pest<- N0_Pest[N0_Pest$idScenario %in% scenarioIdSel,]
+    # sim@N0_Pest<- N0_Pest[na.omit(match(N0_Pest$idScenario, scenarioIdSel)),]
   }
   
   
@@ -753,11 +756,13 @@ setMethod("show", signature(object="Model"),
     if (nrow(sim@Ntf) > 0){
       Ntf<- sim@Ntf
       sim@Ntf<- Ntf[Ntf$idScenario %in% scenarioIdSel,]
+      # sim@Ntf<- Ntf[na.omit(match(Ntf$idScenario, scenarioIdSel)),]
     }
     
     if (length(sim@discretePopSim) > 0){
       pop<- sim@discretePopSim
       sim@discretePopSim<- pop[names(pop) %in% scenarioIdSel]
+      # sim@discretePopSim<- pop[na.omit(match(names(pop), scenarioIdSel))]
     }
   }
 

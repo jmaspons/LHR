@@ -56,7 +56,7 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 6 * 4), nrow=4, ncol=6, dimnames
     N2j<- N2j + with(params, rbinom(nRep, size=N[,"N2b"] * b2, prob=j2))
     
     ## interbreed interval mortality? otherwise mortality only affected by the last brood event
-    ## Skip reproduction moved outside the broods loop?
+    ## Skip reproduction moved outside the broods loop
     
     ## MOVEMENTS
     # habOLD_NEW

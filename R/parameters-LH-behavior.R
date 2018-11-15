@@ -82,7 +82,6 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=
 
 
 # returns a different strategies.and scenarios
-### TODO: rename scenario -> lh. fix code
 # diffHab2: named vector with the differences in the parameters at habitat 2 respect habitat 1
 # @params nonBreedingSurv increase factor on survival for non breeding adults.
 getParams.LH_Beh<- function(params=data.frame(b=1, broods=1, a=0.7, s=.6, j=0.3, AFR=1, breedFail=0.5, jind=0.4615385, jbr=0.65),

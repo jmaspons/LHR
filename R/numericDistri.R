@@ -154,7 +154,7 @@ distriNegBinom.numeric<- function(size, prob, mu, logP=FALSE, minP, maxPomitted=
   return (res)
 }
 
-#TODO distriNegBinom.numericDistri
+## TODO: distriNegBinom.numericDistri ----
 
 ## Beta negative binomial distribution ----
 #' @rdname numericDistri
@@ -179,7 +179,7 @@ distriBetaNegBinom<- function(size, shape1, shape2, logP=FALSE, minP, maxPomitte
   return (res)
 }
 
-#TODO distriBetaNegBinom.numericDistri
+#TODO distriBetaNegBinom.numericDistri ----
 
 
 ## Poisson distribution ----
@@ -218,7 +218,7 @@ distriPois.numeric<- function(lambda, logP=FALSE, minP, maxPomitted=0.0001){
 }
 
 
-## TODO
+## TODO: distriPois.numericDistri (src/numericDistribution.c) ----
 # @rdname numericDistri
 # @export
 distriPois.numericDistri<- function(lambda, logP=FALSE, minP, maxPomitted=0.0001){
