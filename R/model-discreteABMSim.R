@@ -110,10 +110,9 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
     }
   }
   
-  
-  pop<- discreteABMSim2discretePopSim(popABM) # sort replicates by final size
-  
-  popABM<- popABM[order(pop[, ncol(pop)], na.last=TRUE),,, drop=FALSE]
+  ## Sort replicates by final size
+  # pop<- discreteABMSim2discretePopSim(popABM) 
+  # popABM<- popABM[order(pop[, ncol(pop)], na.last=TRUE),,, drop=FALSE]
   
   class(popABM)<- c("discreteABMSim", "array")
   return(popABM)
@@ -136,7 +135,6 @@ discreteABMSim2discretePopSim<- function(popABM, maxN, omitClass){
   }else{
     pop<- apply(popABM[, !grepl(omitClass, colnames(popABM)),, drop=FALSE], MARGIN=3, rowSums)
   }
-  
   
   pop<- cleanDiscretePopSim(pop)
   

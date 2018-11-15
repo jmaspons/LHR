@@ -12,6 +12,8 @@
 NULL
 
 cleanDiscretePopSim<- function(pop, maxN){
+  pop<- pop[order(pop[, ncol(pop)], decreasing=TRUE), ] # sort replicates by Ntf
+
   if (ncol(pop) == 2) return(pop) ## for ABM with Ntf=TRUE (keep N0 and Ntf only)
   
   pop<- extinctNA(pop)
@@ -221,7 +223,7 @@ mFit.t<- function(fecundity, j, s, a, AFR, N0, replicates, tf, maxN=100000){
     pop[which(pop[,t+1, AFR] > maxN), t+1, AFR]<- maxN
   }
   
-  pop<- pop[order(pop[, ncol(pop), AFR]),, AFR] # Keep adults only and drop subadults
+  pop<- pop[,, AFR] # Keep adults only and drop subadults
   pop<- cleanDiscretePopSim(pop, maxN=maxN)
   class(pop)<- c("discretePopSim", "matrix")
   
@@ -254,7 +256,7 @@ mSurvBV.t<- function(broods, b, j, s, a, AFR, breedFail, N0, replicates, tf, max
     pop[which(pop[, t+1, AFR] > maxN), t+1, AFR]<- maxN
   }
   
-  pop<- pop[order(pop[, ncol(pop), AFR]),, AFR] # Keep adults only and drop subadults
+  pop<- pop[,, AFR] # Keep adults only and drop subadults
   pop<- cleanDiscretePopSim(pop, maxN=maxN)
   class(pop)<- c("discretePopSim", "matrix")
   
@@ -405,7 +407,7 @@ mFit.tvar<- function(fecundity, j, s, a, AFR, varJ, varA, N0, replicates, tf, ma
     pop[which(pop[, t+1, AFR] > maxN), t+1, AFR]<- maxN
   }
   
-  pop<- pop[order(pop[, ncol(pop), AFR]),, AFR] # Keep adults only and drop subadults
+  pop<- pop[,, AFR] # Keep adults only and drop subadults
   pop<- cleanDiscretePopSim(pop, maxN=maxN)
   class(pop)<- c("discretePopSim", "matrix")
   
@@ -440,7 +442,7 @@ mFit.tseason<- function(broods, b, j, s, a, AFR, seasonVar, N0, replicates, tf, 
     pop[which(pop[, t+1, AFR] > maxN), t+1, AFR]<- maxN
   }
   
-  pop<- pop[order(pop[, ncol(pop), AFR]),, AFR] # Keep adults only and drop subadults
+  pop<- pop[,, AFR] # Keep adults only and drop subadults
   pop<- cleanDiscretePopSim(pop, maxN=maxN)
   class(pop)<- c("discretePopSim", "matrix")
   
@@ -512,7 +514,7 @@ mFit.tvarseason<- function(broods, b, j, s, a, AFR, seasonVar, varJ=0, varA=0, N
     pop[which(pop[, t+1, AFR] > maxN), t+1, AFR]<- maxN
   }
   
-  pop<- pop[order(pop[, ncol(pop), AFR]),, AFR] # Keep adults only and drop subadults
+  pop<- pop[,, AFR] # Keep adults only and drop subadults
   pop<- cleanDiscretePopSim(pop, maxN=maxN)
   class(pop)<- c("discretePopSim", "matrix")
   
@@ -598,7 +600,7 @@ mSurvBV.tvar<- function(broods, b, j, s, a, AFR, breedFail, varJ=0, varBreedFail
     
     pop[which(pop[, t+1, AFR] > maxN), t+1, AFR]<- maxN
   }
-  pop<- pop[order(pop[, ncol(pop), AFR]),, AFR] # Keep adults only and drop subadults
+  pop<- pop[,, AFR] # Keep adults only and drop subadults
   pop<- cleanDiscretePopSim(pop, maxN=maxN)
   class(pop)<- c("discretePopSim", "matrix")
   
@@ -638,7 +640,7 @@ mSurvBV.tseason<- function(broods, b, j, s, a, AFR, breedFail, seasonVar, N0, re
     pop[which(pop[, t+1, AFR] > maxN), t+1, AFR]<- maxN
   }
   
-  pop<- pop[order(pop[, ncol(pop), AFR]),, AFR] # Keep adults only and drop subadults
+  pop<- pop[,, AFR] # Keep adults only and drop subadults
   pop<- cleanDiscretePopSim(pop, maxN=maxN)
   class(pop)<- c("discretePopSim", "matrix")
   
@@ -729,7 +731,7 @@ mSurvBV.tvarseason<- function(broods, b, j, s, a, AFR, breedFail, seasonVar, var
     pop[which(pop[, t+1, AFR] > maxN), t+1, AFR]<- maxN
   }
   
-  pop<- pop[order(pop[, ncol(pop), AFR]),, AFR] # Keep adults only and drop subadults
+  pop<- pop[,, AFR] # Keep adults only and drop subadults
   pop<- cleanDiscretePopSim(pop, maxN=maxN)
   class(pop)<- c("discretePopSim", "matrix")
   
