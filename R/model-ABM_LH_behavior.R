@@ -131,6 +131,129 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 6 * 4), nrow=4, ncol=6, dimnames
 transitionABM.LH_Beh<- compiler::cmpfun(transitionABM.LH_Beh) # byte-compile the function
 
 
+transitionABM.LH_Beh_DET<- function(N=matrix(rep(5, 6), nrow=1, ncol=6, dimnames=list(NULL, state=c("N1s", "N1b", "N1bF", "N2s", "N2b", "N2bF"))),
+                                params=list(b1=1, b2=1,  broods=1, PbF1=.4, PbF2=.4,  a1=.25,ab1=.1,sa1=.25,j1=.1,  a2=.25,ab2=.1,sa2=.25,j2=.1, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5)){
+  N1j<- N2j<- numeric(1) # Juveniles
+  
+  saAges<- grep("sa", colnames(N), value=TRUE)
+  if (length(saAges) / 2 < params$AFR - 1){
+    warning("Subadult classes missing in the population matrix N. Updating N")
+    if (sum(N[, saAges]) > 0) warning("Removing individuals from subadult classes ", saAges)
+    
+    saColsOri<- grep("sa", colnames(N))
+    if (length(saColsOri) > 0)
+      N<- N[, -saColsOri] # remove original columns
+    
+    saAges<- paste0("sa", 1:(params$AFR - 1))
+    saAges<- c(paste0("N1", saAges), paste0("N2", saAges))
+    Nsa<- matrix(0, nrow=1, ncol=length(saAges), dimnames=list(replicates=1, state=saAges))
+    N<- cbind(N, Nsa)
+    rm(Nsa)
+  }
+  
+  saAges1<- grep("N1", saAges, value=TRUE)
+  saAges2<- grep("N2", saAges, value=TRUE)
+  
+  ## BREEDING
+  adultN1<- sum(N[,c("N1b", "N1bF", "N1s")])
+  adultN2<- sum(N[,c("N2b", "N2bF", "N2s")])
+  
+  ## Breeders
+  breedingN1<-  with(params, adultN1 * Pb1)
+  breedingN2<-  with(params, adultN2 * Pb2)
+  
+  # Skip reproduction
+  N[,"N1s"]<- adultN1 - breedingN1
+  N[,"N2s"]<- adultN2 - breedingN2
+  
+  for (i in 1:params$broods){
+    ## Breeding success
+    N[,"N1b"]<-  with(params, breedingN1 * (1 - PbF1))
+    N[,"N2b"]<-  with(params, breedingN2 * (1 - PbF2))
+    ## Breeding Fail
+    N[,"N1bF"]<- breedingN1 - N[,"N1b"]
+    N[,"N2bF"]<- breedingN2 - N[,"N2b"]
+    
+    ## Juvenile recruitment and mortality
+    N1j<- N1j + with(params, N[,"N1b"] * b1 * j1)
+    N2j<- N2j + with(params, N[,"N2b"] * b2 * j2)
+    
+    ## interbreed interval mortality? otherwise mortality only affected by the last brood event
+    ## Skip reproduction moved outside the broods loop
+    
+    ## MOVEMENTS
+    # habOLD_NEW
+    hab2_1Nb<-  with(params, N[,"N2b"] * c2 * P1b)
+    hab1_2Nb<-  with(params, N[,"N1b"] * c1 * (1 - P1b))
+    hab2_1NbF<-  with(params, N[,"N2bF"] * cF * P1b)
+    hab1_2NbF<-  with(params, N[,"N1bF"] * cF * (1 - P1b))
+    
+    ## Apply movements
+    N[,"N1b"]<-  N[,"N1b"]  + hab2_1Nb  - hab1_2Nb
+    N[,"N2b"]<-  N[,"N2b"]  + hab1_2Nb  - hab2_1Nb
+    N[,"N1bF"]<- N[,"N1bF"] + hab2_1NbF - hab1_2NbF
+    N[,"N2bF"]<- N[,"N2bF"] + hab1_2NbF - hab2_1NbF
+  }
+  
+  ## MOVEMENTS (not based on breeding experience, only once per year)
+  # non reproductive adults (juveniles don't change habitat)
+  hab2_1Ns<-  with(params, N[,"N2s"] * c2 * P1s)
+  hab1_2Ns<-  with(params, N[,"N1s"] * c1 * (1 - P1s))
+  # hab2_1Nj<-  with(params, N2j * c2 * P1j)
+  # hab1_2Nj<-  with(params, N1j * c1 * (1 - P1j))
+  
+  N[,"N1s"]<-  N[,"N1s"]  + hab2_1Ns  - hab1_2Ns
+  N[,"N2s"]<-  N[,"N2s"]  + hab1_2Ns  - hab2_1Ns
+  #     N1j<-  N1j + hab2_1Nj  - hab1_2Nj
+  #     N2j<-  N2j + hab1_2Nj  - hab2_1Nj
+  
+  # subadults
+  if (params$AFR > 1){
+    hab2_1Nsa<-  apply(N[, saAges2, drop=FALSE], 2, function(x) with(params, x * c2 * P1sa))
+    hab1_2Nsa<-  apply(N[, saAges1, drop=FALSE], 2, function(x) with(params, x * c1 * (1 - P1sa)))
+    N[, saAges1]<-  N[, saAges1, drop=FALSE] + hab2_1Nsa - hab1_2Nsa
+    N[, saAges2]<-  N[, saAges2, drop=FALSE] + hab1_2Nsa - hab2_1Nsa
+  }
+  
+  
+  ## SURVIVAL
+  # juvenile survival already calculated during recruitment (saved in N*j)
+  N[,"N1b"]<-  with(params, N[,"N1b"] * ab1)
+  N[,"N2b"]<-  with(params, N[,"N2b"] * ab2)
+  
+  N[,"N1bF"]<- with(params, N[,"N1bF"] * ab1)
+  N[,"N2bF"]<- with(params, N[,"N2bF"] * ab2)
+  
+  N[,"N1s"]<-  with(params, N[,"N1s"] * a1)
+  N[,"N2s"]<-  with(params, N[,"N2s"] * a2)
+  
+  ## Subadults
+  if (params$AFR > 1){
+    N1sa<-  apply(N[, saAges1, drop=FALSE], 2, function(x) with(params, x * sa1))
+    N2sa<-  apply(N[, saAges2, drop=FALSE], 2, function(x) with(params, x * sa2))
+  }
+  
+  
+  ## GROWTH
+  if (params$AFR > 1){
+    # WARNING: assumes saAges* is sorted by age
+    N[, saAges1[-1]]<- N1sa[, -ncol(N1sa)] # subadult age transitions
+    N[, saAges2[-1]]<- N2sa[, -ncol(N2sa)] # subadult age transitions
+    N[, "N1b"]<- N[, "N1b"] + N1sa[, ncol(N1sa)] # subadult -> adult
+    N[, "N2b"]<- N[, "N2b"] + N2sa[, ncol(N2sa)] # subadult -> adult
+    N[, saAges1[1]]<- N1j # juvenil -> subadult
+    N[, saAges2[1]]<- N2j # juvenil -> subadult
+  } else { # Juveniles grow to N*b
+    N[,"N1b"]<- N[,"N1b"] + N1j
+    N[,"N2b"]<- N[,"N2b"] + N2j
+  }
+  
+  return(N)
+}
+
+transitionABM.LH_Beh_DET<- compiler::cmpfun(transitionABM.LH_Beh_DET) # byte-compile the function
+
+
 ## Graphics ----
 
 #' Plot LH_behavior simulations
