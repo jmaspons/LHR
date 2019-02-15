@@ -631,7 +631,7 @@ setMethod("result",
                           res
                         })
                   Ntf<- t(Ntf)
-                  colnames(Ntf)<- names(quantile(1, ...))
+                  colnames(Ntf)<- names(stats::quantile(1, ...))
                   Ntf<- cbind(model@sim@Ntf[, c(1,2)], Ntf, stringsAsFactors=FALSE)
                 }
                 

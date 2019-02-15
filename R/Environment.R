@@ -234,7 +234,7 @@ setMethod("show", signature(object="Env"),
 #'
 #' @return
 #' @export
-summary.LH<- function(object, ...){
+summary.Env<- function(object, ...){
   lapply(S3Part(object)[, sapply(object, is.numeric)], function(x) sort(unique(x)))
 }
 
