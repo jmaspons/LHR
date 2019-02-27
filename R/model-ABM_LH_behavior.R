@@ -73,6 +73,9 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 6 * 4), nrow=4, ncol=6, dimnames
     N[,"N2b"]<-  N[,"N2b"]  + hab1_2Nb  - hab2_1Nb
     N[,"N1bF"]<- N[,"N1bF"] + hab2_1NbF - hab1_2NbF
     N[,"N2bF"]<- N[,"N2bF"] + hab1_2NbF - hab2_1NbF
+    
+    breedingN1<-  N[,"N1b"] +  N[,"N1bF"]
+    breedingN2<-  N[,"N2b"] +  N[,"N2bF"]
   }
   
   ## MOVEMENTS (not based on breeding experience, only once per year)
@@ -204,6 +207,9 @@ transitionABM.LH_Beh_DET<- function(N=matrix(rep(5, 6), nrow=1, ncol=6, dimnames
     N[,"N2b"]<-  N[,"N2b"]  + hab1_2Nb  - hab2_1Nb
     N[,"N1bF"]<- N[,"N1bF"] + hab2_1NbF - hab1_2NbF
     N[,"N2bF"]<- N[,"N2bF"] + hab1_2NbF - hab2_1NbF
+    
+    breedingN1<-  N[,"N1b"] +  N[,"N1bF"]
+    breedingN2<-  N[,"N2b"] +  N[,"N2bF"]
   }
   
   ## MOVEMENTS (not based on breeding experience, only once per year)
