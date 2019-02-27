@@ -1,5 +1,6 @@
 ## TODO: add subadult classes for models with 2 sexes and AFR > 1
 ## TODO: add varA for *Sex.tvar models
+## TODO: add correlation among aEnv, jEnv, sEnv
 
 #' Discrete Time Simulation
 #' 
@@ -12,7 +13,7 @@
 NULL
 
 cleanDiscretePopSim<- function(pop, maxN){
-  pop<- pop[order(pop[, ncol(pop)], decreasing=TRUE), ] # sort replicates by Ntf
+  pop<- pop[order(pop[, ncol(pop)], decreasing=TRUE), , drop=FALSE] # sort replicates by Ntf
 
   if (ncol(pop) == 2) return(pop) ## for ABM with Ntf=TRUE (keep N0 and Ntf only)
   

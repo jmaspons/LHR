@@ -7,8 +7,11 @@
 #' @importFrom stats rbinom 
 transitionABM.LH_Beh<- function(N=matrix(rep(5, 6 * 4), nrow=4, ncol=6, dimnames=list(replicates=NULL, state=c("N1s", "N1b", "N1bF", "N2s", "N2b", "N2bF"))),
                          params=list(b1=1, b2=1,  broods=1, PbF1=.4, PbF2=.4,  a1=.25,ab1=.1,sa1=.25,j1=.1,  a2=.25,ab2=.1,sa2=.25,j2=.1, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5)){
+  if (is.null(dim(N)))
+    N<- as.matrix(t(N))
+  
   nRep<- nrow(N)
-  if (nRep < 2) stop("Minimum 2 replicates")
+  
   N1j<- N2j<- numeric(nRep) # Juveniles
   
   saAges<- grep("sa", colnames(N), value=TRUE)
@@ -32,8 +35,8 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 6 * 4), nrow=4, ncol=6, dimnames
   
   
   ## BREEDING
-  adultN1<- rowSums(N[,c("N1b", "N1bF", "N1s")])
-  adultN2<- rowSums(N[,c("N2b", "N2bF", "N2s")])
+  adultN1<- rowSums(N[,c("N1b", "N1bF", "N1s"), drop=FALSE])
+  adultN2<- rowSums(N[,c("N2b", "N2bF", "N2s"), drop=FALSE])
   
   ## Breeders
   breedingN1<-  with(params, rbinom(nRep, size=adultN1, prob=Pb1))
@@ -108,6 +111,11 @@ transitionABM.LH_Beh<- function(N=matrix(rep(5, 6 * 4), nrow=4, ncol=6, dimnames
   if (params$AFR > 1){
     N1sa<-  apply(N[, saAges1, drop=FALSE], 2, function(x) with(params, rbinom(nRep, size=x, prob=sa1)))
     N2sa<-  apply(N[, saAges2, drop=FALSE], 2, function(x) with(params, rbinom(nRep, size=x, prob=sa2)))
+    
+    if (is.null(dim(N1sa))){
+      N1sa<- as.matrix(t(N1sa))
+      N2sa<- as.matrix(t(N2sa))
+    }
   }
   
   
@@ -133,6 +141,9 @@ transitionABM.LH_Beh<- compiler::cmpfun(transitionABM.LH_Beh) # byte-compile the
 
 transitionABM.LH_Beh_DET<- function(N=matrix(rep(5, 6), nrow=1, ncol=6, dimnames=list(NULL, state=c("N1s", "N1b", "N1bF", "N2s", "N2b", "N2bF"))),
                                 params=list(b1=1, b2=1,  broods=1, PbF1=.4, PbF2=.4,  a1=.25,ab1=.1,sa1=.25,j1=.1,  a2=.25,ab2=.1,sa2=.25,j2=.1, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5)){
+  if (is.null(dim(N)))
+    N<- as.matrix(t(N))
+  
   N1j<- N2j<- numeric(1) # Juveniles
   
   saAges<- grep("sa", colnames(N), value=TRUE)
@@ -231,6 +242,11 @@ transitionABM.LH_Beh_DET<- function(N=matrix(rep(5, 6), nrow=1, ncol=6, dimnames
   if (params$AFR > 1){
     N1sa<-  apply(N[, saAges1, drop=FALSE], 2, function(x) with(params, x * sa1))
     N2sa<-  apply(N[, saAges2, drop=FALSE], 2, function(x) with(params, x * sa2))
+    
+    if (is.null(dim(N1sa))){
+      N1sa<- as.matrix(t(N1sa))
+      N2sa<- as.matrix(t(N2sa))
+    }
   }
   
   

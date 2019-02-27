@@ -29,7 +29,7 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
                           params=list(b1=2, b2=2,   broods=2, PbF1=.4, PbF2=.4,  a1=.3,ab1=.25,sa1=.25,j1=.1,  a2=.3,ab2=.25,sa2=.20,j2=.1, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5),
                           tf=10, replicates=100, maxN=100000, Ntf=FALSE, randomizeN0=FALSE){
   # Check nStates returned by transitionsFunc (LH_behavior add subadult classes according to AFR)
-  N<- transitionsFunc(N=rbind(N0, N0), params=params)
+  N<- transitionsFunc(N=N0, params=params)
   stateName<- colnames(N)
   nStates<- length(stateName)
   
@@ -53,7 +53,7 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
     
     for (ti in 1:tf){
       popABM[,, ti+1]<- transitionsFunc(N=popABM[,, ti], params=params)
-      popABM[,, ti+1]<- apply(popABM[,, ti+1], MARGIN=2, function(x) ifelse(x > maxN, maxN, x))
+      popABM[,, ti+1]<- apply(popABM[,, ti+1, drop=FALSE], MARGIN=2, function(x) ifelse(x > maxN, maxN, x))
       
       if (anyNA(popABM[,, ti+1])){
         warning("NAs produced during the simulation of the discreteABMSim model.")
@@ -64,12 +64,12 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
       
       if (ti %% 10 == 0 & ti + 1 < tf){ # check stop conditions every 10 time steps
         # Stop if all replicates have a class that reach maxN. TODO: check if the optimization is worth it benchmark.Rmd
-        if (all(apply(popABM[,, ti+1], MARGIN=1, function(x) any(c(x == maxN, FALSE), na.rm=TRUE)))){ # FALSE in case all is NA
+        if (all(apply(popABM[,, ti+1, drop=FALSE], MARGIN=1, function(x) any(c(x == maxN, FALSE), na.rm=TRUE)))){ # FALSE in case all is NA
           popABM[,, ti+1]<- maxN
           popABM[,, (ti+2):(tf+1)]<- NA # remove 0. If maxN is not stable, the transitions are cosidered valid at maxNNA(pop)
           break
         }# Stop if all replicates get extinct TODO: check if the optimization is worth in benchmark.Rmd
-        if (all(apply(popABM[,, ti+1], MARGIN=1, function(x) all(c(x <= 0, TRUE), na.rm=TRUE))) & ti < tf){ # TRUE in case all is NA
+        if (all(apply(popABM[,, ti+1, drop=FALSE], MARGIN=1, function(x) all(c(x <= 0, TRUE), na.rm=TRUE))) & ti < tf){ # TRUE in case all is NA
           break
         }
       }
@@ -95,14 +95,14 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
     
     for (ti in 1:tf){
       popABM[,, 2]<- transitionsFunc(N=popABM[,, 2], params=params)
-      popABM[,, 2]<- apply(popABM[,, 2], MARGIN=2, function(x) ifelse(x > maxN, maxN, x))
+      popABM[,, 2]<- apply(popABM[,, 2, drop=FALSE], MARGIN=2, function(x) ifelse(x > maxN, maxN, x))
       
       if (ti %% 10 == 0 & ti < tf){ # check stop conditions every 10 time steps
         # Stop if all replicates have a class that reach maxN
-        if (all(apply(popABM[,, 2], MARGIN=1, function(x) any(c(x == maxN, FALSE), na.rm=TRUE)))){ # FALSE in case all is NA
+        if (all(apply(popABM[,, 2, drop=FALSE], MARGIN=1, function(x) any(c(x == maxN, FALSE), na.rm=TRUE)))){ # FALSE in case all is NA
           break
         }# Stop if all replicates get extinct
-        if (all(apply(popABM[,, 2], MARGIN=1, function(x) all(c(x <= 0, TRUE), na.rm=TRUE)))){ # TRUE in case all is NA
+        if (all(apply(popABM[,, 2, drop=FALSE], MARGIN=1, function(x) all(c(x <= 0, TRUE), na.rm=TRUE)))){ # TRUE in case all is NA
           popABM[,, 2]<- 0
           break
         }
@@ -135,6 +135,9 @@ discreteABMSim2discretePopSim<- function(popABM, maxN, omitClass){
   }else{
     pop<- apply(popABM[, !grepl(omitClass, colnames(popABM)),, drop=FALSE], MARGIN=3, rowSums)
   }
+  
+  if (is.null(dim(pop)))
+    pop<- as.matrix(t(pop))
   
   pop<- cleanDiscretePopSim(pop)
   
