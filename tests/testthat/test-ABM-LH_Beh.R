@@ -77,15 +77,15 @@ test_that("discreteABMSim extreme values", {
 })
 
 test_that("sample parameter space", {
-  expect_is(getScenario("identicalHab"), "numeric")
-  expect_is(getScenario("mortalHab2"), "numeric")
-  expect_is(getScenario("nestPredHab2"), "numeric")
+  expect_is(getDiffHabScenario("identicalHab"), "numeric")
+  expect_is(getDiffHabScenario("mortalHab2"), "numeric")
+  expect_is(getDiffHabScenario("nestPredHab2"), "numeric")
   
-  expect_is(setScenario(habDiffScenario="identicalHab"), "data.frame")
-  expect_is(setScenario(habDiffScenario="mortalHab2"), "data.frame")
-  expect_is(setScenario(habDiffScenario="nestPredHab2"), "data.frame")
+  expect_is(setHabScenario(habDiffScenario="identicalHab"), "data.frame")
+  expect_is(setHabScenario(habDiffScenario="mortalHab2"), "data.frame")
+  expect_is(setHabScenario(habDiffScenario="nestPredHab2"), "data.frame")
   
-  obj<- setParams2diff1(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,
+  obj<- getParams2diff1(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,
                                           a1=.25,ab1=.2,sa1=.2,j1=.1,  a2=.25,ab2=.2,sa2=.2,j2=.1,
                                           AFR=2, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5))
   expect_is(obj, "data.frame")
