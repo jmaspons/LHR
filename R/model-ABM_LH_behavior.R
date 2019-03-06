@@ -392,7 +392,7 @@ plotLH_behavior.discreteABMSim<- function(x, groups=c("all", "habitat", "age", "
 #' @export
 #'
 #' @examples
-plotLH_behavior.Model<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf"), facet_grid=breedFail ~ habDiff + behavior, ...){
+plotLH_behavior.Model<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf"), facet_grid=breedFail ~ idHabDiff + idBehavior, ...){
   if (missing(resultType)) noType<- TRUE else noType<- FALSE
   
   resultType<- match.arg(resultType)
@@ -458,7 +458,7 @@ plotLH_behavior.Model<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf
 #' @export
 #'
 #' @examples
-plotLH_behavior.data.frame<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf"), facet_grid=breedFail ~ habDiff + behavior, ...){
+plotLH_behavior.data.frame<- function(x, resultType=c("Pest_N0", "G", "N0_Pest", "Ntf"), facet_grid=breedFail ~ idHabDiff + idBehavior, ...){
   if (missing(resultType)) noType<- TRUE else noType<- FALSE
   
   resultType<- match.arg(resultType)
@@ -506,7 +506,7 @@ plotLH_behavior.data.frame<- function(x, resultType=c("Pest_N0", "G", "N0_Pest",
   return(out)
 }
 
-plotPest_N0.LH_behavior<- function(x, facet_grid=breedFail ~ habDiff + behavior, ...){
+plotPest_N0.LH_behavior<- function(x, facet_grid=breedFail ~ idHabDiff + idBehavior, ...){
   x$Pest<- 1 - x$extinct
   
   ggplot2::ggplot(data=x, ggplot2::aes(x=N0, y=Pest, group=idScenario, color=colorLH)) + 
@@ -515,7 +515,7 @@ plotPest_N0.LH_behavior<- function(x, facet_grid=breedFail ~ habDiff + behavior,
     ggplot2::scale_size(breaks=unique(x$lambda), range=c(0.5, 2))
 }
 
-plotG.LH_behavior<- function(x, facet_grid=breedFail ~ habDiff + behavior, ...){
+plotG.LH_behavior<- function(x, facet_grid=breedFail ~ idHabDiff + idBehavior, ...){
   ggplot2::ggplot(data=x, ggplot2::aes(x=N0, y=GL, group=idScenario, color=colorLH)) + 
     ggplot2::geom_hline(yintercept=1) + ggplot2::geom_line(mapping=ggplot2::aes(size=lambda), alpha=0.5) + # ggplot2::geom_point() +
     ggplot2::geom_line(mapping=ggplot2::aes(y=meanL), linetype=2) +
@@ -524,12 +524,12 @@ plotG.LH_behavior<- function(x, facet_grid=breedFail ~ habDiff + behavior, ...){
     ggplot2::scale_size(breaks=unique(x$lambda), range=c(0.5, 2))
 }
 
-plotN0_Pest.LH_behavior<- function(x, facet_grid=breedFail ~ habDiff + behavior, ...){
+plotN0_Pest.LH_behavior<- function(x, facet_grid=breedFail ~ idHabDiff + idBehavior, ...){
   ggplot2::ggplot(data=x, ggplot2::aes(x=lambda, y=N0interpoled, group=colorLH, color=colorLH)) + ggplot2::scale_y_log10() +
     ggplot2::geom_point() + ggplot2::geom_line(size=0.5) + ggplot2::facet_grid(facet_grid, labeller=ggplot2::label_both)  
 }
 
-plotNtf.LH_behavior<- function(x, facet_grid=breedFail ~ habDiff + behavior, ...){
+plotNtf.LH_behavior<- function(x, facet_grid=breedFail ~ idHabDiff + idBehavior, ...){
   abline<- 1:max(x$N0)
   abline<- data.frame(x=abline, y=abline)
   

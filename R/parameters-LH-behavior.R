@@ -53,14 +53,14 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=
   if (pb & requireNamespace("pbapply", quietly=TRUE)){
     params<- pbapply::pblapply(combL, function (x){
       out<- getParams.LH_Beh(x, habDiffScenario=x$habDiffScenario, behavior=x$behavior)
-      out<- data.frame(idScenario=x$idScenario, habDiff=x$habDiffScenario, behavior=x$behavior, out, stringsAsFactors=FALSE)
+      out<- data.frame(idScenario=x$idScenario, idHabDiff=x$habDiffScenario, idBehavior=x$behavior, out, stringsAsFactors=FALSE)
       
       out
     }, cl=cl)
   }else{
     params<- parallel::parLapply(cl=cl, combL, function (x){
       out<- getParams.LH_Beh(x, habDiffScenario=x$habDiffScenario, behavior=x$behavior)
-      out<- data.frame(idScenario=x$idScenario, habDiff=x$habDiffScenario, behavior=x$behavior, out, stringsAsFactors=FALSE)
+      out<- data.frame(idScenario=x$idScenario, idHabDiff=x$habDiffScenario, idBehavior=x$behavior, out, stringsAsFactors=FALSE)
       
       out
     })
@@ -69,13 +69,13 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=
   params<- do.call(rbind, params)
 
   params<- merge(params, LH_Env[,c("idScenario", setdiff(names(LH_Env), names(params)))], by="idScenario")
-  params$idScenario<- with(params, paste(idScenario, habDiff, behavior, sep="_"))
+  params$idScenario<- with(params, paste(idScenario, idHabDiff, idBehavior, sep="_"))
   rownames(params)<- params$idScenario
   
   # Sort
-  params$habDiff<- factor(params$habDiff, levels=c("identicalHab", "mortalHab2", "nestPredHab2"))
-  params$behavior<- factor(params$behavior, levels=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2"))
-  params<- params[naturalsort::naturalorder(paste0(params$idScenario, "|", params$habDiff, "|", params$behavior)),]
+  params$idHabDiff<- factor(params$idHabDiff, levels=c("identicalHab", "mortalHab2", "nestPredHab2"))
+  params$idBehavior<- factor(params$idBehavior, levels=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2"))
+  params<- params[naturalsort::naturalorder(params$idScenario),]
   
   return (params)
 }
