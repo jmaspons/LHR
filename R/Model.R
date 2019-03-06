@@ -6,8 +6,8 @@ NULL
 #' Model constructor
 #'
 #' @rdname Model
-#' @param lh 
-#' @param env 
+#' @param lh a \code{\link{LH}} object. 
+#' @param env a \code{\link{Env}} object. 
 #' @param sim 
 #'
 #' @return a \code{Model} object.
@@ -55,8 +55,8 @@ setMethod("Model",
 ## Combine LH and Environment ----
 #' Combine a LH and a Env object in a set of scenarios
 #'
-#' @param lh 
-#' @param env 
+#' @param lh a \code{\link{LH}} object. 
+#' @param env a \code{\link{Env}} object. 
 #' @param resolution the number of divisions of the sinusoidal pattern representing one year. Used in \code{\link{seasonOptimCal}}.
 #' @param interval a vector with the number of events for each LH strategy.
 #' @param criterion 
@@ -141,7 +141,8 @@ setMethod("combineLH_Env",
 #' @rdname Model
 #'
 #' @param model 
-#' @param cl 
+#' @param cl The number of cores to use or a cluster object (\code{\link[parallel]{makeCluster}} or 
+#'   \code{\link[snow]{makeCluster} from \href{https://cran.r-project.org/web/packages/snow/index.html}{snow} package}) 
 #' @param pb if \code{TRUE} and \link[pbapply]{pbapply} package is installed, show a progress bar.
 #' @param debug if \code{TRUE} run the simulations in a simple loop and print information about the state.
 #' @param ... 

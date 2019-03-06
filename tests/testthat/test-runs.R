@@ -269,6 +269,7 @@ test_that("ABM LH-behavior", {
     # a<- res[1:6,]
     # b<- rbind(res[1:3,], res[4:6,])
     # all.equal(a@sim@Ntf[order(a@sim@Ntf$idScenario),], b@sim@Ntf[order(b@sim@Ntf$idScenario),])
+    # data.frame(a@sim@Ntf$idScenario, b@sim@Ntf$idScenario, stringsAsFactors=FALSE)
     expect_error(rbind(res, res)) # duplicated scenarios
 
     ## Duplicated ids
@@ -333,6 +334,7 @@ test_that("ABM LH-behavior Deterministic", {
     # a<- res[1:6,]
     # b<- rbind(res[1:3,], res[4:6,])
     # all.equal(a@sim@Ntf[order(a@sim@Ntf$idScenario),], b@sim@Ntf[order(b@sim@Ntf$idScenario),])
+    # data.frame(a@sim@Ntf$idScenario, b@sim@Ntf$idScenario, stringsAsFactors=FALSE)
     expect_error(rbind(res, res)) # duplicated scenarios
     
     ## Duplicated ids

@@ -11,8 +11,10 @@
 #'
 #' @return a \code{slurm_job} object to retrieve the results using \code{\link[rslurm]{get_slurm_out}}.
 #' @examples 
-#' sjob<- run.slurm(Model(), nodes=2, cpus_per_node=4, jobname="LHR", slurm_options=list(mem=100), submit=FALSE)
-#' cleanup_files(sjob)
+#' \dontrun{
+#'   sjob<- run.slurm(Model(), nodes=2, cpus_per_node=4, jobname="LHR", slurm_options=list(mem=100), submit=FALSE)
+#'   cleanup_files(sjob)
+#' }
 #' @include aaa-classes.R
 #' @export
 setGeneric("run.slurm", function(model, nodes, cpus_per_node, slurm_options, ...) standardGeneric("run.slurm"))
@@ -66,9 +68,11 @@ setMethod("run.slurm",
 #'
 #' @return a \code{\link[rslurm]{slurm_job}} object to retrieve the results using \code{\link[rslurm]{get_slurm_out}}.
 #' @examples 
-#' sjob- findN0_Pest.slurm(Model(), nodes=2, cpus_per_node=4, jobname="LHR", slurm_options=list(mem=100), submit=FALSE)
-#' res<- ensembleModel.slurm(sjob)
-#' cleanup_files(sjob)
+#' \dontrun{
+#'   sjob- findN0_Pest.slurm(Model(), nodes=2, cpus_per_node=4, jobname="LHR", slurm_options=list(mem=100), submit=FALSE)
+#'   res<- ensembleModel.slurm(sjob)
+#'   cleanup_files(sjob)
+#' }
 #' @include aaa-classes.R
 #' @export
 findN0_Pest.slurm<- function(model=Model(), nodes, cpus_per_node, Pobjective=.5, verbose=FALSE, slurm_options, ...){
@@ -110,10 +114,12 @@ findN0_Pest.slurm<- function(model=Model(), nodes, cpus_per_node, Pobjective=.5,
 #'
 #' @return a \code{\link{Model}} object with all the results from a  \code{\link[rslurm]{get_slurm_out}}.
 #' @examples 
-#' sjob<- run.slurm(Model(), nodes=2, cpus_per_node=4,
+#' \dontrun{
+#'   sjob<- run.slurm(Model(), nodes=2, cpus_per_node=4,
 #'          jobname="LHR", slurm_options=list(mem=100), submit=FALSE)
-#' res<- ensembleModel.slurm(sjob)
-#' cleanup_files(sjob)
+#'   res<- ensembleModel.slurm(sjob)
+#'   cleanup_files(sjob)
+#' }
 #' @seealso \code{\link{run.slurm}}, \code{\link{findN0_Pest.slurm}}.
 #' @include aaa-classes.R
 #' @export

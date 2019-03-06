@@ -3,7 +3,8 @@
 #' @name findN0_Pest
 #' @param model a \code{Model} object.
 #' @param Pobjective the probability that a given population still exists at the end of the simulations.
-#' @param cl
+#' @param cl The number of cores to use or a cluster object (\code{\link[parallel]{makeCluster}} or 
+#'   \code{\link[snow]{makeCluster} from \href{https://cran.r-project.org/web/packages/snow/index.html}{snow} package})
 #' @param pb if \code{TRUE} and \link[pbapply]{pbapply} package is installed, show a progress bar. It 
 #' increases the communication overhead between the main process and nodes / child processes. In most cases,
 #' using \code{pbobtions(use_lb=TRUE)} improves the concurrency.

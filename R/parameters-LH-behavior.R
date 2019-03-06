@@ -1,16 +1,18 @@
 # Parameters in probabilities.
 # (get|set)(Params|Scenario|Behavior)
 
-# Parameters ----
+# API Parameters----
 
-#' Title
+#' getParamsCombination.LH_Beh
 #'
-#' @param lh
-#' @param env
-#' @param strategies 
+#' Combine parameters of LH-Env scenarios with 2 patch habitat differences and behavior.
+#' 
+#' @param lh a \code{\link{LH}} object.
+#' @param env a \code{\link{Env}} object.
 #' @param habDiffScenario
 #' @param behavior 
-#' @param cl 
+#' @param cl The number of cores to use or a cluster object (\code{\link[parallel]{makeCluster}} or 
+#'   \code{\link[snow]{makeCluster} from \href{https://cran.r-project.org/web/packages/snow/index.html}{snow} package}) 
 #' @param pb if \code{TRUE} and \link[pbapply]{pbapply} package is installed, show a progress bar.
 #'
 #' @return
@@ -47,8 +49,6 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=
   comb<- merge(comb, LH_Env, by="idScenario")
   
   combL<- split(comb, rownames(comb))
-  
-  message("Applying scenarios and behaviors to the LH and Env parameters...")
   
   if (pb & requireNamespace("pbapply", quietly=TRUE)){
     params<- pbapply::pblapply(combL, function (x){
