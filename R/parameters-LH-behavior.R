@@ -81,6 +81,8 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=
 }
 
 
+## Helpers ----
+
 # returns a different strategies.and scenarios
 # diffHab2: named vector with the differences in the parameters at habitat 2 respect habitat 1
 # @params nonBreedingSurv increase factor on survival for non breeding adults.
@@ -111,11 +113,11 @@ getParams.LH_Beh<- function(params=data.frame(b=1, broods=1, a=0.7, s=.6, j=0.3,
   out<- split(out, rownames(out))
   
   if (!missing(diffHab2)){
-    out<- lapply(out, function(x) setParams2diff1(x, diffHab2, type="probabilityMultiplicative"))
+    out<- lapply(out, function(x) getParams2diff1(x, diffHab2, type="probabilityMultiplicative"))
   }else{
-    out<- lapply(out, function(x) setScenario(x, habDiffScenario, type="probabilityMultiplicative"))
+    out<- lapply(out, function(x) setHabScenario(x, habDiffScenario, type="probabilityMultiplicative"))
     names(out)<- paste(names(out), habDiffScenario, sep="_")
-    out<- lapply(out, function(x) setBehavior(x, behavior))
+    out<- lapply(out, function(x) setBehScenario(x, behavior))
     names(out)<- paste(names(out), behavior, sep="_")
   }
   out<- data.frame(do.call("rbind", out))
@@ -129,22 +131,39 @@ getParams.LH_Beh<- function(params=data.frame(b=1, broods=1, a=0.7, s=.6, j=0.3,
 }
 
 
-## TODO translate parameters to probabilities 
-# Return new parames where parameters on habitat 2 are modified according to parameters from habitat 1 and a difference.
-# diff: named vector with the proportion of difference respect habitat 1.
-setParams2diff1<- function(params,
-                           diff=getScenario("identicalHab"),
+#' getParams2diff1
+#'
+#' @param params a data.frame that must 
+#' @param diff a named vector with the difference respect habitat 1.
+#' @param type a character vector with the type of difference applied
+#'  \code{("additive", "multiplicative", "probabilityMultiplicative", "lambda")}.
+#'
+#' @details
+#'  all names in \code{diff} must be in params. Trailing «Diff» in parameter names is removed
+#' @return Return \code{params} where parameters on habitat 2 are modified according to parameters from habitat 1 and a difference.
+#' @export
+getParams2diff1<- function(params,
+                           diff=getDiffHabScenario("mortalHab2"),
                            type=c("additive", "multiplicative", "probabilityMultiplicative", "lambda")){
   type<- match.arg(type)
   
   varsDiff<- gsub("Diff$", "", names(diff))
-  misVars<- setdiff(c(paste0(varsDiff, 1), paste0(varsDiff, 2)), names(params))
+  varsDiffParams<- c(paste0(varsDiff, 1), paste0(varsDiff, 2))
+  misVars<- setdiff(varsDiffParams, names(params))
   
   if (length(misVars) > 0){
-    warning("Removing some variables from diff which are missing in params:\n", paste(misVars, collapse=", "))
-    diff<- diff[!names(diff) %in% gsub("1", "Diff", misVars)]
-    varsDiff<- gsub("Diff$", "", names(diff))
-    if (length(diff) == 0) return (params)
+    if (0 < length(selMisVars<- varsDiff[varsDiff %in% names(params)])){
+      # add parameters with trailing 1 and 2 if missing (varsDiffParams)
+      selMisVarsHabs<- paste0(rep(selMisVars,  each=2), rep(1:2, length(selMisVars)))
+      params<- cbind(params, structure(params[, rep(selMisVars,  each=2)], names=selMisVarsHabs))
+    }
+    if (misVars<- setdiff(varsDiffParams, names(params)) > 0){
+      warning("Removing some variables from diff which are missing in params:\n", paste(misVars, collapse=", "))
+      diff<- diff[!names(diff) %in% gsub("1", "Diff", misVars)]
+      varsDiff<- gsub("Diff$", "", names(diff))
+      
+      if (length(diff) == 0) return (params)
+    }
   }
   
   selHab1<- sort(paste0(varsDiff, "1"))
@@ -164,29 +183,28 @@ setParams2diff1<- function(params,
 }
 
 
-# params<- getParams.LH_Beh()
-# setParams2diff1(params, diff=c(PbFDiff=.5, dDiff=-.3, gDiff=-.2))
-getScenario<- function(habDiffScenario=c("identicalHab", "mortalHab2", "nestPredHab2")){
+getDiffHabScenario<- function(habDiffScenario=c("identicalHab", "mortalHab2", "nestPredHab2"), intensity=2){
   habDiffScenario<- match.arg(habDiffScenario)
   
   diff<- switch(habDiffScenario,
                 `identicalHab`= c(bDiff=1, PbFDiff=1, aDiff=1, abDiff=1, saDiff=1, jDiff=1),
-                `mortalHab2`=   c(bDiff=1, PbFDiff=1, aDiff=0.5, abDiff=0.5, saDiff=.5, jDiff=0.5),
-                `nestPredHab2`= c(bDiff=1, PbFDiff=2, aDiff=1, abDiff=1, saDiff=1, jDiff=1)
+                `mortalHab2`  = c(bDiff=1, PbFDiff=1, aDiff=1 / intensity, abDiff=1 / intensity, saDiff=1 / intensity, jDiff=1 / intensity),
+                `nestPredHab2`= c(bDiff=1, PbFDiff=intensity, aDiff=1, abDiff=1, saDiff=1, jDiff=1)
   )
   return (diff)
 }
 
 
-setScenario<- function(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=.8,ab1=.7,sa1=.6,j1=.25,  a2=.8,ab2=.7,sa2=.6,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
+## DEPRECATED ----
+setHabScenario<- function(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=.8,ab1=.7,sa1=.6,j1=.25,  a2=.8,ab2=.7,sa2=.6,j2=.25, AFR=1, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
                        habDiffScenario="identicalHab", type="probabilityMultiplicative"){
-  params<- setParams2diff1(params=params, diff=getScenario(habDiffScenario), type=type)
+  params<- getParams2diff1(params=params, diff=getDiffHabScenario(habDiffScenario), type=type)
   
   return (params)
 }
 
 
-setBehavior<- function(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=.8,ab1=.7,sa1=.6,j1=.25,  a2=.8,ab2=.7,sa2=.6,j2=.25, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
+setBehScenario<- function(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,  a1=.8,ab1=.7,sa1=.6,j1=.25,  a2=.8,ab2=.7,sa2=.6,j2=.25, AFR=1, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5),
                        behavior=c("neutral", "skip", "learnBreed", "learnExploreBreed", "static", "preferHab1", "preferHab2")){
   behavior<- match.arg(behavior, several.ok=TRUE)
   
