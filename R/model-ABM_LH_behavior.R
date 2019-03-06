@@ -2,11 +2,11 @@
 ## Discrete time transitions with a probability model ----
 # Stage based subadult class. 
 # TODO: Add age based subadults class? Important for time lags
-# params<- slow=c(clutch1=1, clutch2=1,   b=1, PbF1=.4, PbF2=.4,  d1=.1,db1=.25,dj1=.25,  d2=.1,db2=.25,dj2=.25, g1=1, g2=1, K=500)
+# params<- slow=c(clutch1=1, clutch2=1,   b=1, PbF1=.4, PbF2=.4,  d1=.1,db1=.25,dj1=.25,  d2=.1,db2=.25,dj2=.25, g1=1, g2=1)
 # params<- c(params, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5) # add neutral behavior
 #' @importFrom stats rbinom 
 transitionABM.LH_Beh<- function(N=matrix(rep(5, 6 * 4), nrow=4, ncol=6, dimnames=list(replicates=NULL, state=c("N1s", "N1b", "N1bF", "N2s", "N2b", "N2bF"))),
-                         params=list(b1=1, b2=1,  broods=1, PbF1=.4, PbF2=.4,  a1=.25,ab1=.1,sa1=.25,j1=.1,  a2=.25,ab2=.1,sa2=.25,j2=.1, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5)){
+                         params=list(b1=1, b2=1,  broods=1, PbF1=.4, PbF2=.4,  a1=.25,ab1=.1,sa1=.25,j1=.1,  a2=.25,ab2=.1,sa2=.25,j2=.1, AFR=1, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5)){
   if (is.null(dim(N)))
     N<- as.matrix(t(N))
   
@@ -143,7 +143,7 @@ transitionABM.LH_Beh<- compiler::cmpfun(transitionABM.LH_Beh) # byte-compile the
 
 
 transitionABM.LH_Beh_DET<- function(N=matrix(rep(5, 6), nrow=1, ncol=6, dimnames=list(NULL, state=c("N1s", "N1b", "N1bF", "N2s", "N2b", "N2bF"))),
-                                params=list(b1=1, b2=1,  broods=1, PbF1=.4, PbF2=.4,  a1=.25,ab1=.1,sa1=.25,j1=.1,  a2=.25,ab2=.1,sa2=.25,j2=.1, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5)){
+                                params=list(b1=1, b2=1,  broods=1, PbF1=.4, PbF2=.4,  a1=.25,ab1=.1,sa1=.25,j1=.1,  a2=.25,ab2=.1,sa2=.25,j2=.1, AFR=1, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5)){
   if (is.null(dim(N)))
     N<- as.matrix(t(N))
   

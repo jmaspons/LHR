@@ -87,7 +87,7 @@ test_that("sample parameter space", {
   
   obj<- setParams2diff1(params=data.frame(b1=1, b2=1,   broods=1, PbF1=.4, PbF2=.4,
                                           a1=.25,ab1=.2,sa1=.2,j1=.1,  a2=.25,ab2=.2,sa2=.2,j2=.1,
-                                          AFR=2, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5))
+                                          AFR=2, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5))
   expect_is(obj, "data.frame")
   
   expect_is(getParams.LH_Beh(), "data.frame")

@@ -26,7 +26,7 @@ NULL
 #' @examples
 discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
                           transitionsFunc=transitionABM.LH_Beh,
-                          params=list(b1=2, b2=2,   broods=2, PbF1=.4, PbF2=.4,  a1=.3,ab1=.25,sa1=.25,j1=.1,  a2=.3,ab2=.25,sa2=.20,j2=.1, AFR=1, K=500, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5),
+                          params=list(b1=2, b2=2,   broods=2, PbF1=.4, PbF2=.4,  a1=.3,ab1=.25,sa1=.25,j1=.1,  a2=.3,ab2=.25,sa2=.20,j2=.1, AFR=1, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5),
                           tf=10, replicates=100, maxN=100000, Ntf=FALSE, randomizeN0=FALSE){
   # Check nStates returned by transitionsFunc (LH_behavior add subadult classes according to AFR)
   N<- transitionsFunc(N=N0, params=params)

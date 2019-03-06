@@ -97,7 +97,7 @@ getParams.LH_Beh<- function(params=data.frame(b=1, broods=1, a=0.7, s=.6, j=0.3,
   out<- with(params, data.frame(b1=b, b2=b,   broods=broods, PbF1=1 - jbr, PbF2=1 - jbr,  a1=aNonBreed,ab1=a,sa1=s,j1=jind,  a2=aNonBreed,ab2=a,sa2=s,j2=jind, AFR=AFR))
   
   # Add extra parameters for neutral behavior and density dependence
-  out$K<- -1 # densodependence not implemented
+  # out$K<- -1 # densodependence not implemented
   out$Pb1=1
   out$Pb2=1
   out$c1=1
