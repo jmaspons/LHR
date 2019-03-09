@@ -98,7 +98,7 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=
 #'
 #' @examples
 getParamsCombination.LHEnv_2patchBeh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=0, varA=0),
-                                                patchScenario=getPatchScenario(habDiffIntensity=c(1.5, 2), behaviorIntensity=c(2, 3)),
+                                                patchScenario=getPatchScenario(habDiffIntensity=1.5, behaviorIntensity=2),
                                                 nonBreedingSurv=1.5,
                                                 cl=parallel::detectCores(), pb=FALSE){
   if (any(env$seasonAmplitude > 0)){
@@ -204,11 +204,6 @@ getParams.LH_Beh<- function(params=data.frame(b=1, broods=1, a=0.7, s=.6, j=0.3,
   }
   out<- data.frame(do.call("rbind", out))
   
-  out<- lapply(out, function(x){
-    attributes(x)<- NULL
-    x
-  })
-  
   return (data.frame(out))
 }
 
@@ -254,10 +249,10 @@ getParams2diff1<- function(params,
   diff<- diff[order(names(diff))]
   
   for (i in 1:length(diff)){
-    params[selHab2[i]]<- switch(type,
-                                additive= params[selHab1[i]] + diff[i],
-                                multiplicative= params[selHab1[i]] * diff[i],
-                                probabilityMultiplicative= 1 - (1 - params[selHab1[i]])^diff[i],
+    params[, selHab2[i]]<- switch(type,
+                                additive= params[, selHab1[i]] + diff[i],
+                                multiplicative= params[, selHab1[i]] * diff[i],
+                                probabilityMultiplicative= 1 - (1 - params[, selHab1[i]])^diff[i],
                                 lambda="TODO")
   }
   
