@@ -44,15 +44,18 @@ setMethod("LH",
             if (!"s" %in% colnames(pars)){
               pars$s<- pars$a
             }
-            
+
+            # Order columns and keep all columns in pars
             cols<- c("baseLH", "idLH", "lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")
             colsPopbio<- c("elasFecundity", "elasSurvRepro", "elasSurvNonRepro", "generation.time", "net.reproductive.rate", "matureLifeExpectancy", "damping.ratio")
+            selCols<- intersect(c(cols, colsPopbio), colnames(pars))
             
-            if (popbio){
-              cols<- c(cols, colsPopbio)
+            misCol<- setdiff(c("lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR"), selCols)
+            
+            if (length(misCol) > 0){
+              stop("Missing columns in params: ", paste(misCol, collapse= ", "))
             }
             
-            selCols<- intersect(cols, colnames(pars))
             pars<- unique(pars[, selCols])
             
             if (!"idLH" %in% colnames(pars)) pars<- data.frame(idLH=rownames(pars), pars, stringsAsFactors=FALSE)
