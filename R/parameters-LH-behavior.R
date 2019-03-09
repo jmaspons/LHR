@@ -216,7 +216,7 @@ getParams.LH_Beh<- function(params=data.frame(b=1, broods=1, a=0.7, s=.6, j=0.3,
 #'  \code{("additive", "multiplicative", "probabilityMultiplicative", "lambda")}.
 #'
 #' @details
-#'  all names in \code{diff} must be in params. Trailing «Diff» in parameter names is removed
+#'  all names in \code{diff} must be in params. Trailing "Diff" in parameter names is removed
 #' @return Return \code{params} where parameters on habitat 2 are modified according to parameters from habitat 1 and a difference.
 #' @export
 getParams2diff1<- function(params,
