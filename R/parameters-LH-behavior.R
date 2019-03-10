@@ -142,7 +142,9 @@ getParamsCombination.LHEnv_2patchBeh<- function(lh=LH(), env=Env(seasonAmplitude
     }, cl=cl)
   }else{
     params<- parallel::parLapply(cl=cl, combL, function (x){
-      out<- getParams2diff1(params=x[, otherCols], diff=x[, diffCols], type="probabilityMultiplicative")
+      out<- getParams2diff1(params=x[, otherCols],
+                            diff=structure(as.numeric(x[, diffCols]), names=diffCols),
+                            type="probabilityMultiplicative")
       return(out)
     })
   }
