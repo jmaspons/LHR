@@ -49,15 +49,25 @@ distriSum<- function(x, y){
 ## R implementation
 # @export
 distriDiff<- function(x, y){
+  if (!inherits(x, "numericDistri") | !inherits(y, "numericDistri")) stop("Parameters must be numericDistri objects.")
+  if (attributes(x)$logP | attributes(y)$logP) stop("Parameters must have probabilities on natural scalse. Use logP(x, log=F) to change it. Perhaps I will implement it some day.")
+  log<- attributes(x)$logP
+
   names(x)<- c("x", "px")
   names(y)<- c("y", "py")
-  res<- merge(x, y, all=TRUE)
+  res<- merge(x[x$px > 0, ], y[y$py > 0, ], all=TRUE) ## Remove values with p = 0
   res<- data.frame(x=res$x - res$y, p=res$px * res$py)
   res<- by(res$p, res$x, sum)
   res<- data.frame(x=as.numeric(names(res)), p=as.numeric(res))
+
   infiniteDomain<- inherits(x, "infiniteSuport") | inherits(y, "infiniteSuport")
-  attributes(res)$p.omitted<- ifelse(infiniteDomain, 1 - sum(res$p), 0)
+  if (log){
+    attributes(res)$p.omitted<- 1 - sum(exp(res$p))
+  }else{
+    attributes(res)$p.omitted<- 1 - sum(res$p)
+  }
   attributes(res)$parameters<- list(x=attributes(x)$parameters, y=attributes(y)$parameters)
+  attributes(res)$logP<- log
   class(res)<- "diffOfDistri"
   if (infiniteDomain) class(res)<- c(class(res), "infiniteSuport")
   class(res)<- c(class(res), "numericDistri", "data.frame")
