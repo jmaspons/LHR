@@ -78,14 +78,6 @@ distriScalarProd<- function(distri, x){
   
   distri$x<- distri$x * x
   
-#   domain<- 0:max(distri$x)
-#   domain<- domain[!domain %in% distri$x]
-#   domain<- data.frame(x=domain, p=0)
-#   
-#   distri<- rbind(distri, domain)
-#   distri<- distri[order(distri$x),]
-#   rownames(distri)<- NULL
-  
   attributes(distri)$parameters<- c(list(scalarProd=x), attributes(distri)$parameters)
   class(distri)<- c("scalarProdDistri", class(distri))
   
@@ -93,8 +85,39 @@ distriScalarProd<- function(distri, x){
 }
 
 #' @rdname numericDistri
-#' @param x a positive integer
+#' @param x a positive integer (not checked).
 #' @export
 "*.numericDistri"<- function(distri, x){
   return(distriScalarProd(distri, x))
+}
+
+
+## Add negative values to 0 ----
+## TODO: logP
+#' Title
+#'
+#' @param distri 
+#'
+#' Useful to simulate natural values (e.g. populations)
+#' @return
+#' @export
+#'
+#' @examples
+neg2zeroP<- function(distri){
+  if (attributes(distri)$logP){
+    distri<- logP(distri, logP=FALSE)
+    warning("Probabilities transformed to non Log scale.")
+  }
+  
+  if (!any(distri$x == 0)){
+    distri<- rbind(distri, data.frame(x=0, p=0))
+    distri<- distri[order(distri$x), ]
+  }
+  
+  negP<- distri$p[distri$x < 0]
+  distri<- distri[distri$x >= 0, ]
+  
+  distri$p[distri$x == 0]<- distri$p[distri$x == 0] + sum(negP)
+  
+  return(distri)
 }
