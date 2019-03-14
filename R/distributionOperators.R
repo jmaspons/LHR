@@ -2,9 +2,18 @@
 
 # @export
 distriSum<- function(x, y){
-  if (!inherits(x, "numericDistri") | !inherits(y, "numericDistri"))
-    stop("Parameters must be numericDistri objects.")
-    
+  if (!inherits(x, "numericDistri") | !inherits(y, "numericDistri")){
+    if (is.numeric(x)){
+      y$x<- y$x + x
+      return(y)
+    }
+    if (is.numeric(y)){
+      x$x<- x$x + y
+      return(x)
+    }
+    stop("At least one parameter must be a numericDistri object.")
+  }
+  
   if (attributes(x)$logP != attributes(y)$logP){
     y<- logP(y, logP=attributes(x)$logP)
     message("y probabilities transformed to the same scale than x. Use logP(x, log=T/F) to change it.")
