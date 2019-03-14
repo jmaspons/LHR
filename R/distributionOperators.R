@@ -2,12 +2,22 @@
 
 # @export
 distriSum<- function(x, y){
-  if (!inherits(x, "numericDistri") | !inherits(y, "numericDistri")) stop("Parameters must be numericDistri objects.")
-  if (attributes(x)$logP != attributes(y)$logP) stop("Parameters must have probabilities on the same scale. Use logP(x, log=T/F) change it.")
-  log<- attributes(x)$logP
-  res<- .External("distrisum", x$x, x$p, y$x, y$p, log, max(x$x) + max(y$x))
+  if (!inherits(x, "numericDistri") | !inherits(y, "numericDistri"))
+    stop("Parameters must be numericDistri objects.")
+    
+  if (attributes(x)$logP != attributes(y)$logP){
+    y<- logP(y, logP=attributes(x)$logP)
+    message("y probabilities transformed to the same scale than x. Use logP(x, log=T/F) to change it.")
+  }
   
-  res<- data.frame(x=0:(length(res) - 1), p=res)
+  log<- attributes(x)$logP
+  minRes<- min(x$x) + min(y$x)
+  maxRes<- max(x$x) + max(y$x)
+  vals<- minRes:maxRes
+  
+  res<- .External("distrisum", x$x, x$p, y$x, y$p, log, minRes, maxRes, length(vals))
+  res<- data.frame(x=vals, p=res)
+  
   infiniteDomain<- inherits(x, "infiniteSuport") | inherits(y, "infiniteSuport")
   if (log){
     attributes(res)$p.omitted<- 1 - sum(exp(res$p))
