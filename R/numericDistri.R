@@ -46,8 +46,16 @@ distriBinom.numericDistri<- function(size, prob, logP=FALSE){
     size<- logP(size, logP=logP)
   }
   
-  res<- .External("binomialCompound", size$x, size$p, prob, logP, max(size$x))
-  res<- data.frame(x=0:(length(res) - 1), p=res)
+  if (logP){
+    size<- size[size$p > -Inf,, drop=FALSE]
+  }else{
+    size<- size[size$p > 0,, drop=FALSE]
+  }
+  
+  maxRes<- max(size$x)
+
+  res<- .External("binomialCompound", size$x, size$p, prob, logP, maxRes)
+  res<- data.frame(x=0:maxRes, p=res)
   
   if (logP){
     attributes(res)$p.omitted<- 1 - sum(exp(res$p))
@@ -55,7 +63,7 @@ distriBinom.numericDistri<- function(size, prob, logP=FALSE){
     attributes(res)$p.omitted<- 1 - sum(res$p)
   }
   attributes(res)$parameters<- list(size=class(size)[1], prob=prob)
-  attributes(res)$support<- c(0, max(size$x))
+  attributes(res)$support<- c(0, max(attributes(size)$support))
   attributes(res)$logP<- logP
   
   class(res)<- "compoundBinom"
@@ -107,8 +115,16 @@ distriBetaBinom.numericDistri<- function(size, shape1, shape2, logP=FALSE){
     size<- logP(size, logP=logP)
   }
   
-  res<- .External("BetaBinomialCompound", size$x, size$p, shape1, shape2, logP, max(size$x))
-  res<- data.frame(x=0:(length(res) - 1), p=res)
+  if (logP){
+    size<- size[size$p > -Inf,, drop=FALSE]
+  }else{
+    size<- size[size$p > 0,, drop=FALSE]
+  }
+  
+  maxRes<- max(size$x)
+  
+  res<- .External("BetaBinomialCompound", size$x, size$p, shape1, shape2, logP, maxRes)
+  res<- data.frame(x=0:maxRes, p=res)
   
   if (logP){
     attributes(res)$p.omitted<- 1 - sum(exp(res$p))
@@ -117,7 +133,7 @@ distriBetaBinom.numericDistri<- function(size, shape1, shape2, logP=FALSE){
   }
   prob<- sbeta(shape1=shape1, shape2=shape2)
   attributes(res)$parameters<- list(size=class(size)[1], prob=prob$mean, var=prob$var)
-  attributes(res)$support<- c(0, max(size$x))
+  attributes(res)$support<- c(0, max(attributes(size)$support))
   attributes(res)$logP<- logP
   
   class(res)<- "compoundBetaBinom"
