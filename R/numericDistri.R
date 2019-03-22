@@ -8,7 +8,6 @@ NULL
 
 ## TODO: call distriBeta* or distri* according to p parameter (p = c(shape1, shape2) | p)
 ## TODO: optimize for prob=1 & prob=0
-## TODO: remove x$p == 0 and keep x$x range in attributes
 
 ## Binomial distribution ----
 #' @rdname numericDistri
@@ -28,6 +27,9 @@ distriBinom<- function(size, prob, logP=FALSE){
 #' @rdname numericDistri
 #' @export
 distriBinom.numeric<- function(size, prob, logP=FALSE){
+  if (size < 0)
+    stop("Negative size parameter not allowed in Binomial distributions.")
+  
   res<- data.frame(x=0:size, p=dbinom(x=0:size, size, prob, log=logP))
   attributes(res)$p.omitted<- 0
   attributes(res)$parameters<- list(size=size, prob=prob)
@@ -42,6 +44,9 @@ distriBinom.numeric<- function(size, prob, logP=FALSE){
 #' @rdname numericDistri
 #' @export
 distriBinom.numericDistri<- function(size, prob, logP=FALSE){
+  if (min(size$x) < 0)
+    stop("Negative size parameter not allowed in Binomial distributions.")
+  
   if (logP != attributes(size)$logP){ # Transform p to log scale if necessary
     size<- logP(size, logP=logP)
   }
@@ -95,6 +100,9 @@ distriBetaBinom<- function(size, shape1, shape2, logP=FALSE){
 #' @rdname numericDistri
 #' @export
 distriBetaBinom.numeric<- function(size, shape1, shape2, logP=FALSE){
+  if (size < 0)
+    stop("Negative size parameter not allowed in Beta Binomial distributions.")
+  
   res<- data.frame(x=0:size, p=dbetabinom(x=0:size, size, shape1, shape2, log=logP))
   attributes(res)$p.omitted<- 0
   prob<- sbeta(shape1=shape1, shape2=shape2)
@@ -111,6 +119,9 @@ distriBetaBinom.numeric<- function(size, shape1, shape2, logP=FALSE){
 #' @rdname numericDistri
 #' @export
 distriBetaBinom.numericDistri<- function(size, shape1, shape2, logP=FALSE){
+  if (min(size$x) < 0)
+    stop("Negative size parameter not allowed in Beta Binomial distributions.")
+  
   if (logP != attributes(size)$logP){ # Transform p to log scale if necessary
     size<- logP(size, logP=logP)
   }
@@ -352,12 +363,12 @@ print.summary.numericDistri<- function(x, ...){
 
 #' @rdname numericDistri
 #' @export
-plot.numericDistri<- function(x, cum=FALSE, ...){
+plot.numericDistri<- function(x, cum=FALSE, type=ifelse(cum, "s", "p"), ...){
   if (cum){
     x<- cumP(x)
     x$p<- x$cump
   }
-  type<- ifelse(cum, "s", "p")
+
   graphics::plot.default(x, type=type, ...)
 }
 
@@ -366,11 +377,10 @@ plot.numericDistri<- function(x, cum=FALSE, ...){
 #' @rdname numericDistri
 #' @export
 mean.numericDistri<- function(x, ...){
-  if(attributes(x)$logP){
-      x$p<- exp(x$p)
-  }
+  distri<- logP(x, logP=FALSE)
+  distri<- distri[distri$p > 0, ]
   
-  res<- stats::weighted.mean(x$x, x$p, ...)
+  res<- stats::weighted.mean(distri$x, distri$p, ...)
 
   return (res)
 }
@@ -389,7 +399,15 @@ var.default<- function(x, ...) stats::var(x, ...)
 #' @export
 var.numericDistri<- function(x, ...){
   distri<- logP(x, logP=FALSE)
+  distri<- distri[distri$p > 0, ]
+  
   sum(distri$p * (distri$x - mean(distri))^2)
+}
+
+#' @rdname numericDistri
+#' @export
+median.numericDistri<- function(x, na.rm=FALSE, ...){
+  qdistri(.5, x)
 }
 
 #' @export
@@ -421,6 +439,9 @@ cumP<- function(x, ...){
 #' @rdname numericDistri
 #' @export
 cumP.numericDistri<- function(x, ...){
+  if ("cump" %in% names(x))
+    return(x)
+  
   if(attributes(x)$logP){
     p<- exp(x$p)
     x$cump<- cumsum(p)
@@ -435,11 +456,9 @@ cumP.numericDistri<- function(x, ...){
 #' @rdname numericDistri
 #' @export
 #' @importFrom stats quantile
-quantile.numericDistri<- function(x, na.rm=FALSE, ...){
-  x<- cumP(x)
-  p<- stats::quantile(x$cump, na.rm=na.rm, ...)
-  res<- qdistri(p, x, ...)
-  names(res)<- names(p)
+quantile.numericDistri<- function(x, na.rm=FALSE, probs=seq(0, 1, 0.25), ...){
+  res<- qdistri(probs, x)
+  names(res)<- paste0(round(probs * 100, digits=1), "%")
   res
 }
 
@@ -479,21 +498,17 @@ qdistri<- function(p, distri){
   
   sel<- sapply(p, function(x){
     diffs<- distri$cump - x
-
-    # sel<- which.min(abs(diffs))
     
-    sel<- which(abs(diffs) == min(abs(diffs)))
-    # Select the x value in the midle if there are more than one value with the minimum distance to p
-    if (length(sel) > 1)
-      sel<- sel[length(sel) %/% 2]
+    # value of the random variable such that the probability of the variable being less than or equal to that value
+    sel<- which.min(abs(diffs))
     
-    if (diffs[sel] > 0){
+    if (diffs[sel] > 0 & sel > 1){
       sel<- sel - 1
     }
     sel
   })
+  
   res<- distri$x[sel]
-  res[sel == 0]<- 0
   res[p >= 1]<- max(distri$x)
   res
 }

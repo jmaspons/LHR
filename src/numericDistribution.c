@@ -56,7 +56,6 @@ SEXP binomialCompound(SEXP args){
       }
     }
 
-    
     UNPROTECT(6);
     return (Res);
 }

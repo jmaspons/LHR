@@ -6,11 +6,21 @@ distriSum<- function(x, y){
     if (is.numeric(x)){
       y$x<- y$x + x
       attributes(y)$support<- attributes(y)$support + x
+      class(y)<- c("numericDistri", "sumOfDistri")
+      if (inherits(y, "infiniteSuport"))
+        class(y)<- c(class(y), "infiniteSuport")
+      
+      class(y)<- c(class(y), "data.frame")
       return(y)
     }
     if (is.numeric(y)){
       x$x<- x$x + y
       attributes(x)$support<- attributes(x)$support + y
+      class(x)<- c("numericDistri", "sumOfDistri")
+      if (inherits(x, "infiniteSuport"))
+        class(x)<- c(class(x), "infiniteSuport")
+      
+      class(x)<- c(class(x), "data.frame")
       return(x)
     }
     stop("Parameters must be numericDistri objects or numeric. ")
@@ -18,7 +28,7 @@ distriSum<- function(x, y){
   
   if (attributes(x)$logP != attributes(y)$logP){
     y<- logP(y, logP=attributes(x)$logP)
-    message("y probabilities transformed to the same scale than x. Use logP(x, log=TRUE/FALSE) to change it.")
+    warning("y probabilities transformed to the same scale than x. Use logP(x, log=TRUE/FALSE) to change it.")
   }
   
   if (attributes(x)$logP){
@@ -46,11 +56,11 @@ distriSum<- function(x, y){
   attributes(res)$support<- attributes(x)$support + attributes(y)$support
   attributes(res)$logP<- log
   
-  class(res)<- "sumOfDistri"
+  class(res)<- c("sumOfDistri", "numericDistri")
   if (inherits(x, "infiniteSuport") | inherits(y, "infiniteSuport"))
     class(res)<- c(class(res), "infiniteSuport")
     
-  class(res)<- c("numericDistri", "data.frame")
+  class(res)<- c(class(res), "data.frame")
   
   return (res)
 }
@@ -71,8 +81,13 @@ distriSum<- function(x, y){
 ## R implementation
 # @export
 distriDiff<- function(x, y){
-  y$x<- -y$x
-  attributes(y)$support<- range(- attributes(y)$support)
+  if (inherits(y, "numericDistri")){
+    y$x<- -y$x
+    attributes(y)$support<- range(- attributes(y)$support)
+  }else{
+    y<- -y
+  }
+  
   distriSum(x, y)
 }
 
@@ -133,9 +148,10 @@ neg2zeroP<- function(distri){
   distri<- distri[distri$x >= 0, ]
   
   distri$p[distri$x == 0]<- distri$p[distri$x == 0] + sum(negP)
-  attributes(distri)$support<- c(0, attributes(distri)$support[2])
+  maxSupport<- ifelse(max(attributes(distri)$support) > 0, max(attributes(distri)$support), 0)
+  attributes(distri)$support<- c(0, maxSupport)
   
-  ## TODO: class
+  class(distri)<- c("numericDistri", "data.frame")
   
   return(distri)
 }
