@@ -13,16 +13,20 @@ NULL
 #' @return a \code{Model} object.
 #' @examples model<- Model()
 #' @export
-setGeneric("Model", function(lh=LH(method="LH axes"), env=Env(), sim=Sim(type=match.arg(type)), pars, type=c("discretePopSim", "numericDistri", "ABM"), ...) standardGeneric("Model"))
+setGeneric("Model", function(lh=LH(method="LH axes"), env=Env(), sim=Sim(type=match.arg(type)), pars, type=c("discretePopSim", "numericDistri", "ABM", "numericDistriABM"), ...) standardGeneric("Model"))
 
 # c("discretePopSim", "numericDistri", "ABM")
 setMethod("Model",
           signature(lh="ANY", env="ANY", sim="ANY", pars="missing", type="ANY"),
-          function(lh=LH(method="LH axes"), env=Env(), sim=Sim(type=match.arg(type)), type=c("discretePopSim", "numericDistri", "ABM"), ...){
+          function(lh=LH(method="LH axes"), env=Env(), sim=Sim(type=match.arg(type)), type=c("discretePopSim", "numericDistri", "ABM", "numericDistriABM"), ...){
             
-            if (inherits(sim, "Sim.ABM")){
+            if (inherits(sim, c("Sim.ABM", "Sim.numericDistriABM"))){
               pars<- getParamsCombination.LH_Beh(lh=lh, env=env, ...)
-              model<- new("Model.ABM", pars, sim=sim)
+              if (inherits(sim, "Sim.ABM")){
+                model<- new("Model.ABM", pars, sim=sim)
+              }else{
+                model<- new("Model.numericDistriABM", pars, sim=sim)
+              }
             } else if (inherits(sim, c("Sim.discretePopSim", "Sim.numericDistri"))){
               ## WARNING: Sim.ABM inherits from Sim.discretePopSim. Exclude from here
               lhEnv<- combineLH_Env(lh=lh, env=env)
@@ -167,7 +171,8 @@ setMethod("run",
             simRes<- switch(class(model@sim),
                                Sim.discretePopSim=run.discretePopSim(model, cl=cl, pb=pb, debug=debug, ...),
                                Sim.numericDistri=run.numericDistri(model, cl=cl, pb=pb, debug=debug, ...),
-                               Sim.ABM=run.ABM(model, cl=cl, pb=pb, debug=debug, ...))
+                               Sim.ABM=run.ABM(model, cl=cl, pb=pb, debug=debug, ...),
+                               Sim.numericDistriABM=run.numericDistriABM(model, cl=cl, pb=pb, debug=debug, ...))
 
             modelRes<- new(class(model), 
                         S3Part(model),
@@ -212,6 +217,7 @@ run.discretePopSim<- function(model, cl=parallel::detectCores(), pb=FALSE, debug
   }
   
   stats<- lapply(sim, function(x) x$stats)
+  names(stats)<- NULL
   stats<- do.call("rbind", stats)
   stats<- as.data.frame(stats, stringsAsFactors=FALSE)
 
@@ -295,7 +301,6 @@ runScenario.discretePopSim<- function (scenario, pars){
 }
 
 
-
 run.numericDistri<- function(model, cl=parallel::detectCores(), pb=FALSE, debug=FALSE){
   scenario<- S3Part(model)
   scenario<- split(scenario, scenario$idScenario)
@@ -327,6 +332,7 @@ run.numericDistri<- function(model, cl=parallel::detectCores(), pb=FALSE, debug=
   }
   
   stats<- lapply(sim, function(x) x$stats)
+  names(stats)<- NULL
   stats<- do.call("rbind", stats)
   stats<- as.data.frame(stats, stringsAsFactors=FALSE)
 
@@ -535,11 +541,6 @@ runScenario.ABM<- function (scenario, pars, randomizeN0=FALSE){
           tmpNtf<- mapply(function(x, tf) x[tf], x=split(popTmp, 1:nrow(popTmp)), tf=tf)
           Ntf[n, -(1:2)]<- sort(tmpNtf) # First columns: idScenario and N0
         }
-#         
-#         
-#         tmpNtf<- apply(popTmp[, -1, drop=FALSE], 1, function(x) x[which(match(x, NA) == 1)[1] - 1])
-#         tmpNtf[is.na(tmpNtf)]<- popTmp[is.na(tmpNtf), ncol(popTmp)] # replicates which run until tf (no extinction nor maxN)
-#         Ntf[n, -(1:2)]<- sort(tmpNtf) # First columns: idScenario and N0
       }
     }
   }
@@ -552,6 +553,146 @@ runScenario.ABM<- function (scenario, pars, randomizeN0=FALSE){
   return (res)
 }
 
+
+run.numericDistriABM<- function(model, cl=parallel::detectCores(), raw, pb=FALSE, debug=FALSE, ...){
+  scenario<- S3Part(model)
+  scenario<- split(scenario, scenario$idScenario)
+  pars<- model@sim@params
+  
+  if (!debug){
+    if (is.numeric(cl)){
+      cl<- parallel::makeCluster(cl)
+      on.exit(parallel::stopCluster(cl))
+    }
+    
+    parallel::clusterExport(cl=cl, "pars", envir=environment())
+    parallel::clusterEvalQ(cl, library(LHR))
+    
+    if (pb & requireNamespace("pbapply", quietly=TRUE)){
+      sim<- pbapply::pblapply(scenario, runScenario.numericDistriABM, pars=pars, cl=cl)
+    }else{
+      sim<- parallel::parLapply(cl=cl, scenario, runScenario.numericDistriABM, pars=pars)
+    }
+    
+  } else {
+    sim<- list()
+    for (i in seq_along(scenario)){
+      message(i, "/", length(scenario))
+      print(scenario[[i]], row.names=FALSE)
+      eTime<- system.time(sim[[i]]<- runScenario.numericDistriABM(scenario=scenario[[i]], pars=pars))
+      message("Elapsed time: ", eTime["elapsed"])
+    }
+  }
+  
+  stats<- lapply(sim, function(x) x$stats)
+  names(stats)<- NULL
+  stats<- do.call("rbind", stats)
+  stats<- as.data.frame(stats, stringsAsFactors=FALSE)
+  
+  simRes<- model@sim
+  S3Part(simRes)<- stats
+  
+  
+  if (pars$raw){
+    simRes@raw<- lapply(sim, function(x) x$raw)
+    names(simRes@raw)<- sapply(scenario, function(x) x$idScenario)
+  }
+  if (pars$numericDistriSim){
+    simRes@numericDistriSim<- lapply(sim, function(x) x$numericDistriSim)
+    names(simRes@numericDistriSim)<- sapply(scenario, function(x) x$idScenario)
+  }
+  if (pars$Ntf){
+    simRes@Ntf<- lapply(sim, function(x) x$Ntf)
+    names(simRes@Ntf)<- sapply(scenario, function(x) x$idScenario)
+  }
+  
+  return (simRes)
+}
+
+
+runScenario.numericDistriABM<- function (scenario, pars, randomizeN0=FALSE){
+  stats<- matrix(NA_real_, nrow=length(pars$N0), ncol=15, 
+                 dimnames=list(scenario_N0=paste0(rep(scenario$idScenario, length=length(pars$N0)), "_N", sapply(pars$N0, sum)),
+                               stats=c("idScenario", "N0", "increase", "decrease", "stable", "extinct",
+                                       "increaseTrans", "decreaseTrans", "stableTrans", "GR", "meanR", "varR", "GL", "meanL", "varL"))) # 15 = ncol(summary(pop)) + 2 (id, N0)
+  stats<- as.data.frame(stats, stringsAsFactors=FALSE)
+  stats$idScenario<- scenario$idScenario
+  stats$N0<- sapply(pars$N0, sum)
+  
+  if (pars$Ntf){
+    Ntf<- list()
+  }
+  
+  if (pars$numericDistriSim) distriSim<- list()
+  
+  if (pars$raw) rawSim<- list()
+  
+  ## Seasonality
+  #   seasonVar<- seasonOptimCal(env=Env(scenario))[[1]] #, resolution=resolution, nSteps=seasonBroods$broods, interval=interval, criterion=criterion)
+  #   if (any(seasonVar !=1)){
+  #     jindSeason<- scenario$jind * seasonVar
+  #     jbrSeason<- scenario$jbr * seasonVar
+  #   }else{
+  #     jindSeason<- scenario$jind
+  #     jbrSeason<- scenario$jbr
+  #   }
+  
+  for (n in 1:length(pars$N0)){
+    N0<- pars$N0[[n]]
+    distriABM<- numericDistriABMSim(N0=N0, params=scenario, transitionsFunc=pars$transitionsFunc,
+                            tf=pars$tf, maxN=pars$maxN, Ntf=!pars$raw & !pars$numericDistriSim, randomizeN0=randomizeN0)
+    
+    N0<- sum(N0)
+    
+    if (is.null(distriABM) | all(is.na(distriABM))){
+      if (pars$raw){
+        rawSim[[n]]<- NA
+        names(rawSim)[n]<- paste0("N", N0)
+      }
+      
+      next
+    }
+    
+    
+    stats[n, -c(1:2)]<- summary(distriABM) # First columns: idScenario and N0
+    
+    if (pars$raw){
+      rawSim[[n]]<- distriABM
+      names(rawSim)[n]<- N0
+    }
+    if (pars$numericDistriSim){
+      distriSim[[n]]<- numericDistriABMSim2numericDistriSim(distriABM)
+      names(distriSim)[n]<- N0
+    }
+    if (pars$Ntf){
+      if (pars$numericDistriSim) distriSimTmp<- distriSim[[n]]
+      else distriSimTmp<- numericDistriABMSim2numericDistriSim(distriABM)
+      
+      if (length(distriSimTmp) == 2){ ## Only one timestep or (pars$Ntf & !pars$raw & !pars$numericDistriSim)
+        Ntf[[n]]<- distriSimTmp[[2]]
+        
+      } else {
+        tf<- which(sapply(distriSimTmp, inherits, "numericDistri"))
+        
+        if (length(tf) > 0){
+          tf<- tf[length(tf)]
+          Ntf[[n]]<- distriSimTmp[[tf]]
+        }else{
+          Ntf[[n]]<- NA
+        }
+      }
+      
+      names(Ntf)[n]<- N0
+    }
+  }
+  
+  res<- list(stats=stats)
+  if (pars$Ntf) res<- c(res, list(Ntf=Ntf))
+  if (pars$numericDistriSim) res<- c(res, list(numericDistriSim=distriSim))
+  if (pars$raw) res<- c(res, list(raw=rawSim))
+  
+  return (res)
+}
 
 
 ## result(): Post process result ----
@@ -602,7 +743,21 @@ setMethod("result",
                 
               },
               Ntf={
-                if (inherits(model, "Model.numericDistri")){
+                if (inherits(model, "Model.numericDistriABM")){
+                  Ntf<- model@sim@Ntf
+                  idScenario<- names(Ntf)
+                  N0<- as.numeric(sapply(Ntf, names))
+                  NtfUL<- unlist(Ntf, recursive=FALSE)
+                  
+                  NtfUL<- sapply(NtfUL, function(x){
+                    quantile(x, na.rm=TRUE, ...)
+                  })
+                  
+                  NtfUL<- t(NtfUL)
+                  
+                  Ntf<- cbind(data.frame(idScenario, N0, stringsAsFactors=FALSE), NtfUL)
+                  
+                }else if (inherits(model, "Model.numericDistri")){
                   Ntf<- model@sim@raw
                   Ntf<- unlist(Ntf, recursive=FALSE)
                   
@@ -765,6 +920,20 @@ setMethod("show", signature(object="Model"),
       sim@discretePopSim<- pop[names(pop) %in% scenarioIdSel]
       # sim@discretePopSim<- pop[na.omit(match(names(pop), scenarioIdSel))]
     }
+    
+  }else if (inherits(sim, "Sim.numericDistri")){
+    if (length(sim@Ntf) > 0){
+      Ntf<- sim@Ntf
+      sim@Ntf<- Ntf[names(Ntf) %in% scenarioIdSel]
+      # sim@Ntf<- Ntf[na.omit(match(names(Ntf), scenarioIdSel))]
+    }
+    
+    if (length(sim@numericDistriSim) > 0){
+      distriSim<- sim@numericDistriSim
+      sim@numericDistriSim<- distriSim[names(distriSim) %in% scenarioIdSel]
+      # sim@numericDistriSim<- distriSim[na.omit(match(names(distriSim), scenarioIdSel))]
+    }
+    
   }
 
   out<- Model(pars=xSel, sim=sim)
@@ -982,10 +1151,46 @@ rbind.Model<- function(...){
     sim@discretePopSim<- do.call(c, discretePopSimL)
   }
   
+  if (inherits(sim, "Sim.numericDistri")){
+    sel<- which(sapply(sims, function(x) length(x@Ntf) > 0))
+    if (length(sel) > 0){
+      NtfL<- lapply(sims[sel], function(x) x@Ntf)
+      
+      if (rebuildId){
+        NtfL<- mapply(function(x, y){
+          if (is.null(x) | length(x) == 0) return(x)
+          
+          thesaurus<- merge(y[, c("idScenario", "idScenario_ori")], names(x), by.x="idScenario_ori", by.y=1)
+          names(x)<- thesaurus$idScenario[match(names(x), thesaurus$idScenario_ori)]
+          x
+        }, x=NtfL, y=scenarios, SIMPLIFY=FALSE)
+      }
+      
+      sim@Ntf<- do.call(c, NtfL)
+    }
+    
+    
+    distriSimL<- lapply(sims, function(x) x@numericDistriSim)
+    
+    if (rebuildId){
+      distriSimL<- mapply(function(x, y){
+        if (is.null(x) | length(x) == 0) return(x)
+        
+        thesaurus<- merge(y[, c("idScenario", "idScenario_ori")], names(x), by.x="idScenario_ori", by.y=1)
+        names(x)<- thesaurus$idScenario[match(names(x), thesaurus$idScenario_ori)]
+        x
+      }, x=distriSimL, y=scenarios, SIMPLIFY=FALSE)
+    }
+    
+    sim@numericDistriSim<- do.call(c, distriSimL)
+  }
+  
+  
   return(Model(pars=scenario, sim=sim))
 }
 
 
+## TODO: numericDistri plots ----
 #' Plot Model
 #'
 #' @rdname Model

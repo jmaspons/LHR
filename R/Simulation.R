@@ -9,30 +9,32 @@ NULL
 #' @return a \code{Sim} object.
 #' @examples Sim()
 #' @export
-setGeneric("Sim", function(params, type=c("discretePopSim", "numericDistri", "ABM"), ...) standardGeneric("Sim"))
+setGeneric("Sim", function(params, type=c("discretePopSim", "numericDistri", "ABM", "numericDistriABM"), ...) standardGeneric("Sim"))
 
 setMethod("Sim",
           signature(params="missing", type="ANY"),
-          function(params, type=c("discretePopSim", "numericDistri", "ABM"), ...){
+          function(params, type=c("discretePopSim", "numericDistri", "ABM", "numericDistriABM"), ...){
             type<- match.arg(type)
             
             sim<- switch(type,
                          discretePopSim=Sim.discretePopSim(...),
                          numericDistri=Sim.numericDistri(...),
-                         ABM=Sim.ABM(...))
+                         ABM=Sim.ABM(...),
+                         numericDistriABM=Sim.numericDistriABM(...))
             return (sim)
           }
 )
 
 setMethod("Sim",
           signature(params="list", type="character"),
-          function(params, type=c("discretePopSim", "numericDistri", "ABM")){
+          function(params, type=c("discretePopSim", "numericDistri", "ABM", "numericDistriABM")){
             type<- match.arg(type)
             
             sim<- switch(type,
                    discretePopSim=Sim.discretePopSim(params=params),
                    numericDistri=Sim.numericDistri(params=params),
-                   ABM=Sim.ABM(params=params))
+                   ABM=Sim.ABM(params=params),
+                   numericDistriABM=Sim.numericDistriABM(params=params))
 
             return (sim)
           }
@@ -48,7 +50,8 @@ setMethod("Sim",
             sim<- switch(type,
                          Sim.discretePopSim=Sim.discretePopSim(params=simPars),
                          Sim.numericDistri=Sim.numericDistri(params=simPars),
-                         Sim.ABM=Sim.ABM(params=simPars))
+                         Sim.ABM=Sim.ABM(params=simPars),
+                         Sim.numericDistriABM=Sim.numericDistriABM(params=simPars))
             
             return (sim)
           }
@@ -195,6 +198,60 @@ setMethod("Sim.ABM",
             params<- c(params, dots)
             
             sim<- Sim.ABM(params=params)
+            
+            return (sim)
+          }
+)
+
+
+## Sim.numericDistriABM Class ----
+
+#' @rdname Sim.numericDistriABM
+#'
+#' @param N0 
+#' @param transitionMat 
+#' @param rateFunc 
+#' @param tf 
+#' @param replicates 
+#' @param raw 
+#' @param Ntf 
+#' @param stats 
+#'
+#' @return a \code{Sim.numericDistriABM} object.
+#' @examples Sim.numericDistriABM()
+#' 
+#' @export
+setGeneric("Sim.numericDistriABM", function(params, N0, transitionsFunc=transitionABM.LH_Beh_DIST, tf=10, replicates=100, maxN=100000,
+                               raw=TRUE, numericDistriSim=TRUE, Ntf=TRUE, stats=TRUE, ...) standardGeneric("Sim.numericDistriABM"))
+setMethod("Sim.numericDistriABM",
+          signature(params="list", N0="missing", transitionsFunc="missing", tf="missing", replicates="missing", maxN="missing", raw="missing", numericDistriSim="missing", Ntf="missing", stats="missing"),
+          function(params){
+            sim<- new("Sim.numericDistriABM", params=params)
+            
+            return (sim)
+          }
+)
+
+setMethod("Sim.numericDistriABM",
+          signature(params="missing", N0="ANY", transitionsFunc="ANY", tf="ANY", replicates="ANY", maxN="ANY", raw="ANY", numericDistriSim="ANY", Ntf="ANY", stats="ANY"),
+          function(N0, transitionsFunc=transitionABM.LH_Beh_DIST, tf=3, maxN=100000, raw=TRUE, numericDistriSim=TRUE, Ntf=TRUE, stats=TRUE, ...){
+            if (missing(N0)){
+              N0<- c(N1s=0, N1b=1, N1bF=0, N2s=0, N2b=1, N2bF=0)
+              N0<- lapply(2^(0:2), function(x) N0 * x)
+              names(N0)<- paste0("N", sapply(N0, sum))
+            }
+            
+            if (!inherits(N0, "list")){
+                N0<- list(N0)
+                names(N0)<- paste0("N", sapply(N0, sum))
+            }
+            
+            params<- list(N0=N0, transitionsFunc=transitionsFunc, tf=tf, maxN=maxN, raw=raw, numericDistriSim=numericDistriSim, Ntf=Ntf, stats=stats)
+            
+            dots<- list(...)
+            params<- c(params, dots)
+            
+            sim<- Sim.numericDistriABM(params=params)
             
             return (sim)
           }

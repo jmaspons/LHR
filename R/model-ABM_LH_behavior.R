@@ -1,8 +1,7 @@
 
 ## Discrete time transitions with a probability model ----
 # Stage based subadult class. 
-# TODO: Add age based subadults class? Important for time lags
-# params<- slow=c(clutch1=1, clutch2=1,   b=1, PbF1=.4, PbF2=.4,  d1=.1,db1=.25,dj1=.25,  d2=.1,db2=.25,dj2=.25, g1=1, g2=1)
+# params<- c(clutch1=1, clutch2=1,   b=1, PbF1=.4, PbF2=.4,  d1=.1,db1=.25,dj1=.25,  d2=.1,db2=.25,dj2=.25, g1=1, g2=1) # slow
 # params<- c(params, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1j=.5) # add neutral behavior
 #' @importFrom stats rbinom 
 transitionABM.LH_Beh<- function(N=matrix(rep(5, 6 * 4), nrow=4, ncol=6, dimnames=list(replicates=NULL, state=c("N1s", "N1b", "N1bF", "N2s", "N2b", "N2bF"))),
@@ -274,6 +273,153 @@ transitionABM.LH_Beh_DET<- function(N=matrix(rep(5, 6), nrow=1, ncol=6, dimnames
 }
 
 transitionABM.LH_Beh_DET<- compiler::cmpfun(transitionABM.LH_Beh_DET) # byte-compile the function
+
+
+transitionABM.LH_Beh_DIST<- function(N=matrix(rep(5, 6), nrow=1, ncol=6, dimnames=list(replicates=NULL, state=c("N1s", "N1b", "N1bF", "N2s", "N2b", "N2bF"))),
+                         params=list(b1=1, b2=1,  broods=1, PbF1=.4, PbF2=.4,  a1=.25,ab1=.1,sa1=.25,j1=.1,  a2=.25,ab2=.1,sa2=.25,j2=.1, AFR=1, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5)){
+  if (!is.list(N)){
+    if (is.null(dim(N))){ # N is a vector
+      N<- structure(as.list(N), names=names(N))
+    }else if (is.matrix(N)){
+      N<- structure(as.list(N), names=colnames(N))
+    }
+    
+    N<- lapply(N, function(x) distriBinom(size=x, prob=1))
+  }
+  
+  N1j<- N2j<- distriBinom(size=0, prob=1) # Juveniles
+  
+  saAges<- grep("sa", names(N), value=TRUE)
+  if (length(saAges) / 2 < params$AFR - 1){
+    warning("Subadult classes missing in the population matrix N. Updating N")
+    if (length(saAges) > 0){
+      if (sum(sapply(N[saAges], function(x) sum(x$p[x$x > 0]))) > 0)
+        warning("Removing individuals from subadult classes ", saAges)
+    }  
+    saColsOri<- grep("sa", names(N))
+    if (length(saColsOri) > 0)
+      N<- N[-saColsOri] # remove original columns
+    
+    saAges<- paste0("sa", 1:(params$AFR - 1))
+    saAges<- c(paste0("N1", saAges), paste0("N2", saAges))
+    
+    tmp<- distriBinom(size=0, prob=1)
+    Nsa<- structure(replicate(length(saAges), tmp, simplify=FALSE), names=saAges)
+    
+    N<- c(N, Nsa)
+    rm(Nsa, tmp)
+  }
+  
+  saAges1<- grep("N1", saAges, value=TRUE)
+  saAges2<- grep("N2", saAges, value=TRUE)
+  
+  
+  ## BREEDING
+  adultN1<- N[["N1b"]] + N[["N1bF"]] + N[["N1s"]]
+  adultN2<- N[["N2b"]] + N[["N2bF"]] + N[["N2s"]]
+  
+  ## Breeders
+  breedingN1<-  with(params, distriBinom(size=adultN1, prob=Pb1))
+  breedingN2<-  with(params, distriBinom(size=adultN2, prob=Pb2))
+  
+  # Skip reproduction
+  N[["N1s"]]<- neg2zeroP(adultN1 - breedingN1)
+  N[["N2s"]]<- neg2zeroP(adultN2 - breedingN2)
+  
+  for (i in 1:params$broods){
+    ## Breeding success
+    N[["N1b"]]<-  with(params, distriBinom(size=breedingN1, prob=(1 - PbF1)))
+    N[["N2b"]]<-  with(params, distriBinom(size=breedingN2, prob=(1 - PbF2)))
+    ## Breeding Fail
+    N[["N1bF"]]<- neg2zeroP(breedingN1 - N[["N1b"]])
+    N[["N2bF"]]<- neg2zeroP(breedingN2 - N[["N2b"]])
+    
+    ## Juvenile recruitment and mortality
+    N1j<- N1j + with(params, distriBinom(size=N[["N1b"]] * b1, prob=j1))
+    N2j<- N2j + with(params, distriBinom(size=N[["N2b"]] * b2, prob=j2))
+    
+    ## interbreed interval mortality? otherwise mortality only affected by the last brood event
+    ## Skip reproduction moved outside the broods loop
+    
+    ## MOVEMENTS
+    # habOLD_NEW
+    hab2_1Nb<-  with(params, distriBinom(size=N[["N2b"]], prob=c2 * P1b))
+    hab1_2Nb<-  with(params, distriBinom(size=N[["N1b"]], prob=c1 * (1 - P1b)))
+    hab2_1NbF<-  with(params, distriBinom(size=N[["N2bF"]], prob=cF * P1b))
+    hab1_2NbF<-  with(params, distriBinom(size=N[["N1bF"]], prob=cF * (1 - P1b)))
+
+    ## Apply movements
+    N[["N1b"]]<-  neg2zeroP(N[["N1b"]]  + hab2_1Nb  - hab1_2Nb)
+    N[["N2b"]]<-  neg2zeroP(N[["N2b"]]  + hab1_2Nb  - hab2_1Nb)
+    N[["N1bF"]]<- neg2zeroP(N[["N1bF"]] + hab2_1NbF - hab1_2NbF)
+    N[["N2bF"]]<- neg2zeroP(N[["N2bF"]] + hab1_2NbF - hab2_1NbF)
+    
+    breedingN1<-  N[["N1b"]] +  N[["N1bF"]]
+    breedingN2<-  N[["N2b"]] +  N[["N2bF"]]
+  }
+  
+  ## MOVEMENTS (not based on breeding experience, only once per year)
+  # non reproductive adults (juveniles don't change habitat)
+  hab2_1Ns<-  with(params, distriBinom(size=N[["N2s"]], prob=c2 * P1s))
+  hab1_2Ns<-  with(params, distriBinom(size=N[["N1s"]], prob=c1 * (1 - P1s)))
+  # hab2_1Nj<-  with(params, distriBinom(size=N2j, prob=c2 * P1j))
+  # hab1_2Nj<-  with(params, distriBinom(size=N1j, prob=c1 * (1 - P1j)))
+  
+  N[["N1s"]]<-  neg2zeroP(N[["N1s"]] + hab2_1Ns - hab1_2Ns)
+  N[["N2s"]]<-  neg2zeroP(N[["N2s"]] + hab1_2Ns - hab2_1Ns)
+  #     N1j<-  N1j + hab2_1Nj  - hab1_2Nj
+  #     N2j<-  N2j + hab1_2Nj  - hab2_1Nj
+  
+  # subadults
+  if (params$AFR > 1){
+    hab2_1Nsa<-  lapply(N[saAges2], function(x) with(params, distriBinom(size=x, prob=c2 * P1sa)))
+    hab1_2Nsa<-  lapply(N[saAges1], function(x) with(params, distriBinom(size=x, prob=c1 * (1 - P1sa))))
+    
+    N[saAges1]<- mapply(function(x, x21, x12){
+                  neg2zeroP(x + x21 - x12)
+                }, x=N[saAges1], x21=hab2_1Nsa, x12=hab1_2Nsa, SIMPLIFY=FALSE)
+    N[saAges2]<- mapply(function(x, x12, x21){
+                  neg2zeroP(x + x12 - x21)
+                }, x=N[saAges1], x21=hab1_2Nsa, x12=hab2_1Nsa, SIMPLIFY=FALSE)
+  }
+  
+  
+  ## SURVIVAL
+  # juvenile survival already calculated during recruitment (saved in N*j)
+  N[["N1b"]]<-  with(params, distriBinom(size=N[["N1b"]], prob=ab1))
+  N[["N2b"]]<-  with(params, distriBinom(size=N[["N2b"]], prob=ab2))
+
+  N[["N1bF"]]<- with(params, distriBinom(size=N[["N1bF"]], prob=ab1))
+  N[["N2bF"]]<- with(params, distriBinom(size=N[["N2bF"]], prob=ab2))
+
+  N[["N1s"]]<-  with(params, distriBinom(size=N[["N1s"]], prob=a1))
+  N[["N2s"]]<-  with(params, distriBinom(size=N[["N2s"]], prob=a2))
+  
+  ## Subadults
+  if (params$AFR > 1){
+    N1sa<- lapply(N[saAges1], function(x) with(params, distriBinom(size=x, prob=sa1)))
+    N2sa<- lapply(N[saAges2], function(x) with(params, distriBinom(size=x, prob=sa2)))
+  }
+  
+  
+  ## GROWTH
+  if (params$AFR > 1){
+    # WARNING: assumes saAges* is sorted by age
+    N[saAges1[-1]]<- N1sa[-length(N1sa)] # subadult age transitions
+    N[saAges2[-1]]<- N2sa[-length(N2sa)] # subadult age transitions
+    N[["N1b"]]<- N[["N1b"]] + N1sa[[length(N1sa)]] # subadult -> adult
+    N[["N2b"]]<- N[["N2b"]] + N2sa[[length(N2sa)]] # subadult -> adult
+    N[[saAges1[1]]]<- N1j # juvenil -> subadult
+    N[[saAges2[1]]]<- N2j # juvenil -> subadult
+  } else { # Juveniles grow to N*b
+    N[["N1b"]]<- N[["N1b"]] + N1j
+    N[["N2b"]]<- N[["N2b"]] + N2j
+  }
+  
+  return(N)
+}
+
+transitionABM.LH_Beh_DIST<- compiler::cmpfun(transitionABM.LH_Beh_DIST) # byte-compile the function
 
 
 ## Graphics ----

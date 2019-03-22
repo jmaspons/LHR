@@ -289,3 +289,28 @@ Pestablishment.ABM<- function(N0, scenario, parsSim){
   return(Pest)
 }
 
+Pestablishment.numericDistriABM<- function(N0, scenario, parsSim){
+  if (N0 == 0) return(0)
+  
+  parsSim$N0<- round(N0)
+  parsSim$raw<- FALSE
+  parsSim$Ntf<- TRUE ## TODO Not set in constructor Sim.numericDistriABM
+  
+  selClass<- which(parsSim$N0[[1]] > 0)
+  N0class<- parsSim$N0[[1]] * (N0 %/% sum(parsSim$N0[[1]])) # split N0 evenly between classes with N0 != 0
+  
+  mod<- N0 %% sum(parsSim$N0[[1]])
+  if (mod > 0){
+    N0class[selClass[1:mod]]<- N0class[selClass[1:mod]] + 1 # add the module to the firsts classes with N0 != 0
+    randomizeN0<- TRUE # avoid bias due to the order of the classes
+  }else{
+    randomizeN0<- FALSE
+  }
+  parsSim$N0<- list(N0class)
+  
+  res<- runScenario.numericDistriABM(scenario=scenario, pars=parsSim)
+  
+  Pest<- 1 - res$stats[,"extinct"]
+  
+  return(Pest)
+}

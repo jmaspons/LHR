@@ -1,15 +1,17 @@
 
 #' @exportClass discretePopSim
 #' @exportClass discreteABMSim
-#' @exportClass distriPopSim
+#' @exportClass numericDistriPopSim
 #' @exportClass numericDistri
+#' @exportClass numericDistriABMSim
 #' @exportClass leslieMatrix
 NULL
 
 setOldClass("discretePopSim")
 setOldClass("discreteABMSim")
-setOldClass("distriPopSim")
+setOldClass("numericDistriPopSim") # TODO: Ntf only
 setOldClass("numericDistri")
+setOldClass("numericDistriABMSim") # list of timesteps with a list of numericDistri for each states
 setOldClass("leslieMatrix")
 
 
@@ -36,7 +38,6 @@ setClass("LH", contains="data.frame")
 #' @export
 setClass("Sim", slots=list(params="list", raw="ANY", N0_Pest="data.frame"), contains="data.frame")
 
-
 #' Discrete Simulation Class
 #' 
 #' @name Sim.discretePopSim
@@ -59,19 +60,25 @@ setClass("Sim.discretePopSim", slots=list(discretePopSim="list", Ntf="data.frame
 #' @export
 setClass("Sim.ABM", slots=list(deterministic="data.frame"), contains="Sim.discretePopSim")
 
-
 #TODO: sexRatio
 #' Numeric Distribution Simulation Class
 #' 
 #' @name Sim.numericDistri
 #'
-#' @slot Ntf data.frame. 
+#' @slot numericDistriSim
+#' @slot Ntf list of final population distribution. 
 #'
 #' @seealso \code{\link{Sim}}
 #' @export
-setClass("Sim.numericDistri", contains="Sim")
+setClass("Sim.numericDistri", slots=list(numericDistriSim="list", Ntf="list"), contains="Sim")
 
-
+#' Agent Based Model Simulation Class based on numericDistri
+#' 
+#' @name Sim.numericDistriABM
+#'
+#' @seealso \code{\link{Sim}}
+#' @export
+setClass("Sim.numericDistriABM", contains="Sim.numericDistri")
 
 
 ## Environment class ----
@@ -112,13 +119,19 @@ setClass("Model.discretePopSim", contains="Model")
 #' @export
 setClass("Model.numericDistri", contains="Model")
 
-
 #' Model.ABM
 #' 
 #' @name Model.ABM
 #'
 #' @export
 setClass("Model.ABM", contains="Model")
+
+#' Model.numericDistriABM
+#' 
+#' @name Model.numericDistriABM
+#'
+#' @export
+setClass("Model.numericDistriABM", contains="Model")
 
 
 ## Check and overview ----

@@ -231,6 +231,7 @@ test_that("compound distribution with environmental variation", {
   }
 })
 
+
 context("Run discreteABMSim models")
 
 test_that("ABM LH-behavior", { 
@@ -297,7 +298,6 @@ test_that("ABM LH-behavior", {
   }
 })
 
-
 test_that("ABM LH-behavior Deterministic", { 
   lh<- LH(method="LH axes")
   env<- Env(seasonAmplitude=0, varJ=0, varA=0)
@@ -359,5 +359,71 @@ test_that("ABM LH-behavior Deterministic", {
     expect_is(plot(res, resultType="Ntf"), "ggplot")
     
     expect_is(hist(res, resultType="Ntf"), "ggplot")
+  }
+})
+
+
+test_that("ABM LH-behavior numericDistri", { 
+  lh<- LH(method="LH axes")
+  env<- Env(seasonAmplitude=0, varJ=0, varA=0, breedFail=.5)
+  sim<- Sim.numericDistriABM(transitionsFunc=transitionABM.LH_Beh_DIST, tf=2, maxN=10000, N0=c(N1s=0, N1b=1, N1bF=0, N2s=0, N2b=1, N2bF=0))
+  pars<- getParamsCombination.LH_Beh(lh=lh, env=env, habDiffScenario="nestPredHab2", behavior="learnExploreBreed")
+  pars<- pars[pars$broods < 2, ]
+  model<- Model(sim=sim, pars=pars)
+  
+  # model<- Model(lh=lh, env=env, sim=sim)
+  # model<- model[model$habDiff == "nestPredHab2" & model$behavior == "learnExploreBreed", ]
+  
+  if (skip_on_cran()){
+    res<- run(model)
+    expect_is(res, "Model")
+    
+    distriABML<- unlist(res@sim@raw, recursive=FALSE)
+    tmp<- lapply(distriABML, expect_is, class="numericDistriABMSim")
+    
+    expect_is(result(res), "data.frame")
+    expect_is(result(res, type="Ntf"), "data.frame")
+    
+    ## Test subsetting
+    expect_identical(length(res@sim@raw), nrow(res))
+    expect_identical(length(res[1,]@sim@raw), nrow(res[1,]))
+    expect_identical(length(res[c(1,3),]@sim@raw), nrow(res[c(1,3),]))
+    
+    expect_equal(length(unlist(res@sim@Ntf, recursive=FALSE)) / length(res@sim@params$N0), nrow(res))
+    expect_equal(length(unlist(res[1,]@sim@Ntf, recursive=FALSE)) / length(res@sim@params$N0), nrow(res[1,]))
+    expect_equal(length(unlist(res[c(1,3),]@sim@Ntf, recursive=FALSE)) / length(res@sim@params$N0), nrow(res[c(1,3),]))
+    
+    ## Test rbind
+    expect_is(rbind(res[1:3,], res[4,]), "Model")
+    expect_identical(rbind(res[1:3,], res[4,]), res[1:4,])
+    # TODO: differences in row sorting
+    # a<- res[1:4,]
+    # b<- rbind(res[1:3,], res[4,])
+    # all.equal(a@sim@Ntf[order(a@sim@Ntf$idScenario),], b@sim@Ntf[order(b@sim@Ntf$idScenario),])
+    # data.frame(a@sim@Ntf$idScenario, b@sim@Ntf$idScenario, stringsAsFactors=FALSE)
+    expect_error(rbind(res, res)) # duplicated scenarios
+    
+    ## Duplicated ids
+    lh1<- LH(lambda=1, broods=1, a=.7, method="regular")
+    lh2<- LH(lambda=1.1, broods=1, a=.6, method="regular")
+    env1<- Env(seasonAmplitude=0, varJ=0, varA=0)
+    env2<- Env(seasonAmplitude=0, varJ=0, varA=0, breedFail=0.4)
+    model1<- Model(lh=lh1, env=env1, sim=sim, habDiffScenario="nestPredHab2", behavior="learnExploreBreed")
+    model2<- Model(lh=lh2, env=env2, sim=sim, habDiffScenario="nestPredHab2", behavior="learnExploreBreed")
+    res1<- run(model1)
+    res2<- run(model2)
+    res12<- rbind(res1, res2)
+    expect_identical(nrow(res12), nrow(res1) + nrow(res2))
+    expect_setequal(names(res12@sim@Ntf), res12$idScenario)
+    expect_setequal(names(res12@sim@numericDistriSim), res12$idScenario)
+    expect_setequal(names(res12@sim@raw), res12$idScenario)
+    
+    ## TODO: Test plots numericDistri ----
+    # expect_is(plot(res, resultType="Pest_N0"), "ggplot")
+    # expect_is(plot(res, resultType="G"), "ggplot")
+    # expect_equal(plot(res, resultType="N0_Pest"), NA)
+    # expect_is(plot(res, resultType="Ntf"), "ggplot")
+    # 
+    # expect_is(hist(res, resultType="Ntf"), "ggplot")
   }
 })

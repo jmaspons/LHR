@@ -1,7 +1,7 @@
 Package: LHR
 Type: Package
 Title: Tools for Life History Modeling
-Version: 0.9.0
+Version: 0.10.0
 Date: 2019-03-6
 Authors@R: person("Joan", "Maspons", email = "j.maspons@creaf.uab.cat", role = c("aut", "cre"))
 Description: Implements stochastic demographic models. Compound distributions
@@ -44,6 +44,7 @@ Collate:
     'model-discretePopSim.R'
     'numericDistri.R'
     'model-numericDistri.R'
+    'model-numericDistriABMSim.R'
     'parameters-LH-behavior.R'
     'populationDynamicsStats.R'
     'probabilityDistributions.R'

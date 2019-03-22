@@ -25,7 +25,6 @@ summary.discretePopSim<- function(object, dt=1, ...){
   return(res)
 }
 
-
 #' @rdname discreteABMSim
 #'
 #' @param object 
@@ -37,6 +36,58 @@ summary.discretePopSim<- function(object, dt=1, ...){
 #' @examples
 summary.discreteABMSim<- function(object, dt=1, ...){
   summary(discreteABMSim2discretePopSim(object), dt=dt)
+}
+
+
+## TODO: implement numericDistriPopSim functions ----
+#' @rdname numericDistriPopSim
+#'
+#' @param object 
+#' @param dt 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+summary.numericDistriPopSim<- function(object, dt=1, ...){
+  N0<- sum(object[[1]])
+  
+  tf<- which(sapply(object, inherits, "numericDistri"))
+  
+  if (length(tf) > 0){
+    tf<- tf[length(tf)]
+    Ntf<- object[[tf]]
+  }else{
+    res<- res<- structure(rep(NA_real_, 13),
+                          names=c("increase", "decrease", "stable", "extinct", "increaseTrans", "decreaseTrans", "stableTrans",
+                                  "GR", "meanR", "varR", "GL", "meanL", "varL"))
+  }
+
+  R<- r(Ntf, N0=N0, dt=dt) # intrinsic growth rate
+  L<- lambda(Ntf, N0=N0, dt=dt) # lambda
+  meanR<- mean(R, na.rm=TRUE)
+  varR<- var(R, na.rm=TRUE)
+  meanL<- mean(L, na.rm=TRUE)
+  varL<- var(L, na.rm=TRUE)
+  GR<- G(meanR, varR)
+  GL<- G(meanL, varL)
+  trends<- trendsProp(Ntf, N0=N0)
+  
+  res<- c(trends, GR=GR, meanR=meanR, varR=varR, GL=GL, meanL=meanL, varL=varL)
+  
+}
+
+#' @rdname numericDistriABMSim
+#'
+#' @param object 
+#' @param dt 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+summary.numericDistriABMSim<- function(object, dt=1, ...){
+  summary(numericDistriABMSim2numericDistriSim(object), dt=dt)
 }
 
 #' @export
@@ -79,6 +130,10 @@ trendsProp<- function(...){
 }
 
 #' @rdname discretePopSim
+#'
+#' @param x 
+#' @param dt 
+#' 
 #' @export
 trendsProp.discretePopSim<- function(x, dt=1, ...){
   pop0<- x[, 1, drop=FALSE]
@@ -95,14 +150,14 @@ trendsProp.discretePopSim<- function(x, dt=1, ...){
   nTransitions<- sum(!is.na(dN))
   
   if (nTransitions > 0){
-    increaseTrans<- length(which(dN > 0)) / nTransitions
-    decreaseTrans<- length(which(dN < 0)) / nTransitions
-    stableTrans<- length(which(dN == 0)) / nTransitions
+    increaseTrans<- sum(dN > 0) / nTransitions
+    decreaseTrans<- sum(dN < 0) / nTransitions
+    stableTrans<- sum(dN == 0) / nTransitions
     
-    increase<- length(which(popF > pop0)) / replicates
-    decrease<- length(which(popF < pop0)) / replicates
-    stable<- length(which(popF == pop0)) / replicates
-    extinct<- length(which(popF == 0)) / replicates
+    increase<- sum(popF > pop0) / replicates
+    decrease<- sum(popF < pop0) / replicates
+    stable<- sum(popF == pop0) / replicates
+    extinct<- sum(popF == 0) / replicates
     res<- structure(c(increase, decrease, stable, extinct, increaseTrans, decreaseTrans, stableTrans),
                     names=c("increase", "decrease", "stable", "extinct", "increaseTrans", "decreaseTrans", "stableTrans"))
   }else{
@@ -115,7 +170,7 @@ trendsProp.discretePopSim<- function(x, dt=1, ...){
 
 #' @rdname discreteABMSim
 #'
-#' @param object 
+#' @param x 
 #' @param dt 
 #'
 #' @return
@@ -126,14 +181,22 @@ trendsProp.discreteABMSim<- function(x, dt=1, ...){
 
 
 #' @rdname numericDistri
+#' 
+#' @param x a numeric distri object
+#' @param N0 initial population size, a numeric value
+#' @param dt integer
+#' 
 #' @export
 trendsProp.numericDistri<- function(x, N0, ...){
   increase<- sum(x$p[which(x$x == (N0 + 1)):nrow(x)])
   decrease<- sum(x$p[1:which(x$x == (N0 - 1))])
   stable<- x$p[x$x == N0]
   extinct<- x$p[x$x == 0]
-  res<- structure(c(increase, decrease, stable, extinct),
-                  names=c("increase", "decrease", "stable", "extinct"))
+  
+  increaseTrans<- decreaseTrans<- stableTrans<- NA
+  
+  res<- structure(c(increase, decrease, stable, extinct, increaseTrans, decreaseTrans, stableTrans),
+                  names=c("increase", "decrease", "stable", "extinct", "increaseTrans", "decreaseTrans", "stableTrans"))
   return(res)
 }
 

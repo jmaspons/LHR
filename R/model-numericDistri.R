@@ -196,7 +196,7 @@ setMethod("tDistri",
             attributes(out)$tf<- tf
             attributes(out)$N0<- N0
             
-            class(out)<- c("distriPopSim", class(out))
+            class(out)<- c("numericDistriPopSim", class(out))
             
             return (out)
           }
