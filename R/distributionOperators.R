@@ -5,18 +5,28 @@ distriSum<- function(x, y){
   if (!inherits(x, "numericDistri") | !inherits(y, "numericDistri")){
     if (is.numeric(x)){
       y$x<- y$x + x
+      attributes(y)$support<- attributes(y)$support + x
       return(y)
     }
     if (is.numeric(y)){
       x$x<- x$x + y
+      attributes(x)$support<- attributes(x)$support + y
       return(x)
     }
-    stop("At least one parameter must be a numericDistri object.")
+    stop("Parameters must be numericDistri objects or numeric. ")
   }
   
   if (attributes(x)$logP != attributes(y)$logP){
     y<- logP(y, logP=attributes(x)$logP)
-    message("y probabilities transformed to the same scale than x. Use logP(x, log=T/F) to change it.")
+    message("y probabilities transformed to the same scale than x. Use logP(x, log=TRUE/FALSE) to change it.")
+  }
+  
+  if (attributes(x)$logP){
+    x<- x[x$p > -Inf,, drop=FALSE]
+    y<- y[y$p > -Inf,, drop=FALSE]
+  }else{
+    x<- x[x$p > 0,, drop=FALSE]
+    y<- y[y$p > 0,, drop=FALSE]
   }
   
   log<- attributes(x)$logP
@@ -24,20 +34,23 @@ distriSum<- function(x, y){
   maxRes<- max(x$x) + max(y$x)
   vals<- minRes:maxRes
   
-  res<- .External("distrisum", x$x, x$p, y$x, y$p, log, minRes, maxRes, length(vals))
+  res<- .External("distrisum", x$x, x$p, y$x, y$p, log, minRes, length(vals))
   res<- data.frame(x=vals, p=res)
   
-  infiniteDomain<- inherits(x, "infiniteSuport") | inherits(y, "infiniteSuport")
   if (log){
     attributes(res)$p.omitted<- 1 - sum(exp(res$p))
   }else{
     attributes(res)$p.omitted<- 1 - sum(res$p)
   }
-  attributes(res)$parameters<- list(x=attributes(x)$parameters, y=attributes(y)$parameters)
+  attributes(res)$parameters<- list(x=class(x)[1], y=class(y)[1])
+  attributes(res)$support<- attributes(x)$support + attributes(y)$support
   attributes(res)$logP<- log
+  
   class(res)<- "sumOfDistri"
-  if (infiniteDomain) class(res)<- c(class(res), "infiniteSuport")
-  class(res)<- c(class(res), "numericDistri", "data.frame")
+  if (inherits(x, "infiniteSuport") | inherits(y, "infiniteSuport"))
+    class(res)<- c(class(res), "infiniteSuport")
+    
+  class(res)<- c("numericDistri", "data.frame")
   
   return (res)
 }
@@ -59,6 +72,7 @@ distriSum<- function(x, y){
 # @export
 distriDiff<- function(x, y){
   y$x<- -y$x
+  attributes(y)$support<- range(- attributes(y)$support)
   distriSum(x, y)
 }
 
@@ -79,6 +93,7 @@ distriScalarProd<- function(distri, x){
   distri$x<- distri$x * x
   
   attributes(distri)$parameters<- c(list(scalarProd=x), attributes(distri)$parameters)
+  attributes(distri)$support<- attributes(distri)$support * x
   class(distri)<- c("scalarProdDistri", class(distri))
   
   return(distri)
@@ -118,6 +133,9 @@ neg2zeroP<- function(distri){
   distri<- distri[distri$x >= 0, ]
   
   distri$p[distri$x == 0]<- distri$p[distri$x == 0] + sum(negP)
+  attributes(distri)$support<- c(0, attributes(distri)$support[2])
+  
+  ## TODO: class
   
   return(distri)
 }

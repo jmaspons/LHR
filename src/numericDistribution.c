@@ -125,8 +125,8 @@ SEXP BetaBinomialCompound(SEXP args){
 // smax<- max(x) + max(y)
 // slen<- length(smin:smax)
 SEXP distrisum(SEXP args){
-    SEXP sx, spx, sy, spy, slog, smin, smax, slen, Res;
-    int * x, * y, min, max, len, xy, logP, i, j;
+    SEXP sx, spx, sy, spy, slog, smin, slen, Res;
+    int * x, * y, min, len, xy, logP, i, j;
     double * px, * py, * res;
     
     args = CDR(args);
@@ -142,8 +142,6 @@ SEXP distrisum(SEXP args){
     args = CDR(args);
     PROTECT(smin = coerceVector(CAR(args), INTSXP));
     args = CDR(args);
-    PROTECT(smax = coerceVector(CAR(args), INTSXP));
-    args = CDR(args);
     PROTECT(slen = coerceVector(CAR(args), INTSXP));
 
     x = INTEGER(sx);
@@ -152,10 +150,9 @@ SEXP distrisum(SEXP args){
     py = REAL(spy);
     logP = asLogical(slog);
     min = asInteger(smin);
-    max = asInteger(smax);
     len = asInteger(slen);
     
-    // res contain the probabilities of resulting distribution for values for smin:smax
+    // res contain the probabilities of resulting distribution for values smin:smax
     Res = PROTECT(allocVector(REALSXP, len));
     res = REAL(Res);
     memset(res, 0, len * sizeof(double)); // initialise res. Take care later about the logP scale
@@ -163,25 +160,25 @@ SEXP distrisum(SEXP args){
     if (logP){
       for  (i=0; i < LENGTH(sx); i++){
         for (j=0; j < LENGTH(sy); j++){
-          xy = x[i] + y[j] + fabs(min);
-          res[xy] = logspace_add(res[xy], px[i] + py[j]);
+          xy = x[i] + y[j];
+          res[xy - min] = logspace_add(res[xy], px[i] + py[j]);
           // Rprintf("\tx:%i; p=%.4f; pp=%.4f\txx=%i; px=%.2f; xy=%i; py=%.2f\n", xy, res[xy], px[i] * py[j], x[i], px[i], y[j], py[j]);
         }
       }
       // substract 0 for the initialization on the log scale
-      for (i=0; i <= max; i++){
+      for (i=0; i < len; i++){
         res[i] = logspace_sub(res[i], 0);
       }
     }else{
-      for  (i=0; i < LENGTH(sx); i++){
+      for (i=0; i < LENGTH(sx); i++){
         for (j=0; j < LENGTH(sy); j++){
-          xy = x[i] + y[j] + fabs(min);
-          res[xy] += px[i] * py[j];
+          xy = x[i] + y[j];
+          res[xy - min] += px[i] * py[j];
           // Rprintf("\tx:%i; p=%.4f; pp=%.4f\txx=%i; px=%.2f; xy=%i; py=%.2f\n", xy, res[xy], px[i] * py[j], x[i], px[i], y[j], py[j]);
         }
       }
     }
     
-    UNPROTECT(9);
+    UNPROTECT(8);
     return (Res);
 }

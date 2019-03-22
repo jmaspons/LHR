@@ -7,6 +7,8 @@
 NULL
 
 ## TODO: call distriBeta* or distri* according to p parameter (p = c(shape1, shape2) | p)
+## TODO: optimize for prob=1 & prob=0
+## TODO: remove x$p == 0 and keep x$x range in attributes
 
 ## Binomial distribution ----
 #' @rdname numericDistri
@@ -29,6 +31,7 @@ distriBinom.numeric<- function(size, prob, logP=FALSE){
   res<- data.frame(x=0:size, p=dbinom(x=0:size, size, prob, log=logP))
   attributes(res)$p.omitted<- 0
   attributes(res)$parameters<- list(size=size, prob=prob)
+  attributes(res)$support<- c(0, size)
   attributes(res)$logP<- logP
   class(res)<- c("binom", "finiteSuport","numericDistri", "data.frame")
   return (res)
@@ -51,10 +54,15 @@ distriBinom.numericDistri<- function(size, prob, logP=FALSE){
   }else{
     attributes(res)$p.omitted<- 1 - sum(res$p)
   }
-  attributes(res)$parameters<- list(size=c(list(distribution=class(size)[1]), attributes(size)$parameters), prob=prob)
+  attributes(res)$parameters<- list(size=class(size)[1], prob=prob)
+  attributes(res)$support<- c(0, max(size$x))
   attributes(res)$logP<- logP
+  
   class(res)<- "compoundBinom"
-  if (inherits(size, "infiniteSuport")) class(res)<- c(class(res), "infiniteSuport")
+  
+  if (inherits(size, "infiniteSuport"))
+    class(res)<- c(class(res), "infiniteSuport")
+    
   class(res)<- c(class(res), "numericDistri", "data.frame")
   
   return (res)
@@ -83,6 +91,7 @@ distriBetaBinom.numeric<- function(size, shape1, shape2, logP=FALSE){
   attributes(res)$p.omitted<- 0
   prob<- sbeta(shape1=shape1, shape2=shape2)
   attributes(res)$parameters<- list(size=size, prob=prob$mean, var=prob$var)
+  attributes(res)$support<- c(0, size)
   attributes(res)$logP<- logP
   class(res)<- c("betaBinom", "finiteSuport","numericDistri", "data.frame")
   return (res)
@@ -107,10 +116,15 @@ distriBetaBinom.numericDistri<- function(size, shape1, shape2, logP=FALSE){
     attributes(res)$p.omitted<- 1 - sum(res$p)
   }
   prob<- sbeta(shape1=shape1, shape2=shape2)
-  attributes(res)$parameters<- list(size=c(list(distribution=class(size)[1]), attributes(size)$parameters), prob=prob$mean, var=prob$var)
+  attributes(res)$parameters<- list(size=class(size)[1], prob=prob$mean, var=prob$var)
+  attributes(res)$support<- c(0, max(size$x))
   attributes(res)$logP<- logP
+  
   class(res)<- "compoundBetaBinom"
-  if (inherits(size, "infiniteSuport")) class(res)<- c(class(res), "infiniteSuport")
+  
+  if (inherits(size, "infiniteSuport"))
+    class(res)<- c(class(res), "infiniteSuport")
+    
   class(res)<- c(class(res), "numericDistri", "data.frame")
   
   return (res)
@@ -149,6 +163,7 @@ distriNegBinom.numeric<- function(size, prob, mu, logP=FALSE, minP, maxPomitted=
     attributes(res)$p.omitted<- 1 - sum(res$p)
   }
   attributes(res)$parameters<- list(size=size, prob=prob)
+  attributes(res)$support<- c(0, Inf)
   attributes(res)$logP<- logP
   class(res)<- c("nbinom", "infiniteSuport", "numericDistri", "data.frame")
   return (res)
@@ -174,6 +189,7 @@ distriBetaNegBinom<- function(size, shape1, shape2, logP=FALSE, minP, maxPomitte
   }
   prob<- sbeta(shape1=shape1, shape2=shape2)
   attributes(res)$parameters<- list(size=size, prob=prob$mean, var=prob$var)
+  attributes(res)$support<- c(0, Inf)
   attributes(res)$logP<- logP
   class(res)<- c("betaNbinom", "infiniteSuport", "numericDistri", "data.frame")
   return (res)
@@ -212,6 +228,7 @@ distriPois.numeric<- function(lambda, logP=FALSE, minP, maxPomitted=0.0001){
   }
   
   attributes(res)$parameters<- list(lambda=lambda)
+  attributes(res)$support<- c(0, Inf)
   attributes(res)$logP<- logP
   class(res)<- c("pois", "infiniteSuport","numericDistri", "data.frame")
   return (res)
@@ -238,6 +255,7 @@ distriPois.numericDistri<- function(lambda, logP=FALSE, minP, maxPomitted=0.0001
     attributes(res)$p.omitted<- 1 - sum(res$p)
   }
   attributes(res)$parameters<- list(lambda=c(list(distribution=class(lambda)[1]), attributes(lambda)$parameters))
+  attributes(res)$support<- c(0, Inf)
   attributes(res)$logP<- logP
   
   class(res)<- c("compoundPois", "infiniteSuport", "numericDistri", "data.frame")
@@ -269,15 +287,18 @@ logP<- function(distri, logP=TRUE){
 
 #' @export
 #' @S3method print numericDistri
-print.numericDistri<- function(x, ...){
-  cat("\t", class(x)[1], "distribution\n")
-  cat("Probability omitted: ", attributes(x)$p.omitted, "\n")
+print.numericDistri<- function(x, maxRows=20, ...){
+  cat("\t", class(x)[1], "object\n")
+  cat("Theoretical support: [", paste(attributes(x)$support, collapse=", "), "]\n", sep="")
+  cat("Probability omitted:", attributes(x)$p.omitted, "\n")
   if (attributes(x)$logP) cat("p in Log probability scale\n")
+  
   cat("Parameters:\n")
   utils::str(attributes(x)$parameters)
+  
   cat("\n")
-  print(utils::head(data.frame(x), n=15), ...)
-  if (nrow(x) > 15) cat("\t ...\t", nrow(x) - 15, "rows omited.\n")
+  print(utils::head(data.frame(x), n=maxRows), ...)
+  if (nrow(x) > maxRows) cat("\t ...\t", nrow(x) - maxRows, "rows omited.\n")
   
   invisible(x)
 }
@@ -290,6 +311,7 @@ summary.numericDistri<- function(object, ...){
   at<- attributes(object)
   attributes(res)$p.omitted<- at$p.omitted
   attributes(res)$parameters<- at$parameters
+  attributes(res)$support<- at$support
   attributes(res)$logP<- at$logP
   
   class(res)<- c("summary.numericDistri", class(res))
@@ -300,12 +322,14 @@ summary.numericDistri<- function(object, ...){
 #' @export
 #' @S3method print summary.numericDistri
 print.summary.numericDistri<- function(x, ...){
-  cat("Probability omitted: ", attributes(x)$p.omitted, "\nParameters:\n")
-  
+  cat("\t", class(x)[1], "object\n")
+  cat("Theoretical support: [", paste(attributes(x)$support, collapse=", "), "]\n", sep="")
+  cat("Probability omitted:", attributes(x)$p.omitted, "\n")
   if (attributes(x)$logP) cat("p in Log probability scale\n")
   
+  cat("Parameters:\n")
   utils::str(attributes(x)$parameters)
-  
+
   cat("\n")
   print(as.data.frame(x), row.names=FALSE, ...)
 }
