@@ -119,7 +119,7 @@ getParamsCombination.LHEnv_2patchBeh<- function(lh=LH(), env=Env(seasonAmplitude
   comb$idScenario<- paste(comb$idScenario, comb$idHabDiff, comb$idBehavior, sep="_")
   
   diffCols<- grep("Diff$", names(comb), value=TRUE)
-  diffCols<- setdiff(diffCols, "idHabDiff")
+  diffCols<- setdiff(diffCols, c("idHabDiff", "baseHabDiff"))
   otherCols<- setdiff(names(comb), diffCols)
   
   combL<- split(comb, 1:nrow(comb))
@@ -293,7 +293,8 @@ getPatchScenario<- function(habDiffScenario=c("identicalHab", "mortalHab2", "nes
   habDiff<- lapply(split(habComb, 1:nrow(habComb)), function(x){
       getDiffHabScenario(habDiffScenario=x$habDiffScenario, intensity=x$habDiffIntensity)
     })
-  habDiff<- as.data.frame(do.call(rbind, habDiff))
+  habDiff<- data.frame(baseHabDiff=habComb$habDiffScenario, habDiffIntensity=habComb$habDiffIntensity,
+                       do.call(rbind, habDiff), stringsAsFactors=FALSE)
   rownames(habDiff)<- ifelse(habComb$habDiffScenario == "identicalHab", "identicalHab",
                              paste0(habComb$habDiffScenario, "X", habComb$habDiffIntensity))
   
@@ -314,8 +315,10 @@ getPatchScenario<- function(habDiffScenario=c("identicalHab", "mortalHab2", "nes
   beh<- lapply(split(behComb, 1:nrow(behComb)), function(x){
     getBehavior(behavior=x$behavior, intensity=x$intensity)
   })
-  beh<- as.data.frame(do.call(rbind, beh))
-  rownames(beh)<- ifelse(behComb$behavior %in% c("neutral", "static"), behComb$behavior, paste0(behComb$behavior, "X", behComb$intensity))
+  beh<- data.frame(baseBeh=behComb$behavior, behIntensity=behComb$intensity,
+                   do.call(rbind, beh), stringsAsFactors=FALSE)
+  rownames(beh)<- ifelse(behComb$behavior %in% c("neutral", "static"),
+                         behComb$behavior, paste0(behComb$behavior, "X", behComb$intensity))
   
   # beh[sort(rownames(beh)),]
   if (any(duplicated(beh))){
