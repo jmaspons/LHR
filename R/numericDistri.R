@@ -52,10 +52,14 @@ distriBinom.numericDistri<- function(size, prob, logP=FALSE){
   }
   
   if (logP){
-    size<- size[size$p > -Inf,, drop=FALSE]
+    size<- size[size$p > log(getOption("numericDistri.minP")),, drop=FALSE]
   }else{
-    size<- size[size$p > 0,, drop=FALSE]
+    size<- size[size$p > getOption("numericDistri.minP"),, drop=FALSE]
   }
+  
+  if (nrow(size) == 0)
+    stop("No value with probability > getOption(\"numericDistri.minP\").\n",
+         "\tUse: options(list(numericDistri.minP=1e-100) to change it.\n")
   
   maxRes<- max(size$x)
 
@@ -127,10 +131,14 @@ distriBetaBinom.numericDistri<- function(size, shape1, shape2, logP=FALSE){
   }
   
   if (logP){
-    size<- size[size$p > -Inf,, drop=FALSE]
+    size<- size[size$p > log(getOption("numericDistri.minP")),, drop=FALSE]
   }else{
-    size<- size[size$p > 0,, drop=FALSE]
+    size<- size[size$p > getOption("numericDistri.minP"),, drop=FALSE]
   }
+  
+  if (nrow(size) == 0)
+    stop("No value with probability > getOption(\"numericDistri.minP\").\n",
+         "\tUse: options(list(numericDistri.minP=1e-100) to change it.\n")
   
   maxRes<- max(size$x)
   

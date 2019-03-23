@@ -32,11 +32,11 @@ distriSum<- function(x, y){
   }
   
   if (attributes(x)$logP){
-    x<- x[x$p > -Inf,, drop=FALSE]
-    y<- y[y$p > -Inf,, drop=FALSE]
+    x<- x[x$p > log(getOption("numericDistri.minP")),, drop=FALSE]
+    y<- y[y$p > log(getOption("numericDistri.minP")),, drop=FALSE]
   }else{
-    x<- x[x$p > 0,, drop=FALSE]
-    y<- y[y$p > 0,, drop=FALSE]
+    x<- x[x$p > getOption("numericDistri.minP"),, drop=FALSE]
+    y<- y[y$p > getOption("numericDistri.minP"),, drop=FALSE]
   }
   
   log<- attributes(x)$logP

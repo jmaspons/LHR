@@ -50,4 +50,5 @@ Collate:
     'probabilityDistributions.R'
     'sampleParameters.R'
     'slurm.R'
+    'zzz.R'
 VignetteBuilder: knitr
