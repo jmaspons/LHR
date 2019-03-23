@@ -2,9 +2,9 @@
 title: "Benchmarking"
 author: "Joan Maspons"
 date: "21 de setembre de 2018"
-output: slidy_presentation
+output: html_notebook
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 <!-- http://adv-r.had.co.nz/Performance.html -->
 ```{r setup, include=FALSE}
@@ -83,5 +83,103 @@ profvisNtf<- profvis::profvis({
 })
 
 profvisNtf
+```
 
+## ABM numericDistri
+
+```{r numericDistriABM, echo = TRUE}
+lh<- LH(method="LH axes", lambda=1.05)
+env<- Env(seasonAmplitude=0, varJ=0, varA=0, breedFail=.5)
+
+N0<- c(N1s=0, N1b=1, N1bF=0, N2s=0, N2b=1, N2bF=0)
+N0<- lapply(seq(1, 20, by=2), function(x) N0 * x)
+names(N0)<- paste0("N", sapply(N0, sum))
+
+sim<- Sim.numericDistriABM(transitionsFunc=LHR:::transitionABM.LH_Beh_DIST, tf=2, maxN=10000, N0=N0)
+
+patchScenario<- getPatchScenario(behavior="skip")
+
+pars<- getParamsCombination.LHEnv_2patchBeh(lh=lh, env=env, patchScenario=patchScenario)
+pars<- pars[pars$broods < 2, ]
+model<- Model(sim=sim, pars=pars)
+
+# model<- Model(lh=lh, env=env, sim=sim)
+# model<- model[model$habDiff == "nestPredHab2" & model$behavior == "learnExploreBreed", ]
+
+params<- S3Part(model)[1,]
+
+
+N0<- c(N1s=0, N1b=1, N1bF=0, N2s=0, N2b=1, N2bF=0)
+N0<- lapply(seq(1, 20, by=4), function(x) N0 * x)
+names(N0)<- paste0("N", sapply(N0, sum))
+
+expr<- lapply(names(N0), function(x){
+  parse(text=paste0(x, "=numericDistriABMSim(N0=N0[['", x, "']], params=params, tf=5, Ntf=TRUE, maxN=1e30)"))
+})
+names(expr)<- names(N0)
+tf<- 3
+benchmarkN0<- microbenchmark(
+  N1=numericDistriABMSim(N0=N0[[1]], params=params, tf=tf, Ntf=TRUE, maxN=1e10),
+  N2=numericDistriABMSim(N0=N0[[2]], params=params, tf=tf, Ntf=TRUE, maxN=1e10),
+  N3=numericDistriABMSim(N0=N0[[3]], params=params, tf=tf, Ntf=TRUE, maxN=1e10),
+  N4=numericDistriABMSim(N0=N0[[4]], params=params, tf=tf, Ntf=TRUE, maxN=1e10),
+  # N5=numericDistriABMSim(N0=N0[[5]], params=params, tf=5, Ntf=TRUE, maxN=1e30),
+  # N6=numericDistriABMSim(N0=N0[[6]], params=params, tf=5, Ntf=TRUE, maxN=1e30),
+  # N7=numericDistriABMSim(N0=N0[[7]], params=params, tf=5, Ntf=TRUE, maxN=1e30),
+  times=5)
+
+# benchmarkN0<- microbenchmark(list=expr, times=10) ## No differences on time
+
+
+tf<- seq(3, 20, by=4)
+expr<- lapply(tf, function(x){
+  parse(text=paste0("numericDistriABMSim(N0=N0[[2]], params=params, tf=", x, ", Ntf=TRUE, maxN=1e30)"))
+})
+names(expr)<- tf
+
+# benchmarkTf<- microbenchmark(list=expr, times=10)
+
+benchmarkTf<- microbenchmark(
+  tf1=numericDistriABMSim(N0=N0[[2]], params=params, tf=tf[1], Ntf=TRUE, maxN=1e30),
+  tf2=numericDistriABMSim(N0=N0[[2]], params=params, tf=tf[2], Ntf=TRUE, maxN=1e30),
+  tf3=numericDistriABMSim(N0=N0[[2]], params=params, tf=tf[3], Ntf=TRUE, maxN=1e30),
+  tf4=numericDistriABMSim(N0=N0[[2]], params=params, tf=tf[4], Ntf=TRUE, maxN=1e30),
+  # tf5=numericDistriABMSim(N0=N0[[2]], params=params, tf=tf[5], Ntf=TRUE, maxN=1e30),
+  # tf6=numericDistriABMSim(N0=N0[[2]], params=params, tf=tf[6], Ntf=TRUE, maxN=1e30),
+  # tf7=numericDistriABMSim(N0=N0[[2]], params=params, tf=tf[7], Ntf=TRUE, maxN=1e30),
+  times=5)
+
+# boxplot(benchmarkN0)
+ggplot2::autoplot(benchmarkN0)
+names(N0)
+
+# boxplot(benchmarkTf)
+ggplot2::autoplot(benchmarkTf)
+tf
+
+tf<- 3
+profvisNtf<- profvis::profvis({
+  numericDistriABMSim(N0=N0[[2]], params=params, tf=tf, Ntf=TRUE)
+  numericDistriABMSim(N0=N0[[2]], params=params, tf=tf, Ntf=FALSE)
+})
+
+profvisNtf
+
+profvisN0<- profvis::profvis({
+  numericDistriABMSim(N0=N0[[1]], params=params, tf=tf, Ntf=TRUE)
+  numericDistriABMSim(N0=N0[[2]], params=params, tf=tf, Ntf=TRUE)
+  numericDistriABMSim(N0=N0[[3]], params=params, tf=tf, Ntf=TRUE)
+  numericDistriABMSim(N0=N0[[4]], params=params, tf=tf, Ntf=TRUE)
+})
+
+profvisN0
+
+profvisTf<- profvis::profvis({
+  numericDistriABMSim(N0=N0[[2]], params=params, tf=2, Ntf=TRUE)
+  numericDistriABMSim(N0=N0[[2]], params=params, tf=4, Ntf=TRUE)
+  numericDistriABMSim(N0=N0[[2]], params=params, tf=6, Ntf=TRUE)
+  numericDistriABMSim(N0=N0[[2]], params=params, tf=8, Ntf=TRUE)
+})
+
+profvisTf
 ```
