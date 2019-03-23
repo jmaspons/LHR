@@ -380,6 +380,16 @@ plot.numericDistri<- function(x, cum=FALSE, type=ifelse(cum, "s", "p"), ...){
   graphics::plot.default(x, type=type, ...)
 }
 
+#' @rdname numericDistri
+#' @export
+points.numericDistri<- function(x, cum=FALSE, type=ifelse(cum, "s", "p"), ...){
+  if (cum){
+    x<- cumP(x)
+    x$p<- x$cump
+  }
+  
+  graphics::points.default(x, type=type, ...)
+}
 
 ## Stats ----
 #' @rdname numericDistri
