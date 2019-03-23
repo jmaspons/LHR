@@ -31,16 +31,6 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=
     env<- env[env$seasonAmplitude == 0 & env$varA == 0 & env$varJ == 0, ]
   }
   
-  if (is.numeric(cl)){
-    if (.Platform$OS.type == "windows"){
-      cl<- parallel::makePSOCKcluster(cl)
-    }else{
-      cl<- parallel::makeForkCluster(cl)
-    }
-    on.exit(parallel::stopCluster(cl))
-  }
-  
-  
   lhEnv<- combineLH_Env(lh=lh, env=env)
   LH_Env<- lhEnv$scenario
   # parameters<- list(seasonBroodEnv=lhEnv$seasonBroodEnv) # TODO: add seasonality
@@ -49,6 +39,15 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=
   comb<- merge(comb, LH_Env, by="idScenario")
   
   combL<- split(comb, rownames(comb))
+  
+  if (is.numeric(cl)){
+    if (.Platform$OS.type == "windows"){
+      cl<- parallel::makePSOCKcluster(cl)
+    }else{
+      cl<- parallel::makeForkCluster(cl)
+    }
+    on.exit(parallel::stopCluster(cl))
+  }
   
   if (pb & requireNamespace("pbapply", quietly=TRUE)){
     params<- pbapply::pblapply(combL, function (x){
@@ -106,16 +105,6 @@ getParamsCombination.LHEnv_2patchBeh<- function(lh=LH(), env=Env(seasonAmplitude
     env<- env[env$seasonAmplitude == 0 & env$varA == 0 & env$varJ == 0, ]
   }
   
-  if (is.numeric(cl)){
-    if (.Platform$OS.type == "windows"){
-      cl<- parallel::makePSOCKcluster(cl)
-    }else{
-      cl<- parallel::makeForkCluster(cl)
-    }
-    on.exit(parallel::stopCluster(cl))
-  }
-  
-  
   lhEnv<- combineLH_Env(lh=lh, env=env)
   LH_Env<- lhEnv$scenario
   
@@ -134,6 +123,15 @@ getParamsCombination.LHEnv_2patchBeh<- function(lh=LH(), env=Env(seasonAmplitude
   otherCols<- setdiff(names(comb), diffCols)
   
   combL<- split(comb, 1:nrow(comb))
+  
+  if (is.numeric(cl)){
+    if (.Platform$OS.type == "windows"){
+      cl<- parallel::makePSOCKcluster(cl)
+    }else{
+      cl<- parallel::makeForkCluster(cl)
+    }
+    on.exit(parallel::stopCluster(cl))
+  }
   
   if (pb & requireNamespace("pbapply", quietly=TRUE)){
     params<- pbapply::pblapply(combL, function (x){
@@ -261,7 +259,21 @@ getParams2diff1<- function(params,
   return (params)
 }
 
-# PatchScenario = habitatDiff + behavior
+#' PatchScenario = habitatDiff + behavior
+#'
+#' @param habDiffScenario 
+#' @param habDiffIntensity 
+#' @param behavior 
+#' @param behaviorIntensity 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' getPatchScenario(habDiffScenario=c("mortalHab2", "nestPredHab2"),
+#'                  habDiffIntensity=c(1.5, 2),
+#'                  behavior=c("neutral", "skip", "learnBreed", "preferHab1", "preferHab2"),
+#'                  behaviorIntensity=2)
 getPatchScenario<- function(habDiffScenario=c("identicalHab", "mortalHab2", "nestPredHab2"), habDiffIntensity=2,
                                 behavior=c("neutral", "skip", "learnBreed", "learnExploreBreed", "static", "preferHab1", "preferHab2"),
                                 behaviorIntensity=2){

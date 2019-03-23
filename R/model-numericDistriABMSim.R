@@ -26,7 +26,7 @@ NULL
 #' @examples
 numericDistriABMSim<- function(N0=c(N1s=0, N1b=1, N1bF=0, N2s=0, N2b=1, N2bF=0),
                           transitionsFunc=LHR:::transitionABM.LH_Beh_DIST,
-                          params=list(b1=4, b2=4,   broods=1, PbF1=.4, PbF2=.4,  a1=.3,ab1=.25,sa1=.25,j1=.1,  a2=.3,ab2=.25,sa2=.20,j2=.1, AFR=1, Pb1=1, Pb2=1, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5),
+                          params=list(b1=4, b2=4,   broods=1, PbF1=.3, PbF2=.4,  a1=.8,ab1=.65,sa1=.7,j1=.3,  a2=.6,ab2=.25,sa2=.20,j2=.1, AFR=1, Pb1=1, Pb2=.5, c1=1, c2=1, cF=1, P1s=.5, P1b=.5, P1sa=.5, P1j=.5),
                           tf=3, maxN=100000, Ntf=FALSE, randomizeN0=FALSE){
   # Check nStates returned by transitionsFunc (LH_behavior add subadult classes according to AFR)
   N<- transitionsFunc(N=N0, params=params)
@@ -135,6 +135,13 @@ numericDistriABMSim2numericDistriSim<- function(distriABM, maxN, omitClass){
   return(distri)
 }
 
+#' @rdname numericDistriABMSim
+#' @export
+`[.numericDistriABMSim`<- function(x, ...){
+  x<- unclass(x)[...]
+  class(x)<- c("numericDistriABMSim", "list")
+  x
+}
 
 ## TODO: Graphics ----
 # Plot population size time series of a numericDistriABMSim simulation with replicates.

@@ -33,19 +33,22 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
   stateName<- colnames(N)
   nStates<- length(stateName)
   
-  if (length(which(N0 > 0)) < 2) randomizeN0<- FALSE
+  if (sum(N0 > 0) < 2) randomizeN0<- FALSE
+  
+  if (randomizeN0){
+    N0rand<- replicate(replicates, N0)
+    N0rand<- apply(N0rand, 2, function(x){
+    selNon0<- which(x > 0)
+    selNon0rand<- sample(selNon0, size=length(selNon0))
+    x[selNon0]<- x[selNon0rand]
+    x
+    })
+  }
   
   if (!Ntf){
     popABM<- array(0, dim=c(replicates, nStates, tf+1), dimnames=list(replicate=NULL, state=stateName, t=0:tf))
     
     if (randomizeN0){
-      N0rand<- replicate(replicates, N0)
-      N0rand<- apply(N0rand, 2, function(x){
-        selNon0<- which(x > 0)
-        selNon0rand<- sample(selNon0, size=length(selNon0))
-        x[selNon0]<- x[selNon0rand]
-        x
-      })
       popABM[, names(N0), 1]<- N0rand
     }else{
       popABM[, names(N0), 1]<- t(replicate(replicates, N0))
@@ -54,14 +57,7 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
     for (ti in 1:tf){
       popABM[,, ti+1]<- transitionsFunc(N=popABM[,, ti], params=params)
       popABM[,, ti+1]<- apply(popABM[,, ti+1, drop=FALSE], MARGIN=2, function(x) ifelse(x > maxN, maxN, x))
-      
-      if (anyNA(popABM[,, ti+1])){
-        warning("NAs produced during the simulation of the discreteABMSim model.")
-        if (ti < tf) popABM[,, (ti+2):(tf+1)]<- -1
-        else popABM[,, tf+1]<- -1
-        break
-      }
-      
+
       if (ti %% 10 == 0 & ti + 1 < tf){ # check stop conditions every 10 time steps
         # Stop if all replicates have a class that reach maxN. TODO: check if the optimization is worth it benchmark.Rmd
         if (all(apply(popABM[,, ti+1, drop=FALSE], MARGIN=1, function(x) any(c(x == maxN, FALSE), na.rm=TRUE)))){ # FALSE in case all is NA
@@ -78,13 +74,6 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
     popABM<- array(0, dim=c(replicates, nStates, 2), dimnames=list(replicate=NULL, state=stateName, t=c(0, tf)))
     
     if (randomizeN0){
-      N0rand<- replicate(replicates, N0)
-      N0rand<- apply(N0rand, 2, function(x){
-        selNon0<- which(x > 0)
-        selNon0rand<- sample(selNon0, size=length(selNon0))
-        x[selNon0]<- x[selNon0rand]
-        x
-      })
       popABM[, names(N0), 1]<- N0rand
       popABM[, names(N0), 2]<- N0rand
     }else{
@@ -130,11 +119,11 @@ discreteABMSim<- function(N0=c(N1s=5, N1b=5, N1bF=5, N2s=5, N2b=5, N2bF=5),
 #'
 #' @examples
 discreteABMSim2discretePopSim<- function(popABM, maxN, omitClass){
-  if (missing(omitClass)){
-    pop<- apply(popABM, MARGIN=3, rowSums)
-  }else{
-    pop<- apply(popABM[, !grepl(omitClass, colnames(popABM)),, drop=FALSE], MARGIN=3, rowSums)
+  if (!missing(omitClass)){
+    popABM<- popABM[, !grepl(omitClass, colnames(popABM)),, drop=FALSE]
   }
+  
+  pop<- apply(popABM, MARGIN=3, rowSums)
   
   if (is.null(dim(pop)))
     pop<- as.matrix(t(pop))
