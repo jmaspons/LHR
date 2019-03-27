@@ -9,18 +9,19 @@ Description: Implements stochastic demographic models. Compound distributions
     following a binomial distribution).
 License: GPL (>= 2)
 Imports:
+    ggplot2,
     methods,
     parallel,
-    reshape2,
-    ggplot2,
+    reshape2
 Suggests:
-    naturalsort,
-    popbio,
-    rslurm,
-    testthat,
+    covr,
     knitr,
+    naturalsort,
+    pbapply,
+    popbio,
     rmarkdown,
-    pbapply
+    rslurm,
+    testthat
 URL: https://github.com/jmaspons/LHR
 BugReports: https://github.com/jmaspons/LHR/issues
 RoxygenNote: 6.1.1
