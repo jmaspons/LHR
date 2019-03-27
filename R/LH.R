@@ -58,14 +58,32 @@ setMethod("LH",
             
             pars<- unique(pars[, selCols])
             
-            if (!"idLH" %in% colnames(pars)) pars<- data.frame(idLH=rownames(pars), pars, stringsAsFactors=FALSE)
-            
-            
+            if (!"idLH" %in% colnames(pars)){
+              if ("baseLH" %in% names(pars)){
+                pars<- data.frame(idLH=paste0(pars$baseLH, "-L", pars$lambda), pars, stringsAsFactors=FALSE)
+                if (anyDuplicated(pars$idLH)){
+                  pars$idLH<- paste0(pars$baseLH, "-", formatC(seq_len(nrow(pars)), format="d", flag="0", width=nchar(nrow(pars))))
+                }
+              } else {
+                pars<- data.frame(idLH=formatC(seq_len(nrow(pars)), format="d", flag="0", width=nchar(nrow(pars))), pars, stringsAsFactors=FALSE)
+              }
+            }
             # Sort rows
             if ("baseLH" %in% names(pars)){
               pars<- pars[order(pars$baseLH, pars$lambda),]
             } else {
-              pars<- pars[naturalsort::naturalorder(pars$idLH),]
+              # Sort by idLH using naturalsort (slow) if installed and idLH is non numeric
+              suppressWarnings(idLHnum<- as.numeric(pars$idLH))
+              
+              if (anyNA(idLHnum)){
+                if (requireNamespace("naturalsort", quietly=TRUE)){
+                  pars<- pars[naturalsort::naturalorder(pars$idLH),]
+                }else{
+                  pars<- pars[order(pars$idLH),]
+                }
+              } else {
+                pars<- pars[order(idLHnum),]
+              }
             }
             
             rownames(pars)<- pars$idLH
@@ -304,7 +322,8 @@ sampleLH<- function(lambda=seq(1, 1.2, by=0.1), broods=2^(0:2), b=c(1, 2, 5, 10)
   # Sort columns
   pars<- pars[order(pars$lambda, pars$a, pars$fecundity), c("lambda", "fecundity", "broods", "b", "a", "s", "j", "AFR")]
   rownames(pars)<- NULL
-  pars<- cbind(idLH=rownames(pars), pars, stringsAsFactors=FALSE)
+  pars<- cbind(idLH=formatC(seq_len(nrow(pars)), format="d", flag="0", width=nchar(nrow(pars))),
+               pars, stringsAsFactors=FALSE)
   
   return (pars)
 }

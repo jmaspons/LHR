@@ -84,7 +84,7 @@ setMethod("combineLH_Env",
             if ("baseLH" %in% names(scenario)){
               scenario<- scenario[order(scenario$baseLH, scenario$lambda, scenario$idEnv),]
             } else {
-              scenario<- scenario[naturalsort::naturalorder(scenario$idScenario),]
+              scenario<- scenario[order(scenario$idLH, scenario$idEnv),]
             }
             
             rownames(scenario)<- scenario$idScenario
@@ -725,7 +725,7 @@ setMethod("result",
                 res$Pest<- 1 - res$extinct
 
                 rownames(res)<- paste0(res$idScenario, "-N", res$N0)
-                res<- res[naturalsort::naturalorder(rownames(res)),]
+                res<- res[order(res$idScenario, res$N0),]
 
                 res
 
@@ -737,7 +737,7 @@ setMethod("result",
                 res<- merge(S3Part(model), S3Part(model@sim@N0_Pest), by="idScenario")
                 
                 rownames(res)<- res$idScenario
-                res<- res[naturalsort::naturalorder(rownames(res)),]
+                res<- res[order(res$idScenario),]
                 
                 res
                 
@@ -794,7 +794,9 @@ setMethod("result",
                 res<- merge(S3Part(model), Ntf, by="idScenario")
                 
                 rownames(res)<- paste0(res$idScenario, "-N", res$N0)
-                res<- res[naturalsort::naturalorder(rownames(res)),]
+                
+                # Sort rows
+                res<- res[order(res$idScenario, res$N0),]
                 
                 # resl<- reshape2::melt(res[, c("idScenario", "N0", selQuantile)], id.vars=1:2, value.name="Ntf") # id vars: idScenario and N0
                 # resl$quantile<- as.numeric(as.character(resl$variable))
@@ -833,7 +835,8 @@ setMethod("result",
             }
             
             # sort columns
-            res<- cbind(res[,grep("^(idScenario|N0)$", names(res)), drop=FALSE], res[,-c(grep("^(idScenario|N0)$", names(res)))])
+            res<- cbind(res[, grep("^(idScenario|N0)$", names(res)), drop=FALSE],
+                        res[,-c(grep("^(idScenario|N0)$", names(res)))])
             
             return(res)
         }
@@ -990,7 +993,7 @@ rbind.Model<- function(...){
       nonUniqueIdLH<- TRUE
       # lhU$idLH_ori<- lhU$idLH
       lhU<- lhU[order(lhU$lambda, lhU$a, lhU$fecundity), ]
-      lhU$idLH<- as.character(seq_len(nrow(lhU)))
+      lhU$idLH<- formatC(seq_len(nrow(lhU)), format="d", flag="0", width=nchar(nrow(lhU)))
     }
     
     
@@ -1005,7 +1008,7 @@ rbind.Model<- function(...){
       nonUniqueIdEnv<- TRUE
       # envU$idEnv_ori<- envU$idEnv
       envU<- envU[order(envU$seasonAmplitude, envU$seasonMean, envU$varJ, envU$varA, envU$breedFail), ]
-      envU$idEnv<- as.character(seq_len(nrow(envU)))
+      envU$idEnv<- formatC(seq_len(nrow(envU)), format="d", flag="0", width=nchar(nrow(envU)))
     }
     
     
@@ -1028,10 +1031,15 @@ rbind.Model<- function(...){
     if (rebuildId){
       scenarios<- lapply(scenarios, function(x){
         id<- paste0("LH", x$idLH, "_Env", x$idEnv)
-        idExtra<- gsub("^LH[0-9]+_Env[0-9]+[_]*", "", x$idScenario)
+        idExtra<- gsub("^LH.+_Env[0-9a-zA-Z]+[_]*", "", x$idScenario)
         if (any(idExtra != "")){
           id<- paste0(id, "_", idExtra)
         }
+        
+        if (anyDuplicated(id)){
+          warning("Some duplicated idScenario values. Be careful and try to fix it before proceed!")
+        }
+        
         x$idScenario_ori<- x$idScenario
         x$idScenario<- id
         x

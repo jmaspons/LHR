@@ -13,8 +13,8 @@ Imports:
     parallel,
     reshape2,
     ggplot2,
-    naturalsort
 Suggests:
+    naturalsort,
     popbio,
     rslurm,
     testthat,

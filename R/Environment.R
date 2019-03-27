@@ -30,7 +30,8 @@ setMethod("Env",
             comb<- merge(season, comb)
             
             comb<- unique(comb)
-            comb<- data.frame(idEnv=rownames(comb), comb, stringsAsFactors=FALSE)
+            comb<- data.frame(idEnv=formatC(seq_len(nrow(comb)), format="d", flag="0", width=nchar(nrow(comb))),
+                              comb, stringsAsFactors=FALSE)
             
             new("Env", comb, seasonRange=getSeasonalRange(seasonMean=comb$seasonMean, seasonAmplitude=comb$seasonAmplitude))
           }
@@ -50,11 +51,26 @@ setMethod("Env",
 setMethod("Env",
           signature(pars="data.frame", seasonAmplitude="missing", seasonRange="missing", varJ="missing", varA="missing", breedFail="missing"),
           function(pars){
-            if (inherits(pars, "Model")) pars<- data.frame(pars, stringsAsFactors=FALSE)
-            if (!"idEnv" %in% names(pars)) pars$idEnv<- rownames(pars)
+            if (inherits(pars, "Model"))
+              pars<- data.frame(pars, stringsAsFactors=FALSE)
+            
+            if (!"idEnv" %in% names(pars))
+              pars$idEnv<- formatC(seq_len(nrow(pars)), format="d", flag="0", width=nchar(nrow(pars)))
             
             pars<- unique(pars[,c("idEnv", "seasonAmplitude", "seasonMean", "varJ", "varA", "breedFail")])
-            pars<- pars[naturalsort::naturalorder(pars$idEnv),]
+            
+            # Sort rows by idEnv using naturalsort (slow) if installed and idEnv is non numeric
+            suppressWarnings(idEnvnum<- as.numeric(pars$idEnv))
+            if (anyNA(idEnvnum)){
+              if (requireNamespace("naturalsort", quietly=TRUE)){
+                pars<- pars[naturalsort::naturalorder(pars$idEnv),]
+              }else{
+                pars<- pars[order(pars$idEnv),]
+              }
+            }else{
+              pars<- pars[order(idEnvnum),]
+            }
+            
             rownames(pars)<- pars$idEnv
             
             new("Env", pars, seasonRange=getSeasonalRange(seasonMean=pars$seasonMean, seasonAmplitude=pars$seasonAmplitude))

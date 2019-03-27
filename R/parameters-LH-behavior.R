@@ -74,7 +74,15 @@ getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=
   # Sort
   params$idHabDiff<- factor(params$idHabDiff, levels=c("identicalHab", "mortalHab2", "nestPredHab2"))
   params$idBehavior<- factor(params$idBehavior, levels=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2"))
-  params<- params[naturalsort::naturalorder(params$idScenario),]
+  
+  # Sort rows
+  if ("baseLH" %in% names(params)){
+    ord<- with(params, order(baseLH, lambda, idEnv, idHabDiff, idBehavior))
+    params<- params[ord, ]
+  } else {
+    ord<- with(params, order(idLH, idEnv, idHabDiff, idBehavior))
+    params<- params[ord, ]
+  }
   
   return (params)
 }
@@ -155,8 +163,14 @@ getParamsCombination.LHEnv_2patchBeh<- function(lh=LH(), env=Env(seasonAmplitude
   params<- params[, ordCols]
   
   # Sort rows
-  params<- params[naturalsort::naturalorder(params$idScenario),]
-  
+  if ("baseLH" %in% names(params)){
+    ord<- with(params, order(baseLH, lambda, idEnv, baseHabDiff, habDiffIntensity, baseBeh, behIntensity))
+    params<- params[ord, ]
+  } else {
+    ord<- with(params, order(idLH, idEnv, baseHabDiff, habDiffIntensity, baseBeh, behIntensity))
+    params<- params[ord, ]
+  }
+
   rownames(params)<- params$idScenario
   
   return (params)
