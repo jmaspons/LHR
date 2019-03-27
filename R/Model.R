@@ -21,7 +21,7 @@ setMethod("Model",
           function(lh=LH(method="LH axes"), env=Env(), sim=Sim(type=match.arg(type)), type=c("discretePopSim", "numericDistri", "ABM", "numericDistriABM"), ...){
             
             if (inherits(sim, c("Sim.ABM", "Sim.numericDistriABM"))){
-              pars<- getParamsCombination.LH_Beh(lh=lh, env=env, ...)
+              pars<- getParamsCombination.LHEnv_2patchBeh(lh=lh, env=env, ...)
               if (inherits(sim, "Sim.ABM")){
                 model<- new("Model.ABM", pars, sim=sim)
               }else{

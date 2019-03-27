@@ -24,7 +24,7 @@ test_that("discreteABMSim extreme values", {
   ## Extinction
   suppressWarnings( lh<- LH(lambda=.3, broods=1, a=.3, AFR=c(1, 3), method="regular") )
   env<- Env(seasonAmplitude=0, varJ=0, varA=0, breedFail=.3)
-  pars<- getParamsCombination.LH_Beh(lh, env, habDiffScenario="mortalHab2", behavior="preferHab2")
+  pars<- getParamsCombination.LHEnv_2patchBeh(lh, env, patchScenario=getPatchScenario(habDiffScenario="mortalHab2", behavior="preferHab2"))
   
   N0<- c(N1s=0, N1b=1, N1bF=0, N2s=0, N2b=1, N2bF=0)
   sim<- Sim.ABM(N0=N0, replicates=1000, maxN=1000, raw=TRUE, discretePopSim=TRUE)
@@ -49,7 +49,7 @@ test_that("discreteABMSim extreme values", {
   # maxN
   lh<- LH(lambda=2, broods=2, a=.8, AFR=c(1, 3), method="regular")
   env<- Env(seasonAmplitude=0, varJ=0, varA=0, breedFail=.3)
-  pars<- getParamsCombination.LH_Beh(lh, env, habDiffScenario="identicalHab", behavior="neutral")
+  pars<- getParamsCombination.LHEnv_2patchBeh(lh, env, patchScenario=getPatchScenario(habDiffScenario="identicalHab", behavior="neutral"))
   
   N0<- c(N1s=0, N1b=100, N1bF=0, N2s=0, N2b=100, N2bF=0)
   sim<- Sim.ABM(N0=N0, replicates=1000, maxN=1000, tf=100, raw=TRUE, discretePopSim=TRUE)
@@ -92,10 +92,11 @@ test_that("sample parameter space", {
   
   expect_is(getParams.LH_Beh(), "data.frame")
   expect_is(getParamsCombination.LH_Beh(), "data.frame")
+  expect_is(getParamsCombination.LHEnv_2patchBeh(), "data.frame")
 })
 
 test_that("plots", {
-  model<- Model(pars=getParamsCombination.LH_Beh(habDiffScenario="nestPredHab2", behavior="skip"), type="ABM")
+  model<- Model(pars=getParamsCombination.LHEnv_2patchBeh(patchScenario=getPatchScenario(habDiffScenario="nestPredHab2", behavior="skip")), type="ABM")
   res<- run(model)
   N0_Pest<- findN0_Pest(model)
   

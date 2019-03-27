@@ -16,13 +16,15 @@
 #' @param pb if \code{TRUE} and \link[pbapply]{pbapply} package is installed, show a progress bar.
 #'
 #' @return
-#' @export
 #'
 #' @examples
 getParamsCombination.LH_Beh<- function(lh=LH(), env=Env(seasonAmplitude=0, varJ=0, varA=0),
                                        habDiffScenario=c("identicalHab", "mortalHab2", "nestPredHab2"),
                                        behavior=c("neutral", "skip", "learnBreed", "learnExploreBreed", "preferHab1", "preferHab2"),
                                        cl=parallel::detectCores(), pb=FALSE){
+  
+  .Deprecated("getParamsCombination.LHEnv_2patchBeh")
+  
   habDiffScenario<- match.arg(habDiffScenario, several.ok=TRUE)
   behavior<- match.arg(behavior, several.ok=TRUE)
   
@@ -380,12 +382,12 @@ getBehavior<- function(behavior=c("neutral", "skip", "learnBreed", "learnExplore
   }
   
   if ("learnBreed" %in% behavior){
-    params[c("c1", "c2", "cF")]<- c(0, 0, P.pos)
+    params[c("c1", "c2", "cF", "P1s","P1b","P1sa","P1j")]<- c(0, 0, P.pos, 1, 1, 1, 1)
   }
   
   # Avoid habitat 2 after exploring or breeding fail (1 timestep memory only)
   if ("learnExploreBreed" %in% behavior){
-    params[c("c1", "c2", "cF")]<- c(0, P.pos, P.pos)
+    params[c("c1", "c2", "cF", "P1s","P1b","P1sa","P1j")]<- c(0, P.pos, P.pos, 1, 1, 1, 1)
   }
   
   if ("static" %in% behavior){
